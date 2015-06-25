@@ -2,7 +2,7 @@
 	<arg name="ns"/>
 	<arg name="mavlink_url" default="udp://localhost:14565@localhost:14560"/>
 
-	<node pkg="docker" name="mavros_to_px4" type="mavros_to_px4.py" output="screen"/>
+	<node pkg="simulator" name="mavros_to_px4" type="mavros_to_px4.py" output="screen"/>
 	<node pkg="px4" name="commander" type="commander" output="screen"/>
 	<node pkg="px4" name="mc_mixer" type="mc_mixer" output="screen"/>
 	<node pkg="px4" name="attitude_estimator" type="attitude_estimator" output="screen"/>

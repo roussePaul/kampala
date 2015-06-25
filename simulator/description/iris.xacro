@@ -44,7 +44,7 @@
   </xacro:property>
 
   <!-- Included URDF Files -->
-  <xacro:include filename="$(find docker)/description/multirotor_base.xacro" />
+  <xacro:include filename="$(find simulator)/description/multirotor_base.xacro" />
 
   <!-- Instantiate multirotor_base_macro once -->
   <xacro:multirotor_base_macro

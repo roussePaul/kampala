@@ -1,12 +1,9 @@
 <?xml version="1.0"?>
 
 <robot name="$(arg ns)" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:property name="load" value="true"/>
-
-
-  <xacro:include filename="$(find docker)/description/component_snippets.xacro" />
+  <xacro:include filename="$(find simulator)/description/component_snippets.xacro" />
   <!-- Instantiate iris "mechanics" -->
-  <xacro:include filename="$(find docker)/description/iris.xacro" />
+  <xacro:include filename="$(find simulator)/description/iris.xacro" />
 
   <!-- Instantiate a controller. -->
   <xacro:controller_plugin_macro
@@ -96,39 +93,6 @@
       rotor_velocity_slowdown_sim="${rotor_velocity_slowdown_sim}"
     >
     </xacro:bag_plugin_macro>
-  </xacro:if>
-
-  <xacro:if value="${load}">
-    <joint type="revolute" name="load_joint_1">
-      <parent link="base_link"/>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.7"/>
-      <child link="${namespace}/load"/>
-      <axis xyz="1 0 0"/>
-      <limit effort="50000" lower="-1.57079632679" upper="1.57079632679" velocity="10000"/>
-    </joint>
-    <!-- <link name="${namespace}/link_load"/>
-    <joint type="revolute" name="load_joint_2">
-      <parent link="${namespace}/link_load"/>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.7"/>
-      <child link="${namespace}/load"/>
-      <axis xyz="0 1 0"/>
-      <limit effort="50000" lower="-1.57079632679" upper="1.57079632679" velocity="10000"/>
-    </joint>
- -->
-    <link name="${namespace}/load">
-      <inertial>
-        <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001"/>
-        <mass value="0.05"/>
-        <!-- [kg] -->
-        <origin rpy="0 0 0" xyz="0 0 0"/>
-      </inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <visual name="visual">
-        <geometry>
-          <sphere radius="0.05"/>
-        </geometry>
-      </visual>
-    </link>
   </xacro:if>
 
 </robot>

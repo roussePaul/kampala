@@ -4,7 +4,13 @@ project(simulator)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+	message_generation
+	mavros
+	px4
+	std_msgs
+	gazebo_msgs
+	)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -13,7 +19,7 @@ find_package(catkin REQUIRED)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
+catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -60,11 +66,14 @@ find_package(catkin REQUIRED)
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+# Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+	mavros
+	px4
+	std_msgs
+	gazebo_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -77,8 +86,13 @@ find_package(catkin REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES multiple_quadcopter
-#  CATKIN_DEPENDS other_catkin_pkg
+#  LIBRARIES simulator
+  CATKIN_DEPENDS 
+  	message_runtime
+	mavros
+	px4
+	std_msgs
+	gazebo_msgs
 #  DEPENDS system_lib
 )
 
@@ -91,19 +105,19 @@ catkin_package(
 # include_directories(include)
 
 ## Declare a cpp library
-# add_library(multiple_quadcopter
-#   src/${PROJECT_NAME}/multiple_quadcopter.cpp
+# add_library(simulator
+#   src/${PROJECT_NAME}/simulator.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(multiple_quadcopter_node src/multiple_quadcopter_node.cpp)
+# add_executable(simulator_node src/simulator_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(multiple_quadcopter_node multiple_quadcopter_generate_messages_cpp)
+# add_dependencies(simulator_node simulator_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(multiple_quadcopter_node
+# target_link_libraries(simulator_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -122,7 +136,7 @@ catkin_package(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS multiple_quadcopter multiple_quadcopter_node
+# install(TARGETS simulator simulator_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -147,7 +161,7 @@ catkin_package(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_multiple_quadcopter.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_simulator.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

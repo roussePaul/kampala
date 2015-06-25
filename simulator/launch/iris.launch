@@ -15,15 +15,15 @@
   </group>
 
 	<group if="$(arg local)">
-		<include file="$(find docker)/launch/docker.launch">
+		<include file="$(find simulator)/launch/docker.launch">
   		  <arg name="ns" value="$(arg ns)"/>
 		</include>	
   </group>
 
   <group ns="$(arg ns)">
-    <include file="$(find docker)/launch/spawn_iris.launch">
+    <include file="$(find simulator)/launch/spawn_iris.launch">
       <arg name="ns" value="$(arg ns)"/>
-      <arg name="model" value="$(find docker)/description/iris_base.xacro" />
+      <arg name="model" value="$(find simulator)/description/iris_base.xacro" />
       <arg name="log_file" value="$(arg ns)"/>
       <arg name="x" value="$(arg x)"/>
       <arg name="y" value="$(arg y)"/>

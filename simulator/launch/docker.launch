@@ -2,7 +2,7 @@
 	<arg name="ns"/>
   
 
-    <include file="$(find docker)/launch/iris.launch">
+    <include file="$(find simulator)/launch/docker_iris.launch">
 		<arg name="ns" value="$(arg ns)"/>
     </include>
 

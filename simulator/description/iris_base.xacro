@@ -4,9 +4,9 @@
   <xacro:property name="load" value="$(arg suspended_load)"/>
 
 
-  <xacro:include filename="$(find docker)/description/component_snippets.xacro" />
+  <xacro:include filename="$(find simulator)/description/component_snippets.xacro" />
   <!-- Instantiate iris "mechanics" -->
-  <xacro:include filename="$(find docker)/description/iris.xacro" />
+  <xacro:include filename="$(find simulator)/description/iris.xacro" />
 
   <!-- Instantiate a controller. -->
   <xacro:controller_plugin_macro

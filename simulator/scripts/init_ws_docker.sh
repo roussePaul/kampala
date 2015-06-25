@@ -43,7 +43,7 @@ git clone https://github.com/catkin/catkin_simple.git
 
 ## Kampala
 cd $WORKSPACE/src
-git clone https://github.com/paulRousse/Kampala.git
+git clone https://github.com/roussePaul/Kampala.git
 
 
 # Disable parallel make jobs for compilation.

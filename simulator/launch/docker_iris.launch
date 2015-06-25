@@ -3,7 +3,7 @@
 
   <group ns="$(arg ns)">
 
-    <include file="$(find docker)/launch/multicopter_w.launch">
+    <include file="$(find simulator)/launch/multicopter_w.launch">
       <arg name="ns" value="$(arg ns)"/>
     </include>
 
