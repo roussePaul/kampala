@@ -1,0 +1,26 @@
+<package>
+  <name>Kampala</name>
+  <version>1.0.0</version>
+  <description>Kampala</description>
+  <maintainer email="rousse@kth.se">Paul Rousse</maintainer>
+
+  <license>ASL 2.0</license>
+
+  <url type="website">http://kth.se</url>
+
+  <author>SML</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>controller</run_depend>
+  <run_depend>docker</run_depend>
+  <run_depend>mocap</run_depend>
+  <run_depend>summer</run_depend>
+  <run_depend>simulator</run_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>

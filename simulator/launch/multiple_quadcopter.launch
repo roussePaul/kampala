@@ -1,0 +1,37 @@
+<launch>
+    <arg name="headless" default="false"/>
+    <arg name="gui" default="true"/>
+    <arg name="enable_logging" default="false"/>
+    <arg name="enable_ground_truth" default="true"/>
+    <arg name="ns" default="iris"/>
+    <arg name="log_file" default="$(arg ns)"/>
+
+
+<!-- CONFIG -->
+<!-- Network: see setup.bash at root directory of the workspace (not the one in devel/setup.bash) -->
+
+<!-- GAZEBO -->
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find rotors_gazebo)/worlds/basic.world"/>
+		<!-- <arg name="debug" value="true" /> -->
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="gui" value="$(arg gui)"/>
+	</include>	
+
+<!-- IRIS 1 -->
+    <include file="$(find simulator)/launch/iris.launch">
+        <arg name="x" value="1.0"/>
+        <arg name="y" value="1.0"/>
+        <arg name="docker" value="docker-iris-1"/>
+        <arg name="ns" value="iris1"/>
+    </include>
+
+<!-- IRIS 2 -->
+    <include file="$(find simulator)/launch/iris.launch">
+        <arg name="x" value="0.0"/>
+        <arg name="y" value="1.0"/>
+        <arg name="docker" value="docker-iris-2"/>
+        <arg name="ns" value="iris2"/>
+    </include>
+
+</launch>

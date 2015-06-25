@@ -1,0 +1,38 @@
+<launch>
+  <arg name="ns"/>
+  <arg name="docker"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="local" default="false"/>
+
+  <arg name="suspended_load" default="false"/>
+  <arg name="load_link_height" default="0.3"/> <!-- [m] -->
+  <arg name="load_mass" default="0.3"/> <!-- [kg] -->
+
+<!-- DOCKER START -->
+	<group unless="$(arg local)">
+  	<node name="start_docker_$(arg ns)" pkg="simulator" type="start_docker.sh" args="$(arg docker) $(arg ns) $(arg x) $(arg y)"/>
+  </group>
+
+	<group if="$(arg local)">
+		<include file="$(find docker)/launch/docker.launch">
+  		  <arg name="ns" value="$(arg ns)"/>
+		</include>	
+  </group>
+
+  <group ns="$(arg ns)">
+    <include file="$(find docker)/launch/spawn_iris.launch">
+      <arg name="ns" value="$(arg ns)"/>
+      <arg name="model" value="$(find docker)/description/iris_base.xacro" />
+      <arg name="log_file" value="$(arg ns)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="0.08"/>
+
+      <arg name="suspended_load" value="$(arg suspended_load)"/>
+      <arg name="load_link_height" value="$(arg load_link_height)"/> <!-- [m] -->
+      <arg name="load_mass" value="$(arg load_mass)"/> <!-- [kg] -->
+    </include>
+  </group>
+
+</launch>
