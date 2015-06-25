@@ -29,7 +29,7 @@
   </include>
 
   <group ns="iris1">
-    <node name="circle_gen_acc" pkg="controller" type="circle_gen_acc.py" output="screen"/>
+    <node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" output="screen"/>
   </group>
 
 <!-- IRIS 1 LAUNCH -->
@@ -53,7 +53,7 @@
   </include>
 
   <group ns="iris2">
-    <node name="trajectory_gen_follower_new" pkg="controller" type="trajectory_gen_follower_new.py" output="screen"/>
+    <node name="trajectory_gen_follower_new" pkg="trajectory_generator" type="trajectory_gen_follower_new.py" output="screen"/>
   </group>
 
 <!-- MOCAP -->
