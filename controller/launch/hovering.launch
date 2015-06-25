@@ -2,7 +2,7 @@
 	<arg name="body_id" default="21"/>
 	<arg name="hovering_height" default="0.6"/>
 
-	<node name="hover_controller" pkg="controller" type="hover_controller.py" clear_params="true" output="screen">
+	<node name="hover_controller" pkg="trajectory_generator" type="hover_controller.py" clear_params="true" output="screen">
 		<param name="qualysis_id" value="$(arg body_id)"/>
 		<param name="height" value="$(arg hovering_height)"/>
 	</node>

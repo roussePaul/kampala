@@ -49,7 +49,7 @@
 
     <node name="PID_controller" pkg="controller" type="PID_controller.py" output="screen"/>
 
-    <node name="circle_gen_tilt" pkg="controller" type="circle_gen_tilt.py" clear_params="true" output="screen"/>
+    <node name="circle_gen_tilt" pkg="trajectory_generator" type="circle_gen_tilt.py" clear_params="true" output="screen"/>
 
     <node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>
 

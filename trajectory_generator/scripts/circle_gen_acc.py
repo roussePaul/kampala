@@ -21,7 +21,7 @@ class CircleGen:
     if type(self.midpoint) is str:
       self.midpoint = ast.literal_eval(self.midpoint)
     self.radius = rospy.get_param("trajectory_generator/radius",0.8)
-    self.velo = rospy.get_param("trajectory_generator/velo",0.2)
+    self.velo = rospy.get_param("trajectory_generator/velo",0.61)
     self.theta = rospy.get_param("trajectory_generator/theta",0.0)
 
   def get_tilted_circle(self):

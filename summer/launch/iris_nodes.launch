@@ -72,9 +72,6 @@
     <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="true"/>
     <node name="PID_controller" pkg="controller" type="PID_controller.py" output="screen"/>
 
-    <!-- TRAJECTORY GENERATOR -->
-    <!-- <node name="circle_gen_tilt" pkg="controller" type="circle_gen_tilt.py" clear_params="true" output="screen"/> -->
-
     <!-- RVIZ LINK -->
     <group if="$(arg rviz)">
       <node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>

@@ -25,7 +25,7 @@
 
 	<node name="PID_controller" pkg="controller" type="PID_controller.py" output="screen"/>
 
-	<node name="trajectory_generator" pkg="controller" type="trajectory_generator.py" clear_params="true" output="screen">
+	<node name="trajectory_generator" pkg="trajectory_generator" type="trajectory_generator.py" clear_params="true" output="screen">
 		<param name="start_point" value="$(arg start_point)"/>
 		<param name="end_point" value="$(arg end_point)"/>
 	</node>

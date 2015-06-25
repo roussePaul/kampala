@@ -31,7 +31,7 @@
   </include>
 
   <group ns="iris1">
-    <node name="straight_line" pkg="controller" type="straight_line_class.py" output="screen"/>
+    <node name="straight_line" pkg="trajectory_generator" type="straight_line_class.py" output="screen"/>
   </group>
 
 <!-- GUI -->
