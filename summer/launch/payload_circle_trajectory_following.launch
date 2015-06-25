@@ -1,0 +1,46 @@
+<launch>
+  <arg name="enable_logging" default="false"/>
+  <arg name="enable_ground_truth" default="true"/>
+  <arg name="log_file" default="iris"/>
+  <arg name="headless" default="false"/>
+  <arg name="gui" default="true"/>
+
+  <arg name="simulation" default="true"/>
+
+<!-- MOCAP -->
+  <rosparam param="/body_array">[1]</rosparam>
+  <rosparam param="/body_names">["iris1"]</rosparam>
+  <node name="ros_mocap" pkg="mocap" type="ros_mocap_message.py" respawn="true">
+  </node>
+
+<!-- IRIS 1 LAUNCH -->
+  <rosparam param="/rviz_mocap/qualysis_id">1</rosparam>
+  <include file="$(find summer)/launch/iris_nodes.launch">
+    <arg name="ns" value="iris1"/>
+
+    <arg name="simulation" value="true"/>
+    <arg name="docker" value="docker-iris-1"/>
+
+    <arg name="suspended_load" value="true"/>
+    <arg name="load_link_height" value="0.3"/> <!-- [m] -->
+    <arg name="load_mass" value="0.1"/> <!-- [kg] -->
+
+    <arg name="body_id" value="1"/>  <!-- Mocap identifier -->
+
+    <arg name="rviz" value="true"/> <!-- No more than one drone visualisable -->
+  </include>
+
+  <group ns="iris1">
+    <node name="circle_gen_acc" pkg="controller" type="circle_gen_acc.py" output="screen"/>
+  </group>
+
+<!-- GUI -->
+  <include file="$(find summer)/launch/gui.launch">
+    <arg name="body_id" default="1"/>
+    <arg name="simulation" default="$(arg simulation)"/>
+  </include>
+  
+  <rosparam param="/gazebo/time_step">0.01</rosparam>
+  <rosparam param="/gazebo/max_update_rate">100</rosparam>
+
+</launch>

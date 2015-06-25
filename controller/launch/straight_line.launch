@@ -1,0 +1,38 @@
+<launch>
+	<arg name="body_id" default="21"/>
+	<arg name="boundaries_shape" default="cube"/>
+	<arg name="boundaries_centerx" default="0"/>
+	<arg name="boundaries_centery" default="0"/>
+	<arg name="boundaries_side" default="3"/>
+	<arg name="boundaries_radius" default="1"/>
+	<arg name="boundaries_height" default="1"/>
+	<arg name="start_point" default="[0.0,0.0,0.6]"/>
+	<arg name="end_point" default="[0.5,-0.5,1.0]"/>
+
+	<node name="security_guard" pkg="controller" type="security_guard.py" clear_params="true" output="screen">
+		<param name="body_id" value="$(arg body_id)"/>
+		<param name="shape" value="$(arg boundaries_shape)"/>
+		<param name="centerx" value="$(arg boundaries_centerx)"/>
+		<param name="centery" value="$(arg boundaries_centery)"/>
+		<param name="side" value="$(arg boundaries_side)"/>
+		<param name="radius" value="$(arg boundaries_radius)"/>
+		<param name="height" value="$(arg boundaries_height)"/>
+	</node>
+
+	<node name="derivator" pkg="controller" type="derivator.py" output="screen" respawn="true"/>
+
+	<node name="lander" pkg="controller" type="lander.py" output="screen" respawn="true"/>
+
+	<node name="PID_controller" pkg="controller" type="PID_controller.py" output="screen"/>
+
+	<node name="trajectory_generator" pkg="controller" type="trajectory_generator.py" clear_params="true" output="screen">
+		<param name="start_point" value="$(arg start_point)"/>
+		<param name="end_point" value="$(arg end_point)"/>
+	</node>
+
+	<node name="rqt_plot" pkg="rqt_plot" type="rqt_plot" args="/derivator/pos_data/x_vel:y_vel:z_vel"/>
+
+	<node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>
+	<node name="rviz" pkg="rviz" type="rviz"/>
+
+</launch>

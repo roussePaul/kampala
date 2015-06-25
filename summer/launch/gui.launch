@@ -1,0 +1,25 @@
+<launch>
+  <arg name="enable_logging" default="false"/>
+  <arg name="enable_ground_truth" default="true"/>
+  <arg name="log_file" default="iris"/>
+  <arg name="headless" default="false"/>
+  <arg name="gui" default="true"/>
+
+  <arg name="simulation" default="true"/>
+  <arg name="body_id" default="1"/>
+
+
+<!-- GAZEBO -->
+  <group if="$(arg simulation)">
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="world_name" value="$(find rotors_gazebo)/worlds/basic.world"/>
+      <!-- <arg name="debug" value="true" /> -->
+      <arg name="headless" value="$(arg headless)"/>
+      <arg name="gui" value="$(arg gui)"/>
+    </include>
+  </group>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find controller)/rviz_config/trajectory_following.rviz"/>
+
+
+</launch>

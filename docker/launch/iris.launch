@@ -1,0 +1,23 @@
+<launch>
+	<arg name="ns"/>
+
+  <group ns="$(arg ns)">
+
+    <include file="$(find docker)/launch/multicopter_w.launch">
+      <arg name="ns" value="$(arg ns)"/>
+    </include>
+
+    <param name="mixer" type="string" value="i" />
+    <param name="MPP_XY_P" type="double" value="1.0" />
+    <param name="MPP_XY_FF" type="double" value="0.0" />
+    <param name="MPP_XY_VEL_P" type="double" value="0.01" />
+    <param name="MPP_XY_VEL_I" type="double" value="0.0" />
+    <param name="MPP_XY_VEL_D" type="double" value="0.01" />
+    <param name="MPP_XY_VEL_MAX" type="double" value="2.0" />
+    <param name="MPP_Z_VEL_P" type="double" value="0.3" />
+    <param name="MPP_Z_P" type="double" value="6" />
+    <param name="MPP_Z_FF" type="double" value="0.5" />
+    <param name="vehicle_model" type="string" value="$(arg ns)" />
+  </group>
+
+</launch>

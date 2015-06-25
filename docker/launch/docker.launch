@@ -1,0 +1,9 @@
+<launch>
+	<arg name="ns"/>
+  
+
+    <include file="$(find docker)/launch/iris.launch">
+		<arg name="ns" value="$(arg ns)"/>
+    </include>
+
+</launch>

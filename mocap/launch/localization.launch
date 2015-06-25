@@ -1,0 +1,12 @@
+<launch>
+
+  <node name="ros_mocap" pkg="mocap" type="ros_mocap.py" output="screen">
+    <rosparam param="track_list">[1]</rosparam>
+  </node>
+
+  <include file="$(find mocap)/launch/ekf_iris.launch">
+    <arg name="name" value="iris1"/> 
+    <arg name="mocap_id" value="1"/>  
+  </include>
+
+</launch>

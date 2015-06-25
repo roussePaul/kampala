@@ -1,0 +1,7 @@
+uint8 id
+QuadStateSimple past_positions
+QuadStateSimple past_velocities
+float64 time_diff
+---
+bool found_body
+QuadState state

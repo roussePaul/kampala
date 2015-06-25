@@ -1,0 +1,13 @@
+float64 x
+float64 y
+float64 z
+float64 yaw
+float64 x_vel
+float64 y_vel
+float64 z_vel
+float64 yaw_vel
+float64 x_acc
+float64 y_acc
+float64 z_acc
+float64 yaw_acc
+float64 time_diff
