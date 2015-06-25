@@ -85,6 +85,7 @@ def Prepare_For_Flight():
 
 
 def Within_Boundaries(x,y,z):
+	#Check whether the quad is within the safety area
 	shape = rospy.get_param('security_guard/shape','cube')
 	centerx = float(rospy.get_param('security_guard/centerx',0.0))
 	centery = float(rospy.get_param('security_guard/centery',0.0))
@@ -110,15 +111,12 @@ def Security_Check(current_point):
 			if Within_Boundaries(current_point.x,current_point.y,current_point.z):
 				keep_controller=True
 			else:
-				rospy.logwarn('['+NODE_NAME+']: Outside of the boundaries. Ask for landing!')
 				keep_controller=False
 				return keep_controller
 		else:
-			rospy.logwarn('['+NODE_NAME+']: Body not found. Ask for landing!')
 			keep_controller=False
 			return keep_controller
 	else:
-		rospy.logwarn('['+NODE_NAME+']: Mocap time out. Ask for landing!')
 		keep_controller=False
 		return keep_controller
 
@@ -218,7 +216,6 @@ if __name__=='__main__':
 	while not rospy.is_shutdown():
 		controller_on=Security_Check(current_point)
 		if trajectory_done.is_done:
-			rospy.logwarn('['+NODE_NAME+']: Trajectory done')
 			controller_on=False
 
 		if controller_on:
@@ -228,7 +225,6 @@ if __name__=='__main__':
 			if controller_permission.permission:
 				rospy.logerr('['+NODE_NAME+']: Initiate landing mode')
 
-			rospy.logerr('['+NODE_NAME+']: Landing mode')
 			lander_permission.permission=True
 			controller_permission.permission=False
 			while not rospy.is_shutdown():

@@ -23,13 +23,13 @@ CONTROL_MIN=1000
 CONTROL_NEUTRAL=1500
 CONTROL_MAX=2000
 CONTROL_ARMING_MIN=1025
-CONTROL_CANCEL_GRAVITY=1420 #Around 1565, but to be on the safe side...
+CONTROL_CANCEL_GRAVITY=1545 #Might have to be changed for different quads!
 
 #Controller parameters
-Ktt=500/(20*math.pi/180)
-Kphi=500/(20*math.pi/180)
+Ktt=1000/(20*math.pi/180)
+Kphi=1000/(20*math.pi/180)
 
-w=1.2
+w=1.3
 x_i=math.sqrt(2)/2
 Kp=w*w
 Kv=2*x_i*w
@@ -39,7 +39,7 @@ K_yaw=2
 w_inf=5
 
 I_lim=0.5
-K_i=1.0
+K_i=7
 #*************************************
 
 
@@ -197,6 +197,7 @@ def Get_Permission(data,instruction_obj):
 def Wait_For_First_Point(target_obj,channel,data,rate):
 	rospy.loginfo('['+NODE_NAME+']: Waiting for first point ...')
 	while not target_obj.first_point_received:
+		#publish low value on the throttle channel, so the drone does not disarm while waiting
 		channel.publish(data)
 		rate.sleep()
 
@@ -239,11 +240,13 @@ if __name__=='__main__':
 	rospy.Subscriber('security_guard/controller',Permission,Get_Permission,instr)
 
 	data_init=OverrideRCIn()
-	command=[0,0,0,CONTROL_ARMING_MIN,0,0,0,0]
+	command=[0,0,CONTROL_ARMING_MIN,0,0,0,0,0]
 	data_init.channels=command
 
+	#Wait until the security guard is online
 	Wait_For_Security_Guard(instr)
 
+	#integral term initialized to 0
 	d_updated=0
 
 	while not rospy.is_shutdown():
@@ -261,7 +264,7 @@ if __name__=='__main__':
 		#implement the PID controller
 		command_controlled,d_updated=PID(x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,time_diff,d_updated)
 
-		#If OK from security guard, publish the messages
+		#If OK from security guard, publish the messages via Mavros to the drone
 		if instr.permission:
 			data=OverrideRCIn()
 			data.channels=command_controlled

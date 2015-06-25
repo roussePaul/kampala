@@ -50,4 +50,3 @@ if __name__ == '__main__':
     pub_actual_marker = rospy.Publisher('visualizer/actual_marker',PoseStamped, queue_size=10)
     pub_planned_marker = rospy.Publisher('visualizer/planned_marker',PoseStamped, queue_size=10)
     listener()
-

@@ -74,7 +74,7 @@ def Get_Topic_Names(bodies):
 	a=len(bodies)
 	result=[]
 	for i in range(0,a):
-		result.append('body_data_filtered/id_'+str(bodies[i]))
+		result.append('body_data/id_'+str(bodies[i]))
 
 	return(result)
 
@@ -136,8 +136,8 @@ def Add_Data(input_signal,current_data):
 	input_signal.append(current_data)
 
 def Apply_Filter_sig(sig,deltaT,T):
-	N=4
-	return np.mean(sig[len(sig)-N:len(sig)])
+	#N=10
+	#return np.mean(sig[len(sig)-N:len(sig)])
 	if len(sig):
 		i = 0
 		t=0.0
@@ -220,7 +220,7 @@ class GetData:
 			self.mocap_past_data[i]=mocap_data_derived
 
 if __name__=="__main__":
-	rospy.init_node("ros_mocap_filtered")
+	rospy.init_node("ros_mocap")
 	Qs=mocap.Mocap(info=0)
 	bodies=Qs.get_updated_bodies()
 	if(bodies=="off"):

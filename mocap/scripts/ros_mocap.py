@@ -1,110 +1,160 @@
 #!/usr/bin/env python
-#Vinzenz Minnig, 2015
 
-#imports the data from the Qualysis motion capture system into the ROS space
-#data has to be requested by a service that this node provides
-#the different services are:
-#	get_available_bodies()		-> 	returns a list of avalable bodies by their id
-#	get_data(body_id)			-> 	returns all the data from a specific body (body id passed as an argument)
-#									the returned data is in the service format BodyData, which contains
-#									x,y,z,pitch,roll,yaw
-
-import sys
 import rospy
-import numpy
+import mocap_source
+import sys
+import ast
+import sml_setup
 
 from mocap.msg import QuadPosition
-from mocap.srv import Bodies
-from mocap.srv import BodyData
-from gazebo_msgs.msg import ModelStates
-from geometry_msgs.msg import Pose
+from mocap.msg import QuadPositionDerived
 
-from rotmat import Vector3, Matrix3
-from math import radians, degrees
+#************Constants********************
+NODE_NAME='MOCAP'
+#*****************************************
 
 
-def quat_to_dcm(q1, q2, q3, q4):
-	'''convert quaternion to DCM'''
-	q3q3 = q3 * q3
-	q3q4 = q3 * q4
-	q2q2 = q2 * q2
-	q2q3 = q2 * q3
-	q2q4 = q2 * q4
-	q1q2 = q1 * q2
-	q1q3 = q1 * q3
-	q1q4 = q1 * q4
-	q4q4 = q4 * q4
-
-	m = Matrix3()
-	m.a.x = 1.0-2.0*(q3q3 + q4q4)
-	m.a.y =   2.0*(q2q3 - q1q4)
-	m.a.z =   2.0*(q2q4 + q1q3)
-	m.b.x =   2.0*(q2q3 + q1q4)
-	m.b.y = 1.0-2.0*(q2q2 + q4q4)
-	m.b.z =   2.0*(q3q4 - q1q2)
-	m.c.x =   2.0*(q2q4 - q1q3)
-	m.c.y =   2.0*(q3q4 + q1q2)
-	m.c.z = 1.0-2.0*(q2q2 + q3q3)
-	return m
-
-class Mocap:
+class Time():
 	def __init__(self):
-		self.bodies = []
-		self.start_services()
-		self.start_subscribes()
-		rospy.spin()
+		self.current_time=rospy.Time.now()
+		self.past_time=self.current_time
+		self.time_diff=0
 
-	def get_bodies(self,arg):
-		num_bodies = len(self.bodies.name)
-		return {'list':range(num_bodies)}
+	def get_time_diff(self):
+		self.past_time=self.current_time
+		self.current_time=rospy.Time.now()
+		d_time=self.current_time-self.past_time
+		self.time_diff=d_time.secs+(d_time.nsecs/1E9)
+
+		return self.time_diff
 
 
-	def get_data(self,body):
-		data = QuadPosition()
 
-		body_id = body.id
+def Get_Body_Data(body_id):
+	bodies=Qs.get_updated_bodies()
+	body_length=len(bodies)
+	body_indice=-1
 
-		data.found_body = False
-		
-		if self.bodies==[]:
-			rospy.logerr("Gazebo not started")
-		else:
-			if hasattr(self.bodies,'name'):
-				if body_id<len(self.bodies.name):
-					data.found_body=True
-					data.x=self.bodies.pose[body_id].position.x
-					data.y=self.bodies.pose[body_id].position.y
-					data.z=self.bodies.pose[body_id].position.z
-					x = self.bodies.pose[body_id].orientation.x
-					y = self.bodies.pose[body_id].orientation.y
-					z = self.bodies.pose[body_id].orientation.z
-					w = self.bodies.pose[body_id].orientation.w
+	if isinstance(bodies,list):
+		for i in range(0,body_length):
+			if(bodies[i]['id']==body_id):
+				body_indice=i
 
-					dcm = quat_to_dcm(w,x,y,z)
-					(roll,pitch,yaw) = dcm.to_euler()
+	data=QuadPosition()
 
-					data.pitch=degrees(pitch)
-					data.roll=degrees(roll)
-					data.yaw=degrees(yaw)
-					
-					print "Sending data for the body with id: "+str(body_id)
-				else:
-					print 'Body not found'
-			
+	if(body_indice==-1):
+		data.found_body=False
 		return(data)
+	
+	
+	data.found_body=True
+	data.x=bodies[body_indice]["x"]
+	data.y=bodies[body_indice]["y"]
+	data.z=bodies[body_indice]["z"]
+	data.pitch=bodies[body_indice]["pitch"]
+	data.roll=bodies[body_indice]["roll"]
+	data.yaw=bodies[body_indice]["yaw"]
 
-	def update_positions(self,msg):
-		self.bodies = msg
+	return(data)
 
-	def start_services(self):
-		gb=rospy.Service("mocap_get_bodies",Bodies,self.get_bodies)
-		gd=rospy.Service("mocap_get_data",BodyData,self.get_data)
 
-	def start_subscribes(self):
-		rospy.Subscriber("/gazebo/model_states",ModelStates,self.update_positions)
+def Get_Topic_Names(bodies):
+	a=len(bodies)
+	result=[]
+	for i in range(0,a):
+		result.append('body_data/id_'+str(bodies[i]))
+
+	return(result)
+
+
+def Get_Publishers(topic_array):
+	a=len(topic_array)
+	result=[]
+	for i in range(0,a):
+		result.append(rospy.Publisher(topic_array[i],QuadPositionDerived,queue_size=10))
+
+	return(result)
+
+
+def Insert_Current_Data(current_data):
+	result=QuadPositionDerived()
+	result.found_body=current_data.found_body
+	result.x=current_data.x
+	result.y=current_data.y
+	result.z=current_data.z
+	result.pitch=current_data.pitch
+	result.roll=current_data.roll
+	result.yaw=current_data.yaw
+	return(result)
+
+
+def Compute_Derivative(current,past,time):
+	result=(current-past)/time
+	return(result)
+
+
+def Get_Derived_Data(current_data,past_data,time):
+	result=Insert_Current_Data(current_data)
+	result.x_vel=Compute_Derivative(current_data.x,past_data.x,time)
+	result.y_vel=Compute_Derivative(current_data.y,past_data.y,time)
+	result.z_vel=Compute_Derivative(current_data.z,past_data.z,time)
+	result.pitch_vel=Compute_Derivative(current_data.pitch,past_data.pitch,time)
+	result.roll_vel=Compute_Derivative(current_data.roll,past_data.roll,time)
+	result.yaw_vel=Compute_Derivative(current_data.yaw,past_data.yaw,time)
+	result.x_acc=Compute_Derivative(result.x_vel,past_data.x_vel,time)
+	result.y_acc=Compute_Derivative(result.y_vel,past_data.y_vel,time)
+	result.z_acc=Compute_Derivative(result.z_vel,past_data.z_vel,time)
+	result.pitch_acc=Compute_Derivative(result.pitch_vel,past_data.pitch_vel,time)
+	result.roll_acc=Compute_Derivative(result.roll_vel,past_data.roll_vel,time)
+	result.yaw_acc=Compute_Derivative(result.yaw_vel,past_data.yaw_vel,time)
+	return(result)
+
+
+def start_publishing():
+	rate=rospy.Rate(30)
+	timer=Time()
+	#Get parameters (all the body ID's that are requested)
+	body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[8,16])
+	if type(body_array) is str:
+		body_array=ast.literal_eval(body_array)
+
+	#Get topic names for each requested body
+	body_topic_array=Get_Topic_Names(body_array)
+
+	#Establish one publisher topic for each requested body
+	topics_publisher=Get_Publishers(body_topic_array)
+
+	#Initialize empty past data list
+	mocap_past_data=[]
+	empty_data=QuadPositionDerived()
+	for i in range(0,len(body_array)):
+		mocap_past_data.append(empty_data)
+
+	while not rospy.is_shutdown():
+
+		delta_time=timer.get_time_diff()
+
+		for i in range(0,len(body_array)):
+			mocap_data=Get_Body_Data(body_array[i])
+			mocap_data_derived=Get_Derived_Data(mocap_data,mocap_past_data[i],delta_time)
+
+			#update past mocap data
+			mocap_past_data[i]=mocap_data_derived
+
+			#Publish data on topic
+			topics_publisher[i].publish(mocap_data_derived)
+
+		rate.sleep()
+
 
 if __name__=="__main__":
-	rospy.init_node("ros_mocap")
-	Mocap()
+	rospy.init_node("ros_mocap_message")
+	Qs=mocap_source.Mocap(info=0)
+	bodies=Qs.get_updated_bodies()
+	if(bodies=="off"):
+		rospy.logerr("No connection to the Qualisys Motion Capture System")
+		sys.exit()
+	else:
+		start_publishing()
 
 #EOF

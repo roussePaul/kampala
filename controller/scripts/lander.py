@@ -18,9 +18,8 @@ def landmode():
     for i in range(0,10):
         if not mode_set:
             try:
-                set_mode = rospy.ServiceProxy('mavros/set_mode', SetMode)
+                set_mode = rospy.ServiceProxy('/mavros/set_mode', SetMode)
                 mode_set = set_mode(base_mode=0, custom_mode='LAND')
-                rospy.loginfo('[LD]: set_mode attempt successful')
             except rospy.ServiceException as ex:
                 rospy.logerr('[LD]: set_mode attempt not successful')
 
