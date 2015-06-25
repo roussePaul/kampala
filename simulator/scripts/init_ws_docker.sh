@@ -3,11 +3,11 @@
 # Create workspace at current location and fetch source repositories
 #
 # License: according to LICENSE.md in the root directory of the PX4 Firmware repository
-source ~/.bashrc
-cd /sitl
 
 set -e
 
+cd /sitl
+source /opt/ros/indigo/setup.bash
 
 WDIR=`pwd`
 WORKSPACE=$WDIR/catkin_ws
