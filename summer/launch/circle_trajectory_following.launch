@@ -31,7 +31,7 @@
   </include>
 
   <group ns="iris1">
-    <node name="circle_gen_acc" pkg="controller" type="circle_gen_acc.py" output="screen"/>
+    <node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" output="screen"/>
   </group>
 
 <!-- GUI -->
