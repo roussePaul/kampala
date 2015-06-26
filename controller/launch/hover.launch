@@ -21,11 +21,11 @@
 
 	<node name="PID_controller" pkg="controller" type="PID_controller.py" output="screen"/>
 
-	<node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" clear_params="true" output="screen"/>
+	<node name="straight_line_class" pkg="trajectory_generator" type="straight_line_class.py" clear_params="true" output="screen"/>
 
 	
 	
-	
+	<node name="rviz" pkg="rviz" type="rviz"/>
 
 	<node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
 
@@ -37,7 +37,6 @@
 	<node name="rqt_plot_z_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/z_velocity" respawn="true"/>
 
 	<node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>
-	<node name="rviz" pkg="rviz" type="rviz"/>
-
+	
 
 </launch>

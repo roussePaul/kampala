@@ -3,7 +3,7 @@
 	<arg name="boundaries_shape" default="cube"/>
 	<arg name="boundaries_centerx" default="0"/>
 	<arg name="boundaries_centery" default="0"/>
-	<arg name="boundaries_side" default="3"/>
+	<arg name="boundaries_side" default="2"/>
 	<arg name="boundaries_radius" default="1"/>
 	<arg name="boundaries_height" default="1"/>
 
@@ -21,11 +21,15 @@
 
 	<node name="PID_controller" pkg="controller" type="PID_controller.py" output="screen"/>
 
-	<node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" clear_params="true" output="screen"/>
+	<node name="trajectory_generator" pkg="trajectory_generator" type="straight_line_class.py" clear_params="true" output="screen">
+		<param name="start_point" value="[0.0,0.0,0.0]"/>
+		<param name="end_point" value="[0.0,1.2,0.6]"/>
+	</node>
+		
 
 	
 	
-	
+	<node name="rviz" pkg="rviz" type="rviz"/>
 
 	<node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
 
@@ -37,7 +41,6 @@
 	<node name="rqt_plot_z_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/z_velocity" respawn="true"/>
 
 	<node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>
-	<node name="rviz" pkg="rviz" type="rviz"/>
-
+	
 
 </launch>

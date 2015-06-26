@@ -27,10 +27,10 @@ class CircleGen:
 
   def get_tilted_circle(self):
     tilted_midpoint = self.inverse_transform(self.midpoint,self.theta) 
-    a_max = 0.6**2.0/0.8
-    v_max = (self.radius*a_max)**(0.5)
-    if self.velo > v_max:
-      self.velo = v_max
+    #a_max = 0.6**2.0/0.8
+    #v_max = (self.radius*a_max)**(0.5)
+    #if self.velo > v_max:
+     # self.velo = v_max
     start_point = self.go_to_start(tilted_midpoint)
     pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
     sec_pub = rospy.Publisher('trajectory_gen/done', Permission, queue_size=10)
