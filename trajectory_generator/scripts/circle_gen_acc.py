@@ -24,7 +24,6 @@ class CircleGen:
     self.radius = rospy.get_param("trajectory_generator/radius",0.8)
     self.velo = rospy.get_param("trajectory_generator/velo",0.4)
     self.theta = rospy.get_param("trajectory_generator/theta",0)
-
   def get_tilted_circle(self):
     tilted_midpoint = self.inverse_transform(self.midpoint,self.theta) 
     a_max = 0.6**2.0/0.8

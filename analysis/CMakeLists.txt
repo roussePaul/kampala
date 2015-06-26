@@ -1,15 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(summer)
+project(analysis)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  std_msgs
-  message_generation
-  mav_msgs
-  mavros
-)
+find_package(catkin REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -18,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -65,13 +60,11 @@ catkin_python_setup()
 #   Action2.action
 # )
 
-# Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  mavros
-  mav_msgs
-)
+## Generate added messages and services with any dependencies listed here
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs  # Or other packages containing msgs
+# )
 
 ###################################
 ## catkin specific configuration ##
@@ -84,12 +77,8 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES summer
-  CATKIN_DEPENDS 
-  message_runtime
-  std_msgs
-  mavros
-  mav_msgs
+#  LIBRARIES analysis
+#  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
 
@@ -100,24 +89,21 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
 
 ## Declare a cpp library
-# add_library(summer
-#   src/${PROJECT_NAME}/summer.cpp
+# add_library(analysis
+#   src/${PROJECT_NAME}/analysis.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(summer_node src/summer_node.cpp)
+# add_executable(analysis_node src/analysis_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(summer_node summer_generate_messages_cpp)
+# add_dependencies(analysis_node analysis_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(summer_node
+# target_link_libraries(analysis_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -136,7 +122,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS summer summer_node
+# install(TARGETS analysis analysis_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -161,7 +147,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_summer.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_analysis.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

@@ -15,7 +15,7 @@
 
 <!-- IRIS 1 LAUNCH -->
   <rosparam param="/rviz_mocap/qualysis_id">1</rosparam>
-  <include file="$(find summer)/launch/iris_nodes.launch">
+  <include file="$(find scenarios)/launch/iris_nodes.launch">
     <arg name="ns" value="iris1"/>
 
     <arg name="simulation" value="true"/>
@@ -35,7 +35,7 @@
   </group>
 
 <!-- GUI -->
-  <include file="$(find summer)/launch/gui.launch">
+  <include file="$(find scenarios)/launch/gui.launch">
     <arg name="body_id" default="1"/>
     <arg name="simulation" default="$(arg simulation)"/>
   </include>

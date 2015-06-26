@@ -23,10 +23,6 @@
 
 	<node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" clear_params="true" output="screen"/>
 
-	
-	
-	
-
 	<node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
 
 	<node name="rqt_plot_x_pos" pkg="rqt_plot" type="rqt_plot" args="error_vis/x_coord" respawn="true"/>

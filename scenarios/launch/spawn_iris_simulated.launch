@@ -24,6 +24,6 @@
     <remap from="odometry" to="odometry_sensor1/odometry" />
   </node>
 
-  <node name="mavros_sim" pkg="summer" type="mavros_sim.py" output="screen"/>
+  <node name="mavros_sim" pkg="scenarios" type="mavros_sim.py" output="screen"/>
 
 </launch>

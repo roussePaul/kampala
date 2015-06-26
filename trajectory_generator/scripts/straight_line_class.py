@@ -11,11 +11,11 @@ from mocap.msg import QuadPositionDerived
 
 class StraightLineGen:
  
-  def __init__(self):
+  def __init__(self,start=[0.0,0.0,0.0],end=[0.0,0.0,0.6]):
     self.done = False
     self.killed = False
-    self.start_point = rospy.get_param("trajectory_generator/start_point",[0.0,0.0,0.0])
-    self.end_point =  rospy.get_param("trajectory_generator/end_point",[0.0,0.0,0.6])
+    self.start_point = rospy.get_param("trajectory_generator/start_point",start)
+    self.end_point =  rospy.get_param("trajectory_generator/end_point",end)
     if type(self.start_point) is str:
       self.start_point = ast.literal_eval(self.start_point)
     if type(self.end_point) is str:

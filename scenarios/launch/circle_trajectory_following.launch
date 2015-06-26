@@ -15,11 +15,11 @@
 
 <!-- IRIS 1 LAUNCH -->
   <rosparam param="/rviz_mocap/qualysis_id">1</rosparam>
-  <include file="$(find summer)/launch/iris_nodes.launch">
+  <include file="$(find scenarios)/launch/iris_nodes.launch">
     <arg name="ns" value="iris1"/>
 
     <arg name="simulation" value="true"/>
-    <arg name="docker" value="docker-iris-2"/>
+    <arg name="docker" value="docker-iris-1"/>
 
     <arg name="suspended_load" value="false"/>
     <arg name="load_link_height" value="1"/> <!-- [m] -->
@@ -31,13 +31,13 @@
   </include>
 
   <group ns="iris1">
-    <node name="straight_line" pkg="controller" type="straight_line_class.py" output="screen"/>
+    <node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" output="screen"/>
   </group>
 
 <!-- GUI -->
   <rosparam param="/gazebo/time_step">0.01</rosparam>
   <rosparam param="/gazebo/max_update_rate">100</rosparam>
-  <include file="$(find summer)/launch/gui.launch">
+  <include file="$(find scenarios)/launch/gui.launch">
     <arg name="body_id" default="1"/>
     <arg name="simulation" default="$(arg simulation)"/>
   </include>
