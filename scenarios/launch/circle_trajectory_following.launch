@@ -10,7 +10,7 @@
 <!-- MOCAP -->
   <rosparam param="/body_array">[1]</rosparam>
   <rosparam param="/body_names">["iris1"]</rosparam>
-  <node name="ros_mocap" pkg="mocap" type="ros_mocap_message.py" respawn="true" output="screen">
+  <node name="ros_mocap" pkg="mocap" type="ros_mocap_message.py" respawn="true">
   </node>
 
 <!-- IRIS 1 LAUNCH -->
