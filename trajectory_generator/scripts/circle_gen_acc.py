@@ -34,7 +34,6 @@ class CircleGen:
     pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
     sec_pub = rospy.Publisher('trajectory_gen/done', Permission, queue_size=10)
     rospy.init_node('TG',anonymous=True)
-    rospy.sleep(4.)
     r = 10.0
     rate = rospy.Rate(r)
     t_f = self.velo/math.sqrt(a_max**2.0 - self.velo**4.0/self.radius**2.0)
@@ -257,7 +256,6 @@ class CircleGen:
     return outacc
 
 if __name__ == '__main__':
-  rospy.sleep(5.)
   try:
     circle_generator = CircleGen()
     circle_generator.get_tilted_circle()  

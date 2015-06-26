@@ -23,6 +23,9 @@ from math import radians, degrees
 
 from scipy import signal
 
+import analysis
+import utils
+
 def quat_to_dcm(q1, q2, q3, q4):
 	'''convert quaternion to DCM'''
 	q3q3 = q3 * q3
@@ -63,6 +66,7 @@ class Time():
 
 class Mocap:
 	def __init__(self):
+		utils.loginfo('Mocap starting')
 		self.bodies = []
 		self.start_subscribes()
 		self.start_publishing()
@@ -80,7 +84,7 @@ class Mocap:
 		data.found_body = False
 		
 		if self.bodies==[]:
-			rospy.loginfo("Gazebo not started")
+			utils.loginfo("Gazebo not started")
 		else:
 			if hasattr(self.bodies,'name'):
 				if body_id<len(self.bodies.name):
@@ -107,14 +111,13 @@ class Mocap:
 		return(data)
 
 	def update_positions(self,msg):
+		utils.loginfo('receive data from Gazebo')
 		self.bodies = msg
 
 
 	def start_subscribes(self):
+		utils.loginfo('Suscrib')
 		rospy.Subscriber("/gazebo/model_states",ModelStates,self.update_positions)
-
-
-
 
 	def Get_Topic_Names(self,bodies):
 		a=len(bodies)
@@ -171,6 +174,9 @@ class Mocap:
 
 
 	def start_publishing(self):
+		
+		utils.loginfo('start publishing')
+		
 		rate=rospy.Rate(30)
 		timer=Time()
 		#Get parameters (all the body ID's that are requested)
@@ -211,9 +217,11 @@ class Mocap:
 
 			rate.sleep()
 
+		utils.logwarn('Mocap stop publishing')
+
 
 if __name__=="__main__":
-	rospy.init_node("ros_mocap_message")
+	rospy.init_node("ros_mocap")
 	Mocap()
 
 #EOF
