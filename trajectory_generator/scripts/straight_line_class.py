@@ -12,6 +12,7 @@ from mocap.msg import QuadPositionDerived
 class StraightLineGen:
  
   def __init__(self,start=[0.0,0.0,0.0],end=[0.0,0.0,0.6]):
+    print("uber")
     self.done = False
     self.killed = False
     self.start_point = rospy.get_param("trajectory_generator/start_point",start)
@@ -32,8 +33,6 @@ class StraightLineGen:
     pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
     r = 10
     rate = rospy.Rate(r)
-    self.adjust_yaw(pub,e_t)
-    rospy.sleep(0.5)
     time = 0.0
     while not rospy.is_shutdown() and not self.done:      #OBS: exits when the final position is reached
       if time < t_f:
@@ -96,7 +95,8 @@ class StraightLineGen:
 
   def get_yaw(self,e_t):
     yaw = math.acos(e_t[0])
-    return math.degrees(yaw)
+    #return math.degrees(yaw)
+    return 0
 
   def get_velocity(self,dist, e_t, t, t_f, c):
     outvelo = [0.0,0.0,0.0]

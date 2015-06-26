@@ -163,13 +163,13 @@ def PID(x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
 	pitch=CONTROL_NEUTRAL-Ktt*math.asin(AUX_rot[0]/norm_AUX)
 	roll=CONTROL_NEUTRAL-Kphi*math.asin(AUX_rot[1]/norm_AUX)
 
-	if pitch<1350 or pitch>1650:
+	if pitch<1400 or pitch>1600:
 		print('Pitch saturated')
-                print(pitch)
+                #print(pitch)
 
-	if roll<1350 or roll>1650:
+	if roll<1400 or roll>1600:
 		print('Roll saturated')
-                print(roll)
+                #print(roll)
 
 	#Implement some saturation
 	throttle=Saturation(throttle,1000,2000)

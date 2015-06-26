@@ -29,7 +29,7 @@ CONTROL_CANCEL_GRAVITY=1545 #Might have to be changed for different quads!
 Ktt=1000/(20*math.pi/180)
 Kphi=1000/(20*math.pi/180)
 
-w=1.3
+w=1.2
 x_i=math.sqrt(2)/2
 Kp=w*w
 Kv=2*x_i*w
@@ -163,18 +163,18 @@ def PID(x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
 	pitch=CONTROL_NEUTRAL-Ktt*math.asin(AUX_rot[0]/norm_AUX)
 	roll=CONTROL_NEUTRAL-Kphi*math.asin(AUX_rot[1]/norm_AUX)
 
-	if pitch<1330 or pitch>1670:
+	if pitch<1400 or pitch>1600:
 		print('Pitch saturated')
-                print(pitch)
+                #print(pitch)
 
-	if roll<1330 or roll>1670:
+	if roll<1400 or roll>1600:
 		print('Roll saturated')
-                print(roll)
+                #print(roll)
 
 	#Implement some saturation
 	throttle=Saturation(throttle,1000,2000)
-	pitch=Saturation(pitch,1330,1670)
-	roll=Saturation(roll,1330,1670)
+	pitch=Saturation(pitch,1350,1650)
+	roll=Saturation(roll,1350,1650)
 
 	return [roll,pitch,throttle,yaw,0,0,0,0],new_d
 

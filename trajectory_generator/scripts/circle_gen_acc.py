@@ -24,16 +24,17 @@ class CircleGen:
     self.radius = rospy.get_param("trajectory_generator/radius",0.8)
     self.velo = rospy.get_param("trajectory_generator/velo",0.4)
     self.theta = rospy.get_param("trajectory_generator/theta",0)
+
   def get_tilted_circle(self):
     tilted_midpoint = self.inverse_transform(self.midpoint,self.theta) 
     a_max = 0.6**2.0/0.8
     #v_max = (self.radius*a_max)**(0.5)
     #if self.velo >= v_max:
      # self.velo = 0.9*v_max
-    start_point = self.go_to_start(tilted_midpoint)
-    pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
-    sec_pub = rospy.Publisher('trajectory_gen/done', Permission, queue_size=10)
     rospy.init_node('TG',anonymous=True)
+    pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
+    start_point = self.go_to_start(tilted_midpoint,pub)
+    sec_pub = rospy.Publisher('trajectory_gen/done', Permission, queue_size=10)
     rospy.sleep(4.)
     r = 10.0
     rate = rospy.Rate(r)
@@ -68,9 +69,7 @@ class CircleGen:
         end_pos = self.decallerate(pub,a_max,self.radius, self.velo, tilted_midpoint, time)
         rospy.set_param("trajectory_generator/start_point",end_pos)
         rospy.set_param("trajectory_generator/end_point",[0.0,0.0,0.6])
-        rospy.sleep(2.)
         sl_gen = StraightLineGen() 
-        rospy.sleep(4.)
         sl_gen.generate()
         rospy.sleep(4.)
         #self.turn(pub, [0.0,0.0,0.6],0)
@@ -123,13 +122,31 @@ class CircleGen:
         yaw += 2*math.pi
     return 0    
 
-  def go_to_start(self,midpoint):
+  def go_to_start(self,midpoint,pub):
+    r = 10.0
+    rate = rospy.Rate(r)
+    for i in range(0,15*int(r)):
+      out_msg = QuadPositionDerived()
+      out_msg.x = 0.
+      out_msg.y = 0.
+      out_msg.z = 0.6
+      out_msg.yaw = 0
+      out_msg.x_vel = 0.  
+      out_msg.y_vel = 0.
+      out_msg.z_vel = 0.
+      out_msg.yaw_vel = 0
+      out_msg.x_acc = 0.
+      out_msg.y_acc = 0.
+      out_msg.z_acc = 0.
+      out_msg.yaw_acc = 0
+      pub.publish(out_msg)
+      rate.sleep()
     target_point = [0.0,0.0,0.0]
     target_point[0] = midpoint[0] + self.radius
     target_point[1] = midpoint[1]
     target_point[2] = midpoint[2]
     outpos = self.transform_coordinates(target_point,self.theta)
-    rospy.set_param("trajectory_generator/start_point",[0.0,0.0,0.2])
+    rospy.set_param("trajectory_generator/start_point",[0.0,0.0,0.6])
     rospy.set_param("trajectory_generator/end_point",outpos)
     sl_gen = StraightLineGen()
     sl_gen.generate()
@@ -257,7 +274,7 @@ class CircleGen:
     return outacc
 
 if __name__ == '__main__':
-  rospy.sleep(5.)
+
   try:
     circle_generator = CircleGen()
     circle_generator.get_tilted_circle()  
