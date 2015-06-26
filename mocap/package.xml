@@ -47,6 +47,8 @@
   <run_depend>gazebo_msgs</run_depend>
   <build_depend>geometry_msgs</build_depend>
   <run_depend>geometry_msgs</run_depend>
+  <build_depend>analysis</build_depend>
+  <run_depend>analysis</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

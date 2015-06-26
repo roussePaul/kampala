@@ -274,7 +274,6 @@ class CircleGen:
     return outacc
 
 if __name__ == '__main__':
-
   try:
     circle_generator = CircleGen()
     circle_generator.get_tilted_circle()  
