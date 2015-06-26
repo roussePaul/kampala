@@ -31,7 +31,7 @@ class CircleGen:
     #v_max = (self.radius*a_max)**(0.5)
     #if self.velo >= v_max:
      # self.velo = 0.9*v_max
-    rospy.init_node('TG',anonymous=True)
+    rospy.init_node('TG')
     pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
     start_point = self.go_to_start(tilted_midpoint,pub)
     sec_pub = rospy.Publisher('trajectory_gen/done', Permission, queue_size=10)

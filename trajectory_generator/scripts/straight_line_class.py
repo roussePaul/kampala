@@ -29,7 +29,7 @@ class StraightLineGen:
     e_t = self.get_direction(self.start_point, self.end_point)
     t_f = math.sqrt(6*dist/0.9*a_max)
     constant = -2.0/t_f**3.0 * dist
-    rospy.init_node('TG',anonymous=True)
+    rospy.init_node('TG')
     pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
     r = 10
     rate = rospy.Rate(r)

@@ -15,7 +15,7 @@ import math
 
 
 def listener():
-    rospy.init_node('visualizer', anonymous=True)
+    rospy.init_node('visualizer')
     rospy.Subscriber('trajectory_gen/target',QuadPositionDerived, planned_path_converter)
     rospy.Subscriber('security_guard/data_forward',QuadPositionDerived, actual_path_converter) # change?
     rospy.spin()

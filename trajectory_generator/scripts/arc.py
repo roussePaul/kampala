@@ -44,7 +44,7 @@ class ArcGenerator:
       self.velo = v_max
     w = self.radius * self.velo
     pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
-    rospy.init_node('TG',anonymous=True)
+    rospy.init_node('TG')
     theta_z = self.tg.get_projection([0,0,1],self.e_n)
     r = 10.0
     rate = rospy.Rate(r)

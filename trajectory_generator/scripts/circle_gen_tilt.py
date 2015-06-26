@@ -29,7 +29,7 @@ def get_tilted_circle():
   elif not test and velo > v_max:
     velo = v_max
   pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
-  rospy.init_node('circle_gen_tilt',anonymous=True)
+  rospy.init_node('circle_gen_tilt')
   r = 25
   rate = rospy.Rate(r)
   time = 0.0

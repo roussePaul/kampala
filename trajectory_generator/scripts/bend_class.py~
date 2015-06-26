@@ -44,7 +44,7 @@ class CircleGen:
     if self.velo > v_max:
       self.velo = v_max
     pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
-    rospy.init_node('TG',anonymous=True)
+    rospy.init_node('TG')
     r = 25
     rate = rospy.Rate(r)
     period = self.psi*self.radius/self.velo

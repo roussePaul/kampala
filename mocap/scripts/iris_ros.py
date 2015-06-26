@@ -56,7 +56,7 @@ class IrisRos(Aircraft):
             "/iris/vehicle_local_position"  : (self.pos_cb, px4.vehicle_local_position),
             }
         
-        rospy.init_node('ArduPilot', anonymous=True)
+        rospy.init_node('ArduPilot')
         for topic in topics.keys():
             (callback, msgtype) = topics[topic]
             rospy.Subscriber(topic, msgtype, callback)
