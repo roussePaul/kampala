@@ -32,7 +32,7 @@ def planned_path_converter(quadstate):
 
 # Publishes actual path
 def actual_path_converter(quadstate):
-    quat = tf.transformations.quaternion_from_euler(math.radians(quadstate.roll), math.radians(quadstate.pitch), math.radians(quadstate.yaw)+math.pi/2)
+    quat = tf.transformations.quaternion_from_euler(math.radians(quadstate.roll), math.radians(quadstate.pitch), math.radians(quadstate.yaw))
     pose = Pose(Point(quadstate.x, quadstate.y, quadstate.z), Quaternion(*quat))
     pose_stamped = PoseStamped(Header(0, rospy.Time.now(), "/map"), pose)
     actual_path.poses.append(pose_stamped)

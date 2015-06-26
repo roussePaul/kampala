@@ -19,7 +19,7 @@
     <arg name="ns" value="iris1"/>
 
     <arg name="simulation" value="true"/>
-    <arg name="docker" value="docker-iris-2"/>
+    <arg name="docker" value="docker-iris-1"/>
 
     <arg name="suspended_load" value="false"/>
     <arg name="load_link_height" value="1"/> <!-- [m] -->
