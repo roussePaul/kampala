@@ -14,11 +14,12 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>analysis</run_depend>
   <run_depend>controller</run_depend>
-  <run_depend>docker</run_depend>
   <run_depend>mocap</run_depend>
-  <run_depend>summer</run_depend>
+  <run_depend>scenarios</run_depend>
   <run_depend>simulator</run_depend>
+  <run_depend>trajectory_generator</run_depend>
 
   <export>
     <metapackage/>
