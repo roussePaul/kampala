@@ -8,6 +8,10 @@
   <arg name="simulation" default="false"/>
 
 <!-- MOCAP -->
+  <rosparam param="/body_array">[1]</rosparam>
+  <rosparam param="/body_names">["iris1"]</rosparam>
+  <node name="ros_mocap" pkg="mocap" type="ros_mocap_message.py" respawn="true">
+  </node>
 
 <!-- IRIS 1 LAUNCH -->
   <include file="$(find scenarios)/launch/iris_nodes.launch">
@@ -21,6 +25,7 @@
 
     <arg name="rviz" value="true"/> 
   </include>
+  
   <group ns="iris2">
     <node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" output="screen"/>
   </group>

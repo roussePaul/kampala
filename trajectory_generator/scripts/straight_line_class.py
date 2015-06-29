@@ -3,151 +3,108 @@ import rospy
 import sys
 import ast
 import math
+from trajectory import Trajectory
 from controller.msg import Permission
 from mocap.msg import QuadPositionDerived
-
+from trajectory_generato import TrajectoryGenerator
+from Trajectory_node import TrajectoryNode
 #generates a straight line between startpoint and endpoint with velocity zero at the start and endpoint
 #respects constraints on acceleration
 
-class StraightLineGen:
+class StraightLineGen(Trajectory):
+  
+  done = False
+  a_max = 9.81/3.
  
-  def __init__(self,start=[0.0,0.0,0.0],end=[0.0,0.0,0.6]):
-    print("uber")
-    self.done = False
-    self.killed = False
-    self.start_point = rospy.get_param("trajectory_generator/start_point",start)
-    self.end_point =  rospy.get_param("trajectory_generator/end_point",end)
-    if type(self.start_point) is str:
-      self.start_point = ast.literal_eval(self.start_point)
-    if type(self.end_point) is str:
-      self.end_point = ast.literal_eval(self.end_point)
-    self.sec_pub = rospy.Publisher('trajectory_gen/done',Permission,queue_size=10)
 
-  def generate(self):
-    a_max = 9.81/3.0
-    dist = self.get_distance(self.start_point, self.end_point)
-    e_t = self.get_direction(self.start_point, self.end_point)
-    t_f = math.sqrt(6*dist/0.9*a_max)
-    constant = -2.0/t_f**3.0 * dist
-    rospy.init_node('TG')
-    pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
-    r = 10
-    rate = rospy.Rate(r)
-    time = 0.0
-    while not rospy.is_shutdown() and not self.done:      #OBS: exits when the final position is reached
-      if time < t_f:
-        outpos = self.get_position(self.start_point, dist, e_t, time, t_f, constant)
-        outvelo = self.get_velocity(dist, e_t, time, t_f, constant)
-        outacc = self.get_acceleration(dist, e_t, time, t_f, constant)
-        yaw = 0
-        out_msg = self.get_message(outpos, 0, outvelo, outacc)
-        pub.publish(out_msg)
-        self.sec_pub.publish(Permission(False))
-        time += 1.0/r
-        rate.sleep()
-      else:
-        out_msg = self.get_message(self.end_point, 0, [0.0,0.0,0.0], [0.0,0.0,0.0])
-        self.sec_pub.publish(Permission(False))
-        pub.publish(out_msg)
-        self.done = True
-        rate.sleep()
-
-  def get_distance(self,a,b):
-    dist_squared = 0
+  def __init__(self,trajectory_node,start,end):
+    Trajectory.__init__(self,trajectory_node)
+    self.start_point = start
+    self.end_point = end
+    self.tg = TrajectoryGenerator()
+    self.dist = self.tg.get_distance(self.start_point, self.end_point)
+    n = [0.,0.,0.]
     for i in range(0,3):
-      dist_squared += (a[i] - b[i])**2.0
-    dist = math.sqrt(dist_squared)
-    return dist
+      n[i] = self.end_point[i] - self.start_point[i]
+    self.e_t = self.tg.get_direction(n) 
+    self.t_f = math.sqrt(6*self.dist/0.9*self.a_max)
+    self.constant = -2.0/self.t_f**3.0 * self.dist
+    
 
-  def get_message(self,outpos, yaw, outvelo, outacc):
-    msg = QuadPositionDerived()
-    msg.x = outpos[0]
-    msg.y = outpos[1]
-    msg.z = outpos[2]
-    msg.yaw = 0
-    msg.x_vel = outvelo[0]
-    msg.y_vel = outvelo[1]
-    msg.z_vel = outvelo[2]
-    msg.yaw_vel = 0
-    msg.x_acc = outacc[0]
-    msg.y_acc = outacc[1]  
-    msg.z_acc = outacc[2]
-    msg.yaw_acc = 0
-    return msg  
-  
+  def begin(self):
+    self.__set_done(False)
 
-  def get_direction(self,a, b):
-    norm = self.get_distance(a,b)
-    e_t = [0.0,0.0,0.0]
-    for j in range(0,3):
-      e_t[j] = (b[j] - a[j])/norm
-    return e_t
+  def loop(self,start_time):
+    r = 10.0
+    rate = rospy.Rate(10)
+    time = start_time
+    while not rospy.is_shutdown() and not self.is_done():
+      outpos = self.get_position(time)
+      outpos.append(0)
+      outvelo = self.get_velocity(time)
+      outvelo.append(0)
+      outacc = self.get_acceleration(time)
+      outacc.append(0)
+      outmsg = self.tg.get_message(outpos, outvelo, outacc)
+      self.trajectory_node.send_msg(outmsg)
+      self.trajectory_node.send_permission(False)
+      rate.sleep()
+      time += 1/r
+      if time >= self.t_f:
+        self.__set_done(True)
+        end = self.end_point
+        end.append(0)
+        outmsg = self.tg.get_message(self.end_point, [0.0,0.0,0.0,0.0], [0.0,0.0,0.0,0.0])
+        self.trajectory_node.send_msg(outmsg)
+        self.trajectory_node.send_permission(False)
+
+      
+  def __set_done(self,boolean):
+    self.done = boolean
+
   
-  def get_position(self,start, dist, e_t, t, t_f, c):
+  
+  def get_position(self,t):
     outpos = [0.0,0.0,0.0]
-    s = self.get_s(t, t_f, c)
+    s = self.get_s(t)
     for i in range(0,3):
-      outpos[i] = start[i] + s * e_t[i]
+      outpos[i] = self.start_point[i] + s * self.e_t[i]
     return outpos
 
-  def get_s(self,t, t_f, c):
-    return t**2.0 * c * (t-1.5*t_f)
+  def get_s(self,t):
+    return t**2.0 * self.constant * (t-1.5*self.t_f)
 
-  def get_yaw(self,e_t):
-    yaw = math.acos(e_t[0])
-    #return math.degrees(yaw)
-    return 0
 
-  def get_velocity(self,dist, e_t, t, t_f, c):
+  def get_velocity(self,t):
     outvelo = [0.0,0.0,0.0]
-    s_d = self.get_s_d(t, t_f, c)
+    s_d = self.get_s_d(t)
     for i in range(0,3):
-      outvelo[i] = s_d * e_t[i]
+      outvelo[i] = s_d * self.e_t[i]
     return outvelo
 
-  def get_s_d (self,t, t_f, c):
-    return c * (3 * t**2.0 - 3 * t_f * t)
+  def get_s_d (self,t):
+    return self.constant * (3 * t**2.0 - 3 * self.t_f * t)
 
-  def get_acceleration(self,dist, e_t, t, t_f, c):
+  def get_acceleration(self,t):
     outacc = [0.0,0.0,0.0]
-    s_dd = self.get_s_dd(t, t_f, c)
+    s_dd = self.get_s_dd(t)
     for i in range(0,3):
-      outacc[i] = s_dd * e_t[i]
+      outacc[i] = s_dd * self.e_t[i]
     return outacc
 
-  def get_s_dd (self,t, t_f, c):
-    return c * (6 * t - 3 * t_f )
-  
-  def set_done(self, boolean):
-    self.done = boolean  
+  def get_s_dd (self,t):
+    return self.constant * (6 * t - 3 * self.t_f )
 
   def is_done(self):
     return self.done
-  
-  def set_killed(self, boolean):
-    self.killed = boolean
-
-  def is_killed(self):
-    return self.killed
-
-  def adjust_yaw(self,pub, e_t):
-    out = self.get_message(self.start_point, self.get_yaw(e_t), [0,0,0], [0,0,0])
-    pub.publish(out)
-
-  def land(self):
-    self.sec_pub.publish(True)
-
 
 
 if __name__ == '__main__':
-  rospy.sleep(5)
   try:
-    StraightLineGen().generate()
+    rospy.sleep(3.)
+    StraightLineGen(TrajectoryNode(),[0.,0.,0.2],[0.,0.,0.6]).loop(0.)  
   except rospy.ROSInterruptException:
     pass
-
-
-
 
 
 

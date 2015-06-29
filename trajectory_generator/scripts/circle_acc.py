@@ -9,7 +9,6 @@ from trajectory_generato import TrajectoryGenerator
 from trajectory import Trajectory
 from Trajectory_node import TrajectoryNode
 from straight_line_class import StraightLineGen
-from circle_acc import AccGen
 
 #This script generates the points, velocities and accelerations to be used as a reference for the 
 #controller to to get the quad to move in a circle.
@@ -17,10 +16,11 @@ from circle_acc import AccGen
 #Constraints on maximum velocity and acceleration are used.
 #Everyhthing is calculated in a coordinatesystem that is rotated by an angle of theta about the z-axis of the SML-frame. The method transform_coordinates transforms a vector given in the rotated frame into the corresponding vector in the SML-frame. 
 
-class ArcGen(Trajectory):
+class AccGen(Trajectory):
   
   done = False
   a_max = 0.6**2.0/0.8
+  t_f = 0
   
   def __init__(self,trajectory_node,mid,start,velo,psi):
     Trajectory.__init__(self,trajectory_node)
@@ -47,48 +47,29 @@ class ArcGen(Trajectory):
     
 
   def loop(self, start_time):
+    self.__set_t_f(self.velo/math.sqrt(self.a_max**2.0 - self.velo**4.0/self.radius**2.0))
     time = start_time
     r = 10.0
     rate = rospy.Rate(r)
-    while not rospy.is_shutdown() and not self.is_done():
-      outpos = self.tg.get_circle_point(self.radius,self.w*time)
-      #outpos = self.tg.rotate_vector(outpos,[0,0,self.theta_z])
-      #outpos = self.tg.vector_to_list(outpos)
+    while not rospy.is_shutdown() and not is_done():
+      theta = self.velo*time**2.0/(2*self.radius*t_f)
+      w = self.velo*time/(self.radius*t_f)
+      alpha = self.velo/(self.radius*t_f)
+      outpos = self.tg.get_circle_point(self.radius, theta)
       outpos = self.tg.offset(outpos,self.midpoint)
       outpos.append(self.tg.adjust_yaw([1,0,0]))
-      outvelo = self.tg.get_circle_velocity(self.radius,self.w*time,self.w)
-      #outvelo = self.tg.rotate_vector(outvelo,[0,0,self.theta_z])
-      #outvelo = self.tg.vector_to_list(outvelo)
+      outvelo = self.tg.get_circle_velocity(self.radius,theta,omega)  
       outvelo.append(0)
-      outacc = self.tg.get_circle_acc(self.radius,self.w*time,self.w,0)
-      #outacc = self.tg.rotate_vector(outacc,[0,0,self.theta_z])
-      #outacc = self.tg.vector_to_list(outacc)
+      outacc = self.tg.get_circle_acc(self.radius,theta,omega,alpha)
       outacc.append(0)
       outmsg = self.tg.get_message(outpos,outvelo,outacc)
       self.trajectory_node.send_msg(outmsg)
       self.trajectory_node.send_permission(False)
       rate.sleep()
       time += 1/r
-      if self.w*time >= self.psi:
-        outpos = self.tg.get_circle_point(self.radius,self.psi)
-        #outpos = self.tg.rotate_vector(outpos,[0,0,self.theta_z])
-        #outpos = self.tg.vector_to_list(outpos)
-        outpos = self.tg.offset(outpos,self.midpoint)
-        outpos.append(self.tg.adjust_yaw([1,0,0]))
-        outvelo = self.tg.get_circle_velocity(self.radius,self.psi,self.w)
-        #outvelo = self.tg.rotate_vector(outvelo,[0,0,self.theta_z])
-        #outvelo = self.tg.vector_to_list(outvelo)
-        outvelo.append(0)
-        outacc = self.tg.get_circle_acc(self.radius,self.psi,self.w,0)
-        #outacc = self.tg.rotate_vector(outacc,[0,0,self.theta_z])
-        #outacc = self.tg.vector_to_list(outacc)
-        outacc.append(0)
-        outmsg = self.tg.get_message(outpos,outvelo,outacc)
-        self.trajectory_node.send_msg(outmsg)
-        self.trajectory_node.send_permission(False)
-        rate.sleep()
-        time += 1/r
+      if time >= t_f:
         self.__set_done(True)
+      
 
     
   def is_done(self):
@@ -96,22 +77,11 @@ class ArcGen(Trajectory):
 
   def __set_done(self,boolean):
     self.done = boolean
+
+  def __set_t_f(self,t):
+    self.t_f = t
+
+  def get_t_f(self):
+    return self.t_f
    
-if __name__ == '__main__':
-  try:
-    rospy.sleep(10.)
-    tn = TrajectoryNode()
-    sl_gen_1 = StraightLineGen(tn,[0.,0.,0.2],[0.,0.,0.6])
-    sl_gen_1.loop(0.)
-    rospy.sleep(5.)
-    sl_gen_2 = StraightLineGen(tn,[0.,0.,0.6],[0.8,0.,0.6])
-    sl_gen_2.loop(0.)
-    rospy.sleep(10.)
-    acc_gen = AccGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.4,0.],6*math.pi)
-    t = acc_gen.get_t_f()
-    a_gen = ArcGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.4,0.],6*math.pi)
-    a_gen.loop(t/2.0)
-    
-  except rospy.ROSInterruptException:
-    pass
-  
+

@@ -12,7 +12,6 @@ import sys
 import ast
 import math
 import numpy as np
-from straight_line_class import StraightLineGen
 from numpy import linalg as la
 from mocap.msg import QuadPositionDerived
 
@@ -21,7 +20,6 @@ from mocap.msg import QuadPositionDerived
 class TrajectoryGenerator():
 
   def __init__(self):
-    self.sl_gen = StraightLineGen()  #creates a straightline generator
     pass
 
 #Method that rotates a vector by angles theta = [theta_x, theta_y, theta_z], theta is given in radians
@@ -70,11 +68,6 @@ class TrajectoryGenerator():
     a_y = R*alpha*math.cos(theta) - R*w**2.0*math.sin(theta)
     return[a_x,a_y,0]
 
-#This function generates a straight line between the origin and the vector given as an argument
-  def generate_straight_line(self, vector):
-    rospy.set_param("trajectory_generator/start_point",[0.0,0.0,0.0])
-    rospy.set_param("trajectory_generator/end_point",vector)
-    self.sl_gen.generate()
 
 #This function adjusts the yaw so that the quad faces in the direction of the vector given as a parameter (which does not have to be a unit vector)
 #Observe that this will return 90 degrees if the vector is parallel to the z-axis
@@ -85,6 +78,13 @@ class TrajectoryGenerator():
     
   def get_norm(self,vector):
     return la.norm(vector)
+
+  def get_distance(self,vector1,vector2):
+    vector = [0.,0.,0.]
+    for i in range(0,3):
+      vector[i] = vector1[i] - vector2[i]
+    return la.norm(vector)
+      
 
   def get_direction(self,vector):
     return vector/la.norm(vector)
@@ -107,6 +107,11 @@ class TrajectoryGenerator():
 
   def get_projection(self,vector,e_t):
     return math.acos(np.dot(vector,e_t)/la.norm(vector))
+
+  def vector_to_list(self,vector):
+    vector = vector.tolist()
+    lis = vector[0]
+    return lis
  
 if __name__ == '__main__':
   try:

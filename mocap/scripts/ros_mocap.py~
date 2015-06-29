@@ -9,8 +9,6 @@ import sml_setup
 from mocap.msg import QuadPosition
 from mocap.msg import QuadPositionDerived
 
-import analysis
-import utils
 #************Constants********************
 NODE_NAME='MOCAP'
 #*****************************************
@@ -91,12 +89,8 @@ def Insert_Current_Data(current_data):
 
 
 def Compute_Derivative(current,past,time):
-	if time:
-		result=(current-past)/time
-		return(result)
-	else:
-		utils.logwarn("Infinite derivative.")
-		return 0
+	result=(current-past)/time
+	return(result)
 
 
 def Get_Derived_Data(current_data,past_data,time):
@@ -120,7 +114,7 @@ def start_publishing():
 	rate=rospy.Rate(30)
 	timer=Time()
 	#Get parameters (all the body ID's that are requested)
-	body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[8,16,17])
+	body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[8,16])
 	if type(body_array) is str:
 		body_array=ast.literal_eval(body_array)
 
