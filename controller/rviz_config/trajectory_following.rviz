@@ -6,11 +6,11 @@ Panels:
       Expanded:
         - /Global Options1
         - /Axes1
-        - /Iris 11
         - /Iris 11/Pose1
         - /Iris 11/Pose2
         - /Iris 21/Path1
         - /Iris 21/Path2
+        - /Iris 31/Pose1
       Splitter Ratio: 0.657993
     Tree Height: 542
   - Class: rviz/Selection
@@ -152,6 +152,24 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Iris 2
+    - Class: rviz/Group
+      Displays:
+        - Alpha: 1
+          Axes Length: 1
+          Axes Radius: 0.1
+          Class: rviz/Pose
+          Color: 255; 25; 0
+          Enabled: true
+          Head Length: 0.3
+          Head Radius: 0.1
+          Name: Pose
+          Shaft Length: 1
+          Shaft Radius: 0.05
+          Shape: Arrow
+          Topic: ""
+          Value: true
+      Enabled: true
+      Name: Iris 3
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

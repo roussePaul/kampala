@@ -1,5 +1,0 @@
-<launch>
-
-  <arg name="ns" value="iris1"/>
-
-</launch>
