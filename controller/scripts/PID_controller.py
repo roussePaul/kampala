@@ -29,10 +29,14 @@ CONTROL_CANCEL_GRAVITY=1545 #Might have to be changed for different quads!
 Ktt=1000/(20*math.pi/180)
 Kphi=1000/(20*math.pi/180)
 
-w=1.3
+w=1.1
+w_z = 1.5
 x_i=math.sqrt(2)/2
 Kp=w*w
 Kv=2*x_i*w
+
+Kv_z= w_z*w_z
+Kp_z= 2*x_i*w_z
 
 N_yaw=500
 K_yaw=2
@@ -218,6 +222,8 @@ def Wait_For_Security_Guard(obj):
 	rate=rospy.Rate(30)
 	rospy.loginfo('['+NODE_NAME+']: Waiting for security guard ...')
 	while not obj.start:
+		if rospy.is_shutdown():
+			return 
 		rate.sleep()
 
 

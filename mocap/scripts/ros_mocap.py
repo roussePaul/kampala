@@ -9,6 +9,8 @@ import sml_setup
 from mocap.msg import QuadPosition
 from mocap.msg import QuadPositionDerived
 
+import analysis
+import utils
 #************Constants********************
 NODE_NAME='MOCAP'
 #*****************************************
@@ -89,8 +91,12 @@ def Insert_Current_Data(current_data):
 
 
 def Compute_Derivative(current,past,time):
-	result=(current-past)/time
-	return(result)
+	if time:
+		result=(current-past)/time
+		return(result)
+	else:
+		utils.logwarn("Infinite derivative.")
+		return 0
 
 
 def Get_Derived_Data(current_data,past_data,time):

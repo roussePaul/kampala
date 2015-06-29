@@ -1,0 +1,8 @@
+<launch>
+
+	
+  <arg name="simulation" default="false"/>
+  <include file="$(find mocap)/launch/mocap.launch">
+    <arg name="simulation" value="$(arg simulation)"/>
+  </include>
+</launch>
