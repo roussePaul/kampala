@@ -21,8 +21,6 @@ from geometry_msgs.msg import Pose
 from rotmat import Vector3, Matrix3
 from math import radians, degrees
 
-from scipy import signal
-
 import analysis
 import utils
 

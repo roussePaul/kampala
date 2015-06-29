@@ -38,7 +38,7 @@ class StraightLineGen(Trajectory):
     r = 10.0
     rate = rospy.Rate(10)
     time = start_time
-    while not rospy.is_shutdown() and not self.is_done:
+    while not rospy.is_shutdown() and not self.is_done():
       outpos = self.get_position(time)
       outpos.append(0)
       outvelo = self.get_velocity(time)
@@ -101,6 +101,7 @@ class StraightLineGen(Trajectory):
 
 if __name__ == '__main__':
   try:
+    rospy.sleep(3.)
     StraightLineGen(TrajectoryNode(),[0.,0.,0.2],[0.,0.,0.6]).loop(0.)  
   except rospy.ROSInterruptException:
     pass

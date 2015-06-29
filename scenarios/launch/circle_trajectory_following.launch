@@ -10,7 +10,7 @@
 <!-- MOCAP -->
   <rosparam param="/body_array">[1]</rosparam>
   <rosparam param="/body_names">["iris1"]</rosparam>
-  <node name="ros_mocap" pkg="mocap" type="ros_mocap_message.py" respawn="true" output="screen">
+  <node name="ros_mocap" pkg="mocap" type="ros_mocap_message.py" respawn="true">
   </node>
 
 <!-- IRIS 1 LAUNCH -->
@@ -31,7 +31,7 @@
   </include>
 
   <group ns="iris1">
-    <node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" output="screen"/>
+    <node name="arc" pkg="trajectory_generator" type="arc.py" output="screen"/>
   </group>
 
 <!-- GUI -->
