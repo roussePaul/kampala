@@ -34,7 +34,7 @@ class CircleGen:
     start_point = self.go_to_start(tilted_midpoint)
     pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
     sec_pub = rospy.Publisher('trajectory_gen/done', Permission, queue_size=10)
-    rospy.init_node('TG',anonymous=True)
+    rospy.init_node('TG')
     r = 10.0
     rate = rospy.Rate(r)
     period = 2*math.pi*self.radius/self.velo

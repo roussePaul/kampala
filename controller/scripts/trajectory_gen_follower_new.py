@@ -86,7 +86,7 @@ class Follower:
 
 
 if __name__ == '__main__':
-  rospy.init_node('follower',anonymous=True)
+  rospy.init_node('follower')
   try:
     follower = Follower()
     follower.follow()

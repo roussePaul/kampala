@@ -203,6 +203,7 @@ class Mocap:
 
 			if self.bodies:
 				for i in range(0,len(self.body_array)):
+					utils.loginfo('body ' + str(i))
 					if self.body_names[i] in self.bodies.name:
 						indice = self.bodies.name.index(self.body_names[i])
 

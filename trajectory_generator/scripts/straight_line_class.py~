@@ -16,6 +16,7 @@ class StraightLineGen(Trajectory):
   done = False
   a_max = 9.81/3.
  
+<<<<<<< HEAD
   def __init__(self,trajectory_node,start,end):
     Trajectory.__init__(self,trajectory_node)
     self.start_point = start
@@ -56,6 +57,47 @@ class StraightLineGen(Trajectory):
         outmsg = self.tg.get_message(self.end_point, [0.0,0.0,0.0,0.0], [0.0,0.0,0.0,0.0])
         self.trajectory_node.send_msg(outmsg)
         self.trajectory_node.send_permission(False)
+=======
+  def __init__(self,start=[0.0,0.0,0.0],end=[0.0,0.0,0.6]):
+    print("uber")
+    self.done = False
+    self.killed = False
+    self.start_point = rospy.get_param("trajectory_generator/start_point",start)
+    self.end_point =  rospy.get_param("trajectory_generator/end_point",end)
+    if type(self.start_point) is str:
+      self.start_point = ast.literal_eval(self.start_point)
+    if type(self.end_point) is str:
+      self.end_point = ast.literal_eval(self.end_point)
+    self.sec_pub = rospy.Publisher('trajectory_gen/done',Permission,queue_size=10)
+
+  def generate(self):
+    a_max = 9.81/3.0
+    dist = self.get_distance(self.start_point, self.end_point)
+    e_t = self.get_direction(self.start_point, self.end_point)
+    t_f = math.sqrt(6*dist/0.9*a_max)
+    constant = -2.0/t_f**3.0 * dist
+    rospy.init_node('TG')
+    pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
+    r = 10
+    rate = rospy.Rate(r)
+    time = 0.0
+    while not rospy.is_shutdown() and not self.done:      #OBS: exits when the final position is reached
+      if time < t_f:
+        outpos = self.get_position(self.start_point, dist, e_t, time, t_f, constant)
+        outvelo = self.get_velocity(dist, e_t, time, t_f, constant)
+        outacc = self.get_acceleration(dist, e_t, time, t_f, constant)
+        yaw = 0
+        out_msg = self.get_message(outpos, 0, outvelo, outacc)
+        pub.publish(out_msg)
+        self.sec_pub.publish(Permission(False))
+        time += 1.0/r
+        rate.sleep()
+      else:
+        out_msg = self.get_message(self.end_point, 0, [0.0,0.0,0.0], [0.0,0.0,0.0])
+        self.sec_pub.publish(Permission(False))
+        pub.publish(out_msg)
+        self.done = True
+>>>>>>> d7420381aa352253877b54dcf879764b913261f3
         rate.sleep()
       
   def __set_done(self,boolean):

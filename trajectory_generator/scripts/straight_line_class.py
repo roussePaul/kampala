@@ -16,6 +16,7 @@ class StraightLineGen(Trajectory):
   done = False
   a_max = 9.81/3.
  
+
   def __init__(self,trajectory_node,start,end):
     Trajectory.__init__(self,trajectory_node)
     self.start_point = start
@@ -56,7 +57,7 @@ class StraightLineGen(Trajectory):
         outmsg = self.tg.get_message(self.end_point, [0.0,0.0,0.0,0.0], [0.0,0.0,0.0,0.0])
         self.trajectory_node.send_msg(outmsg)
         self.trajectory_node.send_permission(False)
-        rate.sleep()
+
       
   def __set_done(self,boolean):
     self.done = boolean

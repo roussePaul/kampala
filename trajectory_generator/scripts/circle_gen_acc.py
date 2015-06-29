@@ -36,12 +36,6 @@ class CircleGen:
     start_point = self.go_to_start(tilted_midpoint,pub)
     sec_pub = rospy.Publisher('trajectory_gen/done', Permission, queue_size=10)
     rospy.sleep(4.)
-<<<<<<< HEAD
-=======
-=======
-    rospy.init_node('TG')
->>>>>>> 04ae51e6476b240c214d23964efaca98f8bd6539
->>>>>>> d7420381aa352253877b54dcf879764b913261f3
     r = 10.0
     rate = rospy.Rate(r)
     t_f = self.velo/math.sqrt(a_max**2.0 - self.velo**4.0/self.radius**2.0)
@@ -224,7 +218,7 @@ class CircleGen:
     outacc[0] = -v/t_f*math.sin(v*t**2.0/(2.0*R*t_f)) - v**2.0 * t**2.0/(R*t_f**2.0) * math.cos(v*t**2.0/(2.0*R*t_f))
     outacc[1] = v/t_f*math.cos(v*t**2.0/(2.0*R*t_f)) - v**2.0 * t**2.0/(R*t_f**2.0) * math.sin(v*t**2.0/(2.0*R*t_f))
     outacc[2] = 0
-    return [0.0,0.0,0.0]
+    return outacc
    
    
   def decallerate(self,pub,a_max,R, v,tilted_midpoint,time):  

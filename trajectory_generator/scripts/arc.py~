@@ -41,14 +41,21 @@ class ArcGenerator(Trajectory):
     v_max = (self.radius*self.a_max)**(0.5)
     if self.velo > v_max:
       self.velo = v_max
+<<<<<<< HEAD
     self.__set_done(False)
     
 
   def loop(self, start_time):
     time = start_time
+=======
+    w = self.radius * self.velo
+    pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
+    rospy.init_node('TG')
+    theta_z = self.tg.get_projection([0,0,1],self.e_n)
+>>>>>>> d7420381aa352253877b54dcf879764b913261f3
     r = 10.0
     rate = rospy.Rate(r)
-    while not rospy.is_shutdown() and not self.done:
+    while not rospy.is_shutdown() and not self.is_done:
       outpos = self.tg.get_circle_point(self.radius,self.w*time)
       outpos = self.tg.rotate_vector(outpos,[0,0,self.theta_z])
       outpos = self.tg.vector_to_list(outpos)
