@@ -9,6 +9,7 @@ from controller.msg import Permission
 from trajectory import Trajectory
 from Trajectory_node import TrajectoryNode
 
+#### OLD! USE trajectory_gen_follower_constant ####
 
 # This script generates points for a follower following a leader,
 # given the id of the leader and a constant offset vector between the
