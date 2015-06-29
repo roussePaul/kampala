@@ -33,7 +33,7 @@ class CircleGen:
     self.yp = self.get_dir(self.initial_velo)
     self.zp = numpy.cross(self.xp,self.yp)
     self.new_frame = [self.xp,self.yp,self.zp]
-    self.psi = rospy.get_param("trajectory_generator/psi",math.pi/4) #angle of rotation about initial e_n direction
+    self.psi = rospy.get_param("trajectory_generator/psi",2*math.pi) #angle of rotation about initial e_n direction
 
 #Observe that initial_velo always has to be perpendicular to the vector pointing from start to #midpoint!!!
 

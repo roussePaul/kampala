@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-
-#!/usr/bin/env python
 import rospy
 import sys
 import ast
@@ -8,6 +6,8 @@ import math
 import numpy
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
+from trajectory import Trajectory
+from Trajectory_node import TrajectoryNode
 
 #This script generates the points, velocities and accelerations to be used as a reference for the 
 #controller to to get the quad to move in a circle.
@@ -15,56 +15,84 @@ from trajectory_generato import TrajectoryGenerator
 #Constraints on maximum velocity and acceleration are used.
 #Everyhthing is calculated in a coordinatesystem that is rotated by an angle of theta about the z-axis of the SML-frame. The method transform_coordinates transforms a vector given in the rotated frame into the corresponding vector in the SML-frame. 
 
-class ArcGenerator:
+class ArcGenerator(Trajectory):
   
-  def __init__(self):
+  done = False
+  a_max = 0.6**2.0/0.8
+
+  def __init__(self,trajectory_node,mid,start,velo,psi):
+    Trajectory.__init__(self,trajectory_node)
     self.tg = TrajectoryGenerator()
-    self.midpoint = rospy.get_param("trajectory_generator/midpoint",[0.0,0.0,0.6])
-    if type(self.midpoint) is str:
-      self.midpoint = ast.literal_eval(self.midpoint)
-    self.start = rospy.get_param("trajectory_generator/start",[0.4,0.0,0.6])
-    if type(self.start) is str:
-     self.start = ast.literal_eval(self.start)
+    self.midpoint = mid
+    self.start = start
     n = [self.start[0]-self.midpoint[0],self.start[1]-self.midpoint[1],self.start[0]-self.midpoint[2]]
-    self.radius = self.tg.get_norm(n)
-    self.initial_velo = rospy.get_param("trajectory_generator/initial_velo",[0.0,0.2,0.2])
-    if type(self.initial_velo) is str:
-      self.initial_velo = ast.literal_eval(self.initial_velo)
+    self.radius = self.tg.get_distance(self.start,self.midpoint)
+    self.initial_velo = velo
     self.velo = self.tg.get_norm(self.initial_velo)
     #define new coordinates
     self.e_n = self.tg.get_direction(n)
     self.yp = self.tg.get_direction(self.initial_velo)
     self.zp = numpy.cross(self.e_n,self.yp)
-    self.psi = rospy.get_param("trajectory_generator/psi",4*math.pi) #angle of rotation about initial e_n direction
-
-  def generate(self):
-    a_max = 0.6**2.0/0.8
-    v_max = (self.radius*a_max)**(0.5)
+    self.psi = psi #angle of rotation about initial e_n direction
+    self.w = self.radius*self.velo
+    self.theta_z = self.tg.get_projection([0,0,1],self.e_n)
+  
+  def begin(self):
+    v_max = (self.radius*self.a_max)**(0.5)
     if self.velo > v_max:
       self.velo = v_max
-    w = self.radius * self.velo
-    pub = rospy.Publisher('trajectory_gen/target',QuadPositionDerived, queue_size=10)
-    rospy.init_node('TG',anonymous=True)
-    theta_z = self.tg.get_projection([0,0,1],self.e_n)
+    self.__set_done(False)
+    
+
+  def loop(self, start_time):
+    time = start_time
     r = 10.0
     rate = rospy.Rate(r)
-    time = 0.0
-    while not rospy.is_shutdown() and not w*time > self.psi:
-      outpos = self.tg.get_circle_point(self.radius,w*time)
-      outpos = self.tg.rotate_vector(outpos,[0,0,theta_z])
+    while not rospy.is_shutdown() and not self.is_done:
+      outpos = self.tg.get_circle_point(self.radius,self.w*time)
+      outpos = self.tg.rotate_vector(outpos,[0,0,self.theta_z])
+      outpos = self.tg.vector_to_list(outpos)
       outpos = self.tg.offset(outpos,self.midpoint)
       outpos.append(self.tg.adjust_yaw([1,0,0]))
-      outvelo = self.tg.get_circle_velocity(self.radius,w*time,w)
-      outvelo = self.tg.rotate_vector(outvelo,[0,0,theta_z])
+      outvelo = self.tg.get_circle_velocity(self.radius,self.w*time,self.w)
+      outvelo = self.tg.rotate_vector(outvelo,[0,0,self.theta_z])
+      outvelo = self.tg.vector_to_list(outvelo)
       outvelo.append(0)
-      outacc = self.tg.get_circle_acc(self.radius,w*time,w,0)
-      outacc = self.tg.rotate_vector(outacc,[0,0,theta_z])
+      outacc = self.tg.get_circle_acc(self.radius,self.w*time,self.w,0)
+      outacc = self.tg.rotate_vector(outacc,[0,0,self.theta_z])
+      outacc = self.tg.vector_to_list(outacc)
       outacc.append(0)
       outmsg = self.tg.get_message(outpos,outvelo,outacc)
-      pub.publish(outmsg)
+      self.trajectory_node.send_msg(outmsg)
+      self.trajectory_node.send_permission(False)
       rate.sleep()
       time += 1/r
-    print("done")
-if __name__  == '__main__':
-  ArcGenerator().generate()
+      if self.w*time >= self.psi:
+        outpos = self.tg.get_circle_point(self.radius,self.psi)
+        outpos = self.tg.rotate_vector(outpos,[0,0,self.theta_z])
+        outpos = self.tg.vector_to_list(outpos)
+        outpos = self.tg.offset(outpos,self.midpoint)
+        outpos.append(self.tg.adjust_yaw([1,0,0]))
+        outvelo = self.tg.get_circle_velocity(self.radius,self.psi,self.w)
+        outvelo = self.tg.rotate_vector(outvelo,[0,0,self.theta_z])
+        outvelo = self.tg.vector_to_list(outvelo)
+        outvelo.append(0)
+        outacc = self.tg.get_circle_acc(self.radius,self.psi,self.w,0)
+        outacc = self.tg.rotate_vector(outacc,[0,0,self.theta_z])
+        outacc = self.tg.vector_to_list(outacc)
+        outacc.append(0)
+        outmsg = self.tg.get_message(outpos,outvelo,outacc)
+        self.trajectory_node.send_msg(outmsg)
+        self.trajectory_node.send_permission(False)
+        rate.sleep()
+        time += 1/r
+        self.__set_done(True)
+
     
+  def is_done(self):
+    return self.done
+
+  def __set_done(self,boolean):
+    self.done = boolean
+    
+  

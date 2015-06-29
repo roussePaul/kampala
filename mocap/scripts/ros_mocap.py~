@@ -114,7 +114,7 @@ def start_publishing():
 	rate=rospy.Rate(30)
 	timer=Time()
 	#Get parameters (all the body ID's that are requested)
-	body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[8,16,17])
+	body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[8,16])
 	if type(body_array) is str:
 		body_array=ast.literal_eval(body_array)
 

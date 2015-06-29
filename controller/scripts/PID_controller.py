@@ -29,10 +29,14 @@ CONTROL_CANCEL_GRAVITY=1545 #Might have to be changed for different quads!
 Ktt=1000/(20*math.pi/180)
 Kphi=1000/(20*math.pi/180)
 
-w=1.3
+w=1.1
+w_z = 1.5
 x_i=math.sqrt(2)/2
 Kp=w*w
 Kv=2*x_i*w
+
+Kv_z= w_z*w_z
+Kp_z= 2*x_i*w_z
 
 N_yaw=500
 K_yaw=2
@@ -137,8 +141,9 @@ def PID(x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
 	new_d=current_d+delta_t*(K_i*((e[2]*Kv/2)+e_dot[2]))
 	new_d=Saturation(new_d,-I_lim,I_lim)
 
-	for i in range(0,3):
+	for i in range(0,2):
 		u.append(x_acc_target[i]-Kv*e_dot[i]-Kp*e[i])
+        u.append(x_acc_target[2]-Kv_z*e_dot[2]-Kp_z*e[2])
 
 	u[2]=u[2]-new_d
 

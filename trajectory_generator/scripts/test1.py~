@@ -1,0 +1,14 @@
+class Test1():
+
+  def __init__(self):
+    print("test1")
+  
+  def start():
+    print("start")
+
+if __name__ == '__main__':
+  try:
+    
+  except rospy.ROSInterruptException:
+    pass
+
