@@ -1,29 +1,25 @@
 #!/usr/bin/env python
+# Abstract follower base class
+
 import rospy
-import ast
+from abc import ABCMeta, abstractmethod
 from numpy import linalg as lg
-import numpy as np
-#import sml_setup
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from trajectory import Trajectory
 from Trajectory_node import TrajectoryNode
 
-#### OLD! USE trajectory_gen_follower_constant ####
 
-# This script generates points for a follower following a leader,
-# given the id of the leader and a constant offset vector between the
-# two.
+class Follower(Trajectory):
 
-class Follower(Trajectory):  
+  __metaclass__ = ABCMeta
 
   leader_state = QuadPositionDerived() 
   done = False 
 
-  def __init__(self, trajectory_node,offset,my_id,leader_id):
+  def __init__(self, trajectory_node, my_id, leader_id):
     # Getting parameters
-    Trajectory.__init__(self,trajectory_node)
-    self.offset = offset
+    super(Follower, self).__init__(trajectory_node)
     self.id = my_id
     self.leader_id = leader_id
     rospy.Subscriber("/body_data/id_"+str(self.leader_id),QuadPositionDerived, self.setLeaderState)
@@ -39,7 +35,7 @@ class Follower(Trajectory):
 
   def begin():
     self.__set_done(False)
-   
+
   def loop(self):
     rate = rospy.Rate(15.)
     leader_init_state = self.leader_state
@@ -54,7 +50,6 @@ class Follower(Trajectory):
         rospy.logwarn('Leader: '+str(self.leader_state.found_body)+', Distance:'+str(distance))
         self.__set_done(True)
     self.trajectory_node.send_permission(True)
-
 
   def setLeaderState(self, data):
     self.leader_state = data
@@ -71,25 +66,12 @@ class Follower(Trajectory):
     return lg.norm(temp)
 
   # Calculates the state of the follower from the leader state
+  @abstractmethod
   def calculateState(self):
-    self.calculated_state.x = self.leader_state.x + self.offset[0]
-    self.calculated_state.y = self.leader_state.y + self.offset[1]
-    self.calculated_state.z = self.leader_state.z + self.offset[2]
-    self.calculated_state.yaw = self.leader_state.yaw
-    self.calculated_state.x_vel = self.leader_state.x_vel
-    self.calculated_state.y_vel = self.leader_state.y_vel
-    self.calculated_state.z_vel = self.leader_state.z_vel
-    self.calculated_state.yaw_vel = self.leader_state.yaw_vel
-    self.calculated_state.x_acc = self.leader_state.x_acc
-    self.calculated_state.y_acc = self.leader_state.y_acc
-    self.calculated_state.z_acc = self.leader_state.z_acc
-    self.calculated_state.yaw_acc = self.leader_state.yaw_acc
+    pass
 
   def __set_done(self,boolean):
     self.done = boolean
 
   def is_done(self):
     return self.done
-
-
-
