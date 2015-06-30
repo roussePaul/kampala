@@ -190,7 +190,7 @@ if __name__=='__main__':
 	trajectory_done=Trajectory()
 
 	#Get the body ID as a parameter
-	body_id=sml_setup.Get_Parameter(NODE_NAME,'security_guard/body_id',8)
+	body_id=sml_setup.Get_Parameter(NODE_NAME,'security_guard/body_id',17)
 	mocap_topic='/body_data/id_'+str(body_id)
 
 	#Publish topics
@@ -207,10 +207,10 @@ if __name__=='__main__':
 
 
 	#Prepare the Iris for flight (set system ID and arm)
-	#ready_to_fly=Prepare_For_Flight()
+	ready_to_fly=Prepare_For_Flight()
 
-	#if not ready_to_fly:
-	#	Interrupt_Flight(lander_channel,controller_channel)
+	if not ready_to_fly:
+		Interrupt_Flight(lander_channel,controller_channel)
 
 	
 	while not rospy.is_shutdown():

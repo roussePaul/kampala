@@ -1,5 +1,5 @@
 <launch>
-	<arg name="body_id" default="8"/>
+	<arg name="body_id" default="17"/>
 	<arg name="boundaries_shape" default="cube"/>
 	<arg name="boundaries_centerx" default="0"/>
 	<arg name="boundaries_centery" default="0"/>
