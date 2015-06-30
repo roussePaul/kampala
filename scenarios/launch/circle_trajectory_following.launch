@@ -5,7 +5,7 @@
   <arg name="headless" default="false"/>
   <arg name="gui" default="true"/>
 
-  <arg name="simulation" default="true"/>
+  <arg name="simulation" default="false"/>
 
 <!-- MOCAP -->
   <rosparam param="/body_array">[1]</rosparam>
@@ -14,24 +14,20 @@
   </node>
 
 <!-- IRIS 1 LAUNCH -->
-  <rosparam param="/rviz_mocap/qualysis_id">1</rosparam>
   <include file="$(find scenarios)/launch/iris_nodes.launch">
-    <arg name="ns" value="iris1"/>
+    <arg name="ns" value="iris2"/>
 
-    <arg name="simulation" value="true"/>
-    <arg name="docker" value="docker-iris-1"/>
+    <arg name="simulation" default="$(arg simulation)"/>
 
     <arg name="suspended_load" value="false"/>
     <arg name="load_link_height" value="1"/> <!-- [m] -->
     <arg name="load_mass" value="0.1"/> <!-- [kg] -->
 
-    <arg name="body_id" value="1"/>  <!-- Mocap identifier -->
-
-    <arg name="rviz" value="true"/> <!-- No more than one drone visualisable -->
+    <arg name="rviz" value="true"/> 
   </include>
-
-  <group ns="iris1">
-    <node name="arc" pkg="trajectory_generator" type="arc.py" output="screen"/>
+  
+  <group ns="iris2">
+    <node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" output="screen"/>
   </group>
 
 <!-- GUI -->

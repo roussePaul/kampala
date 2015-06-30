@@ -10,6 +10,9 @@ import sys
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 
+import analysis
+import utils
+
 #*************Constants*******************
 NODE_NAME='SG'
 #*****************************************
@@ -60,7 +63,7 @@ class Point():
 def Interrupt_Flight(lander_channel,controller_channel):
 	#Interrupt flight, disable controller and enable lander
 	rate=rospy.Rate(30)
-	rospy.logerr('['+NODE_NAME+']: Flight interrupted, landing mode active')
+	utils.logerr('Flight interrupted, landing mode active')
 	while not rospy.is_shutdown():
 		lander_channel.publish(True)
 		controller_channel.publish(False)
@@ -81,6 +84,7 @@ def Prepare_For_Flight():
 		return True
 	else:
 		return False
+
 
 
 
@@ -111,12 +115,15 @@ def Security_Check(current_point):
 			if Within_Boundaries(current_point.x,current_point.y,current_point.z):
 				keep_controller=True
 			else:
+				utils.logerr('Out of boundaries.')
 				keep_controller=False
 				return keep_controller
 		else:
+			utils.logerr('Body not found.')
 			keep_controller=False
 			return keep_controller
 	else:
+		utils.logerr('Lost mocap signal (no signal during more than 0.5 seconds).')
 		keep_controller=False
 		return keep_controller
 
@@ -126,7 +133,7 @@ def Security_Check(current_point):
 def Trajectory_Done(data,end_trajectory):
 	if data.permission:
 		if not end_trajectory.is_done:
-			rospy.loginfo('['+NODE_NAME+']: Trajectory is completed')
+			utils.loginfo('Trajectory is completed')
 		end_trajectory.is_done=True
 
 
@@ -190,7 +197,7 @@ if __name__=='__main__':
 	trajectory_done=Trajectory()
 
 	#Get the body ID as a parameter
-	body_id=sml_setup.Get_Parameter(NODE_NAME,'security_guard/body_id',17)
+	body_id=sml_setup.Get_Parameter(NODE_NAME,'body_id',8)
 	mocap_topic='/body_data/id_'+str(body_id)
 
 	#Publish topics
@@ -222,8 +229,7 @@ if __name__=='__main__':
 			lander_permission.permission=False
 			controller_permission.permission=True
 		else:
-			if controller_permission.permission:
-				rospy.logerr('['+NODE_NAME+']: Initiate landing mode')
+			utils.logerr('Initiate landing mode')
 
 			lander_permission.permission=True
 			controller_permission.permission=False

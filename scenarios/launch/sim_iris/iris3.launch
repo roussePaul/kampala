@@ -1,0 +1,23 @@
+<launch>
+	<arg name="ns" value="iris3"/>
+	<arg name="body_id" value="3"/>
+	<arg name="x" default="0.0"/>
+	<arg name="y" default="0.0"/>
+
+	<arg name="suspended_load"/>
+	<arg name="load_link_height"/> <!-- [m] -->
+	<arg name="load_mass"/> <!-- [kg] -->
+
+	<include file="$(find simulator)/launch/iris.launch">
+	  <arg name="ns" value="iris3"/>
+	  <arg name="docker" value="docker-iris-3"/>
+	  <arg name="local" value="false"/>
+
+	  <arg name="x" value="$(arg x)"/>
+	  <arg name="y" value="$(arg y)"/>
+
+	  <arg name="suspended_load" value="$(arg suspended_load)"/>
+	  <arg name="load_link_height" value="$(arg load_link_height)"/> <!-- [m] -->
+	  <arg name="load_mass" value="$(arg load_mass)"/> <!-- [kg] -->
+	</include>
+</launch>

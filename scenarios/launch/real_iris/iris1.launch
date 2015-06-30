@@ -1,0 +1,28 @@
+<launch>
+	<arg name="ns" value="iris3"/>
+	
+	<arg name="body_id" value="17"/>
+
+	<arg name="fcu_url" default="/dev/ttyUSB0:57600" />
+	<arg name="gcs_url" default="" />
+	<arg name="tgt_system" default="1" />
+	<arg name="tgt_component" default="1" />
+
+	<group ns="$(arg ns)">
+		<rosparam name="body_id" value="$(arg body_id)"/>
+		<node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="screen">
+			<param name="fcu_url" value="$(arg fcu_url)" />
+			<param name="gcs_url" value="$(arg gcs_url)" />
+			<param name="target_system_id" value="$(arg tgt_system)" />
+			<param name="target_component_id" value="$(arg tgt_component)" />
+
+			<!-- remap mavlink bridge topics -->
+			<remap from="/mavlink/to" to="mavlink/to" />
+			<remap from="/mavlink/from" to="mavlink/from" />
+
+			<!-- load blacklist, config -->
+			<rosparam command="load" file="$(find mavros)/launch/apm_pluginlists.yaml" />
+			<rosparam command="load" file="$(find mavros)/launch/apm_config.yaml" />
+		</node>
+	</group>
+</launch>
