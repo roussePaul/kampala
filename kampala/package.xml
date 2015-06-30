@@ -20,6 +20,7 @@
   <run_depend>scenarios</run_depend>
   <run_depend>simulator</run_depend>
   <run_depend>trajectory_generator</run_depend>
+  <run_depend>gui</run_depend>
 
   <export>
     <metapackage/>
