@@ -30,3 +30,12 @@ class ConstantFollower(Follower):
     self.calculated_state.z_acc = self.leader_state.z_acc
     self.calculated_state.yaw_acc = self.leader_state.yaw_acc
 
+
+if __name__ == '__main__':
+  try:
+    my_id = rospy.get_param("/trajectory_generator/follower_id")
+    leader_id = rospy.get_param("/trajectory_generator/leader_id")
+    follower = ConstantFollower(TrajectoryNode(),[0.,2.,0.],my_id,leader_id)
+    follower.loop()
+  except rospy.ROSInterruptException:
+    pass
