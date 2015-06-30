@@ -9,6 +9,9 @@ from controller.msg import Permission
 from trajectory import Trajectory
 from Trajectory_node import TrajectoryNode
 
+import analysis
+import utils
+
 #### OLD! USE trajectory_gen_follower_constant ####
 
 # This script generates points for a follower following a leader,
@@ -35,7 +38,7 @@ class Follower(Trajectory):
     leaderNotHere = True
     while leaderNotHere:
       leaderNotHere = not self.leader_state.found_body
-    rospy.logwarn('Leader found')
+    utils.logwarn('Leader found')
 
   def begin():
     self.__set_done(False)
@@ -51,7 +54,7 @@ class Follower(Trajectory):
       distance = self.__getDistance()
       rate.sleep()
       if self.leader_state.found_body == False or distance < 0.9: 
-        rospy.logwarn('Leader: '+str(self.leader_state.found_body)+', Distance:'+str(distance))
+        utils.logwarn('Leader: '+str(self.leader_state.found_body)+', Distance:'+str(distance))
         self.__set_done(True)
     self.trajectory_node.send_permission(True)
 
@@ -90,6 +93,9 @@ class Follower(Trajectory):
 
   def is_done(self):
     return self.done
+
+if __name__ == '__main__':
+  Follower()
 
 
 

@@ -7,9 +7,9 @@
 	<arg name="load_mass"/> <!-- [kg] -->
 
 	<include file="$(find simulator)/launch/iris.launch">
-	  <arg name="ns" value="iris1"/>
-	  <arg name="body_id" value="1"/>
-	  <arg name="docker" value="docker-iris-1"/>
+	  <arg name="ns" value="iris2"/>
+	  <arg name="body_id" value="2"/>
+	  <arg name="docker" value="docker-iris-2"/>
 	  <arg name="local" value="false"/>
 
 	  <arg name="x" value="$(arg x)"/>
