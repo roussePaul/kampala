@@ -89,6 +89,12 @@ class TrajectoryGenerator():
   def get_direction(self,vector):
     return vector/la.norm(vector)
 
+  def get_direction2(self,vector1,vector2):
+    e_r = [0.,0.,0.]
+    for i in range(0,3):
+      e_r[i] = vector1[i]-vector2[i]
+    return e_r/la.norm(e_r)
+
   def get_message(self,pos,velo,acc):
     msg = QuadPositionDerived()
     msg.x = pos[0]
@@ -113,6 +119,8 @@ class TrajectoryGenerator():
     lis = vector[0]
     return lis
  
+
+
 if __name__ == '__main__':
   try:
     tg = TrajectoryGenerator()

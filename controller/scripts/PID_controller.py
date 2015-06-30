@@ -29,13 +29,10 @@ CONTROL_CANCEL_GRAVITY=1500 #Might have to be changed for different quads!
 Ktt=1000/(20*math.pi/180)
 Kphi=1000/(20*math.pi/180)
 
-<<<<<<< HEAD
-w=1.1
-w_z = 1.5
-=======
+
 w=1.7
 w_z = 1.8
->>>>>>> 1fd7128c656753dbf11f860a29a2bc7f79fa5e7a
+
 x_i=math.sqrt(2)/2
 Kp=w*w
 Kv=2*x_i*w
