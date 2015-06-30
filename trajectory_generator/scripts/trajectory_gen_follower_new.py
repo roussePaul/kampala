@@ -95,7 +95,11 @@ class Follower(Trajectory):
     return self.done
 
 if __name__ == '__main__':
-  Follower()
-
-
+  try:
+    my_id = rospy.get_param("/trajectory_gen/follower_id")
+    leader_id = rospy.get_param("/trajectory_gen/leader_id")
+    follower = Follower(TrajectoryNode(),[0.,1.,0.],my_id,leader_id)
+    follower.loop()
+  except rospy.ROSInterruptException:
+    pass
 
