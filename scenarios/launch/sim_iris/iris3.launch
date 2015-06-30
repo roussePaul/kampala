@@ -1,6 +1,4 @@
 <launch>
-	<arg name="ns" value="iris3"/>
-	<arg name="body_id" value="3"/>
 	<arg name="x" default="0.0"/>
 	<arg name="y" default="0.0"/>
 
@@ -10,6 +8,7 @@
 
 	<include file="$(find simulator)/launch/iris.launch">
 	  <arg name="ns" value="iris3"/>
+	  <arg name="body_id" value="3"/>
 	  <arg name="docker" value="docker-iris-3"/>
 	  <arg name="local" value="false"/>
 

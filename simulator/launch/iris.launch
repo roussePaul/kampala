@@ -1,5 +1,6 @@
 <launch>
   <arg name="ns"/>
+  <arg name="body_id"/>
   <arg name="docker"/>
   <arg name="x" default="0.0"/>
   <arg name="y" default="0.0"/>
@@ -21,6 +22,7 @@
   </group>
 
   <group ns="$(arg ns)">
+    <rosparam param="body_id" subst_value="True">$(arg body_id)</rosparam>
     <include file="$(find simulator)/launch/spawn_iris.launch">
       <arg name="ns" value="$(arg ns)"/>
       <arg name="model" value="$(find simulator)/description/iris_base.xacro" />

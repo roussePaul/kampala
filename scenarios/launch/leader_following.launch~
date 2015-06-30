@@ -1,17 +1,15 @@
 <launch>
-  <arg name="enable_logging" default="false"/>
-  <arg name="enable_ground_truth" default="true"/>
-  <arg name="log_file" default="iris"/>
-  <arg name="headless" default="false"/>
-  <arg name="gui" default="true"/>
-
-  <arg name="simulation" default="true"/>
-
+<arg name="enable_logging" default="false"/>
+<arg name="enable_ground_truth" default="true"/>
+<arg name="log_file" default="iris"/>
+<arg name="headless" default="false"/>
+<arg name="gui" default="true"/>
+<arg name="simulation" default="true"/>
 <!-- CONFIG -->
-  <rosparam param="trajectory_generator/leader_id">1</rosparam>
-  <rosparam param="trajectory_generator/follower_id">2</rosparam>
-
+<rosparam param="trajectory_generator/leader_id">1</rosparam>
+<rosparam param="trajectory_generator/follower_id">2</rosparam>
 <!-- IRIS 1 LAUNCH -->
+
   <rosparam param="/rviz_mocap/qualysis_id">1</rosparam>
   <include file="$(find scenarios)/launch/iris_nodes.launch">
     <arg name="ns" value="iris1"/>
@@ -23,13 +21,12 @@
     <arg name="load_link_height" value="1"/> <!-- [m] -->
     <arg name="load_mass" value="0.1"/> <!-- [kg] -->
 
-    <arg name="body_id" value="1"/>  <!-- Mocap identifier -->
 
     <arg name="rviz" value="true"/> <!-- No more than one drone visualisable -->
   </include>
 
   <group ns="iris1">
-    <node name="circle_gen_acc" pkg="trajectory_generator" type="circle_gen_acc.py" output="screen"/>
+    <node name="arc" pkg="trajectory_generator" type="arc.py" output="screen"/>
   </group>
 
 <!-- IRIS 1 LAUNCH -->
@@ -47,28 +44,26 @@
     <arg name="load_link_height" value="0.3"/> <!-- [m] -->
     <arg name="load_mass" value="0.1"/> <!-- [kg] -->
 
-    <arg name="body_id" value="2"/>  <!-- Mocap identifier -->
 
     <arg name="rviz" value="true"/> <!-- No more than one drone visualisable -->
   </include>
 
   <group ns="iris2">
-    <node name="trajectory_gen_follower_new" pkg="trajectory_generator" type="trajectory_gen_follower_new.py" output="screen"/>
+    <node name="trajectory_gen_follower_new" pkg="trajectory_generator" type="trajectory_gen_follower_constant.py" output="screen"/>
   </group>
 
 <!-- MOCAP -->
   <rosparam param="/body_array">[1,2]</rosparam>
   <rosparam param="/body_names">["iris1","iris2"]</rosparam>
-  <node name="ros_mocap" pkg="mocap" type="ros_mocap_message.py" respawn="true">
+  <node name="ros_mocap" pkg="mocap" type="ros_mocap_sim.py" respawn="true">
   </node>
 
 
 <!-- GUI -->
-  <rosparam param="/gazebo/time_step">0.01</rosparam>
-  <rosparam param="/gazebo/max_update_rate">100</rosparam>
-  <include file="$(find scenarios)/launch/gui.launch">
-    <arg name="body_id" default="1"/>
-    <arg name="simulation" default="$(arg simulation)"/>
-  </include>
-
+<rosparam param="/gazebo/time_step">0.01</rosparam>
+<rosparam param="/gazebo/max_update_rate">100</rosparam>
+<include file="$(find scenarios)/launch/gui.launch">
+<arg name="body_id" default="1"/>
+<arg name="simulation" default="$(arg simulation)"/>
+</include>
 </launch>

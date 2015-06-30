@@ -47,7 +47,7 @@ class Follower(Trajectory):
       distance = self.__getDistance()
       rate.sleep()
       if self.leader_state.found_body == False or distance < 0.9: 
-        rospy.logwarn('Leader: '+str(self.leader_state.found_body)+', Distance:'+str(distance))
+        utils.logwarn('Leader: '+str(self.leader_state.found_body)+', Distance:'+str(distance))
         self.__set_done(True)
     self.trajectory_node.send_permission(True)
 
