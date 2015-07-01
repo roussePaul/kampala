@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>173</width>
+    <width>293</width>
     <height>350</height>
    </rect>
   </property>
@@ -23,26 +23,12 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Unknow Iris&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Unknown Iris&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QPushButton" name="pushButton">
-     <property name="text">
-      <string>Arm</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QPushButton" name="pushButton_2">
-     <property name="text">
-      <string>Start</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0">
-    <widget class="QPushButton" name="pushButton_3">
+   <item row="6" column="0" colspan="4">
+    <widget class="QPushButton" name="LANDButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
        <horstretch>0</horstretch>
@@ -55,11 +41,28 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QPushButton" name="pushButton_4">
+    <widget class="QPushButton" name="ConnectButton">
      <property name="text">
       <string>Connect</string>
      </property>
     </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QPushButton" name="ArmButton">
+     <property name="text">
+      <string>Arm</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="StartButton">
+     <property name="text">
+      <string>Start</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="3">
+    <widget class="QLineEdit" name="StartInputField"/>
    </item>
   </layout>
  </widget>

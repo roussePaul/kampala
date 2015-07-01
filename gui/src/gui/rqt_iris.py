@@ -1,13 +1,37 @@
 import os
 import rospy
-
+import QtGui
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
+from controller.msg import Permission
+from sml_setup import Arming_Quad
 
 class MyPlugin(Plugin):
-
+    
     def __init__(self, context):
+        lander_channel = rospy.Publisher('security_guard/lander',Permission,queue_size=10)
+        land_permission = Permission()
+       
+        def Connect():
+            inputstring = "gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; roslaunch scenarios iris_nodes.launch;sleep 1'" 
+            os.system(inputstring)
+
+        def Land():
+            
+            land_permission.permission = True
+            lander_channel.publish(land_permission)
+
+        def Start():
+            inputstring = "gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; roslaunch scenarios %s.launch;sleep 1'" % (self._widget.StartInputField.text())
+
+            os.system(inputstring)
+
+        
+
+
+        
+        
         super(MyPlugin, self).__init__(context)
         # Give QObjects reasonable names
         self.setObjectName('MyPlugin')
@@ -23,7 +47,9 @@ class MyPlugin(Plugin):
         if not args.quiet:
             print 'arguments: ', args
             print 'unknowns: ', unknowns
-
+        
+        
+        
         # Create QWidget
         self._widget = QWidget()
         # Get path to UI file which is a sibling of this file
@@ -43,6 +69,12 @@ class MyPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
+        self._widget.ConnectButton.clicked.connect(Connect)
+        self._widget.LANDButton.clicked.connect(Land)
+        self._widget.ArmButton.clicked.connect(Arming_Quad)
+        self._widget.StartButton.clicked.connect(Start)
+
+
     def shutdown_plugin(self):
         # TODO unregister all publishers here
         pass
@@ -61,3 +93,5 @@ class MyPlugin(Plugin):
         # Comment in to signal that the plugin has a way to configure
         # This will enable a setting button (gear icon) in each dock widget title bar
         # Usually used to open a modal configuration dialog
+
+    
