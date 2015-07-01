@@ -12,9 +12,10 @@ class MyPlugin(Plugin):
     def __init__(self, context):
         lander_channel = rospy.Publisher('security_guard/lander',Permission,queue_size=10)
         land_permission = Permission()
+        os.system("gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; cd ~/catkin_ws_px4/src/kampala/gui/scripts;./term-pipe-r.sh pipefile;sleep(30)'")
        
         def Connect():
-            inputstring = "gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; roslaunch scenarios iris_nodes.launch;sleep 1'" 
+            inputstring = "gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; cd ~/catkin_ws_px4/src/kampala/scenarios/launch/real_iris; roslaunch %s.launch;sleep 30'" % (self._widget.IrisInputBox.currentText())
             os.system(inputstring)
 
         def Land():
@@ -73,6 +74,7 @@ class MyPlugin(Plugin):
         self._widget.LANDButton.clicked.connect(Land)
         self._widget.ArmButton.clicked.connect(Arming_Quad)
         self._widget.StartButton.clicked.connect(Start)
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
 
 
     def shutdown_plugin(self):
