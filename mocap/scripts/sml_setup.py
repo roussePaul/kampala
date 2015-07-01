@@ -101,19 +101,23 @@ def Connect_To_Mocap(NODE_NAME):
 
 
 
-def Arming_Quad(NODE_NAME):
+def Arming_Quad(NODE_NAME,base_name=""):
 	return_value=True
 
 	#Arming the Quad
+	srv_path = 'mavros/cmd/arming'
+	if base_name!="":
+		srv_path = "/%s/%s"%(base_name,srv_path)
+
 	try:
 		utils.loginfo('Arming Quad ...')
-		rospy.wait_for_service('mavros/cmd/arming',10)
+		rospy.wait_for_service(srv_path,10)
 	except:
 		utils.logerr('No connection to Mavros')
 		return_value=False
 
 	try:
-		arming=rospy.ServiceProxy('mavros/cmd/arming',CommandBool)
+		arming=rospy.ServiceProxy(srv_path,CommandBool)
 		arming_result=arming(True)
 	except:
 		utils.logerr('Cannot arm quad')
@@ -124,7 +128,7 @@ def Arming_Quad(NODE_NAME):
 
 	#Arming has to be done twice sometimes...
 	try:
-		arming=rospy.ServiceProxy('mavros/cmd/arming',CommandBool)
+		arming=rospy.ServiceProxy(srv_path,CommandBool)
 		arming_result=arming(True)
 	except:
 		utils.logerr('Cannot arm quad')

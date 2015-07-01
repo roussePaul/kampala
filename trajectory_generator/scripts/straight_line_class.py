@@ -101,8 +101,21 @@ class StraightLineGen(Trajectory):
 
 if __name__ == '__main__':
   try:
+    traj = TrajectoryNode()
+    traj.send_permission(True)
     rospy.sleep(5.)
-    StraightLineGen(TrajectoryNode(),[0.,0.,0.2],[0.,0.,0.6]).loop(0.)  
+    msg = QuadPositionDerived()
+    msg.x = 0
+    msg.y = 0
+    msg.z = 0.6
+    traj.send_msg(msg)
+    rospy.sleep(10)
+    msg = QuadPositionDerived()
+    msg.x = 0
+    msg.y = 1
+    msg.z = 0.6
+    traj.send_msg(msg)
+    rospy.sleep(5)
   except rospy.ROSInterruptException:
     pass
 
