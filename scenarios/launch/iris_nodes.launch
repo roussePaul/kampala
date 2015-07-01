@@ -27,13 +27,14 @@
 <!-- IRIS LAUNCH -->
   <!-- If simulated -->
   <group if="$(arg simulation)">
-    <include file="$(find scenarios)/launch/sim_iris/$(arg ns).launch">
+    <include file="$(find scenarios)/launch/iris/$(arg ns).launch">
       <arg name="x" value="$(arg x)"/>
       <arg name="y" value="$(arg y)"/>
 
       <arg name="suspended_load" value="$(arg suspended_load)"/>
       <arg name="load_link_height" value="$(arg load_link_height)"/> <!-- [m] -->
       <arg name="load_mass" value="$(arg load_mass)"/> <!-- [kg] -->
+      <arg name="simulation" value="$(arg simulation)"/> <!-- [kg] -->
     </include>
   </group>
 

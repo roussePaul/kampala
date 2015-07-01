@@ -6,9 +6,11 @@
   <arg name="gui" default="true"/>
 
 <!-- Set the ROS environment variables -->
+<!-- Docker ip address, you can get them from 'ifconfig' (see docker0, inet addr) -->
   <env name="ROS_IP" value="172.17.42.1"/>
   <env name="ROS_HOSTNAME" value="172.17.42.1"/>
 
+<!-- Simulation -->
   <arg name="simulation" default="true"/>
 
 <!-- MOCAP -->
@@ -20,7 +22,7 @@
 
 <!-- IRIS 1 LAUNCH -->
   <include file="$(find scenarios)/launch/iris_nodes.launch">
-    <arg name="ns" value="iris3"/>
+    <arg name="ns" value="iris1"/>
 
     <arg name="simulation" default="$(arg simulation)"/>
 
@@ -31,7 +33,7 @@
     <arg name="rviz" value="true"/> 
   </include>
   
-  <group ns="iris3">
+  <group ns="iris1">
     <node name="arc" pkg="trajectory_generator" type="arc.py" output="screen"/>
 
 

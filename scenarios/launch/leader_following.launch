@@ -60,10 +60,9 @@
 
 
 <!-- GUI -->
-<rosparam param="/gazebo/time_step">0.01</rosparam>
-<rosparam param="/gazebo/max_update_rate">100</rosparam>
-<include file="$(find scenarios)/launch/gui.launch">
-<arg name="body_id" default="1"/>
-<arg name="simulation" default="$(arg simulation)"/>
-</include>
+  <rosparam param="/gazebo/time_step">0.01</rosparam>
+  <rosparam param="/gazebo/max_update_rate">100</rosparam>
+  <include file="$(find scenarios)/launch/gui.launch">
+    <arg name="simulation" default="$(arg simulation)"/>
+  </include>
 </launch>

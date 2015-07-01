@@ -45,6 +45,7 @@ def Get_Body_Data(body_id):
 	data=QuadPosition()
 
 	if(body_indice==-1):
+		#utils.logerr('Body %i not found'%(body_id))
 		data.found_body=False
 		return(data)
 	
@@ -136,20 +137,37 @@ def start_publishing():
 	for i in range(0,len(body_array)):
 		mocap_past_data.append(empty_data)
 
+	# Initialize error numbers
+	error = [0]*len(body_array)
+
 	while not rospy.is_shutdown():
 
 		delta_time=timer.get_time_diff()
 
 		for i in range(0,len(body_array)):
 			mocap_data=Get_Body_Data(body_array[i])
-			mocap_data_derived=Get_Derived_Data(mocap_data,mocap_past_data[i],delta_time)
 
-			#update past mocap data
-			mocap_past_data[i]=mocap_data_derived
+			if mocap_data.found_body:
+				mocap_data_derived=Get_Derived_Data(mocap_data,mocap_past_data[i],delta_time)
 
-			#Publish data on topic
-			topics_publisher[i].publish(mocap_data_derived)
+				#update past mocap data
+				mocap_past_data[i]=mocap_data_derived
 
+				#Publish data on topic
+				topics_publisher[i].publish(mocap_data_derived)
+				error[i]=0
+			else:
+				error[i]+=1
+
+				if error[i]<30:
+					if error[i]>5:
+						mocap_past_data[i].found_body = False
+						utils.logwarn("Send body %i not found"%(body_array[i]))
+					utils.logwarn("Body %i: %i errors"%(body_array[i],error[i]))
+				elif error[i]==30:
+					utils.logwarn("Body %i: %i errors. Stop printing Errors!"%(body_array[i],error[i]))
+
+				topics_publisher[i].publish(mocap_past_data[i])
 		rate.sleep()
 
 

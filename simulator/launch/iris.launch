@@ -10,6 +10,7 @@
   <arg name="load_link_height" default="0.3"/> <!-- [m] -->
   <arg name="load_mass" default="0.3"/> <!-- [kg] -->
 
+
 <!-- DOCKER START -->
 	<group unless="$(arg local)">
   	<node name="start_docker_$(arg ns)" pkg="simulator" type="start_docker.sh" args="$(arg docker) $(arg ns) $(arg x) $(arg y)"/>
