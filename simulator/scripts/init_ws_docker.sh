@@ -41,9 +41,6 @@ git clone https://github.com/ethz-asl/glog_catkin.git
 cd $WORKSPACE/src
 git clone https://github.com/catkin/catkin_simple.git
 
-## Kampala
-cd $WORKSPACE/src
-git clone https://github.com/roussePaul/kampala.git
 
 
 # Disable parallel make jobs for compilation.
@@ -54,4 +51,12 @@ export ROS_PARALLEL_JOBS=
 # Compile workspace
 cd $WORKSPACE
 source devel/setup.bash
+catkin_make
+
+## Kampala
+cd $WORKSPACE/src
+git clone https://github.com/roussePaul/kampala.git
+
+# Compile workspace
+cd $WORKSPACE
 catkin_make
