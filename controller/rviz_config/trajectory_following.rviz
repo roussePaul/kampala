@@ -8,8 +8,6 @@ Panels:
         - /Axes1
         - /Iris 11/Pose1
         - /Iris 11/Pose2
-        - /Iris 21/Path1
-        - /Iris 21/Path2
         - /Iris 31/Pose1
       Splitter Ratio: 0.657993
     Tree Height: 542
@@ -168,6 +166,62 @@ Visualization Manager:
           Shape: Arrow
           Topic: ""
           Value: true
+        - Alpha: 1
+          Axes Length: 1
+          Axes Radius: 0.1
+          Class: rviz/Pose
+          Color: 255; 25; 0
+          Enabled: true
+          Head Length: 0.06
+          Head Radius: 0.02
+          Name: Pose
+          Shaft Length: 0.1
+          Shaft Radius: 0.01
+          Shape: Arrow
+          Topic: /iris3/visualizer/actual_marker
+          Value: true
+        - Alpha: 1
+          Buffer Length: 1
+          Class: rviz/Path
+          Color: 25; 255; 0
+          Enabled: true
+          Line Style: Lines
+          Line Width: 0.03
+          Name: Path
+          Offset:
+            X: 0
+            Y: 0
+            Z: 0
+          Topic: /iris3/visualizer/actual_path
+          Value: true
+        - Alpha: 1
+          Axes Length: 1
+          Axes Radius: 0.1
+          Class: rviz/Pose
+          Color: 255; 25; 0
+          Enabled: true
+          Head Length: 0.06
+          Head Radius: 0.02
+          Name: Pose
+          Shaft Length: 0.1
+          Shaft Radius: 0.01
+          Shape: Arrow
+          Topic: /iris3/visualizer/planned_marker
+          Value: true
+        - Alpha: 1
+          Buffer Length: 1
+          Class: rviz/Path
+          Color: 255; 0; 0
+          Enabled: true
+          Line Style: Lines
+          Line Width: 0.03
+          Name: Path
+          Offset:
+            X: 0
+            Y: 0
+            Z: 0
+          Topic: /iris3/visualizer/planned_path
+          Value: true
       Enabled: true
       Name: Iris 3
   Enabled: true
@@ -194,7 +248,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.62291
+      Distance: 3.29845
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -206,10 +260,10 @@ Visualization Manager:
         Z: 0.462613
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.509796
+      Pitch: 0.479796
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.42219
+      Yaw: 1.25219
     Saved: ~
 Window Geometry:
   Displays:
@@ -227,5 +281,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1600
-  X: 113
+  X: 496
   Y: 55
