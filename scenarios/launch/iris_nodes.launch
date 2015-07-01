@@ -5,43 +5,11 @@
   <arg name="log_file" default="$(arg ns)"/>
   <arg name="headless" default="false"/>
 
-<!-- Simulation -->
-  <arg name="simulation" default="true"/>
-  <arg name="docker" default="docker-iris-1"/>
-
-<!-- Initial position -->
-  <arg name="x" default="0.0"/>
-  <arg name="y" default="0.0"/>
-
-<!-- Simulated load -->
-  <arg name="suspended_load" default="false"/>
-  <arg name="load_link_height" default="1"/> <!-- [m] -->
-  <arg name="load_mass" default="0.1"/> <!-- [kg] -->
-
 
 <!-- Visualisation -->
   <arg name="rviz" default="false"/> <!-- No more than one drone visualisable -->
 
 <!-- |||| LAUNCH |||| -->
-
-<!-- IRIS LAUNCH -->
-  <!-- If simulated -->
-  <group if="$(arg simulation)">
-    <include file="$(find scenarios)/launch/iris/$(arg ns).launch">
-      <arg name="x" value="$(arg x)"/>
-      <arg name="y" value="$(arg y)"/>
-
-      <arg name="suspended_load" value="$(arg suspended_load)"/>
-      <arg name="load_link_height" value="$(arg load_link_height)"/> <!-- [m] -->
-      <arg name="load_mass" value="$(arg load_mass)"/> <!-- [kg] -->
-      <arg name="simulation" value="$(arg simulation)"/> <!-- [kg] -->
-    </include>
-  </group>
-
-  <!-- Otherwise -->
-  <group unless="$(arg simulation)">
-    <!-- <include file="$(find scenarios)/launch/real_iris/$(arg ns).launch"/> -->
-  </group>
 
   <group ns="$(arg ns)">
 <!-- Security gard boundaries -->
@@ -64,7 +32,6 @@
 
 
     <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="true"/>
-    <node name="PID_controller" pkg="controller" type="PID_controller.py" output="screen"/>
 
     <!-- RVIZ LINK -->
     <group if="$(arg rviz)">

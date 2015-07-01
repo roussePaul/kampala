@@ -7,31 +7,18 @@ from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
 from sml_setup import Arming_Quad
 
+import os
+import subprocess
+
 class MyPlugin(Plugin):
     
     def __init__(self, context):
-        lander_channel = rospy.Publisher('security_guard/lander',Permission,queue_size=10)
-        land_permission = Permission()
-        os.system("gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; cd ~/catkin_ws_px4/src/kampala/gui/scripts;./term-pipe-r.sh pipefile;sleep(30)'")
-       
-        def Connect():
-            inputstring = "gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; cd ~/catkin_ws_px4/src/kampala/scenarios/launch/real_iris; roslaunch %s.launch;sleep 30'" % (self._widget.IrisInputBox.currentText())
-            os.system(inputstring)
-
-        def Land():
-            
-            land_permission.permission = True
-            lander_channel.publish(land_permission)
-
-        def Start():
-            inputstring = "gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; roslaunch scenarios %s.launch;sleep 1'" % (self._widget.StartInputField.text())
-
-            os.system(inputstring)
-
+        self.pwd = os.environ['PWD']
+        os.system("gnome-terminal -x bash -c 'source "+self.pwd+"/devel/setup.bash; roscd gui/scripts;./term-pipe-r.sh pipefile;sleep(30)'")
         
+        self.land_permission = Permission()
+        self.lander_channel = []
 
-
-        
         
         super(MyPlugin, self).__init__(context)
         # Give QObjects reasonable names
@@ -70,11 +57,33 @@ class MyPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
-        self._widget.ConnectButton.clicked.connect(Connect)
-        self._widget.LANDButton.clicked.connect(Land)
-        self._widget.ArmButton.clicked.connect(Arming_Quad)
-        self._widget.StartButton.clicked.connect(Start)
+        self._widget.ConnectButton.clicked.connect(self.Connect)
+        self._widget.LANDButton.clicked.connect(self.Land)
+        self._widget.ArmButton.clicked.connect(self.Arm)
+        self._widget.StartButton.clicked.connect(self.Start)
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
+
+    def Connect(self):
+        self.name = self._widget.IrisInputBox.currentText()
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=false;sleep 10" % (self.name)
+        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+
+
+        self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
+        print self.lander_channel
+
+
+    def Land(self):
+        self.land_permission.permission = True
+        self.lander_channel.publish(self.land_permission)
+
+    def Start(self):
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios %s.launch;sleep 1" % (self._widget.StartInputField.text())
+        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+
+    def Arm(self):
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios iris_nodes.launch ns:=%s;sleep 10" % (self.name)
+        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
 
 
     def shutdown_plugin(self):
