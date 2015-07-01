@@ -5,17 +5,17 @@ from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
-from sml_setup import Arming_Quad
+
 
 class MyPlugin(Plugin):
     
     def __init__(self, context):
         lander_channel = rospy.Publisher('security_guard/lander',Permission,queue_size=10)
         land_permission = Permission()
-        os.system("gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; cd ~/catkin_ws_px4/src/kampala/gui/scripts;./term-pipe-r.sh pipefile;sleep(30)'")
+        os.system("gnome-terminal -x bash -c 'cd ~/catkin_ws_px4/src/kampala/gui/scripts;./term-pipe-r.sh pipefile;bash'")
        
         def Connect():
-            inputstring = "gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; cd ~/catkin_ws_px4/src/kampala/scenarios/launch/real_iris; roslaunch %s.launch;sleep 30'" % (self._widget.IrisInputBox.currentText())
+            inputstring = "cd ~/catkin_ws_px4/src/kampala/gui/scripts; echo 'source ~/catkin_ws_px4/setup.bash; roslaunch scenarios %s.launch' > pipefile" % (self._widget.IrisInputBox.currentText())
             os.system(inputstring)
 
         def Land():
@@ -24,8 +24,11 @@ class MyPlugin(Plugin):
             lander_channel.publish(land_permission)
 
         def Start():
-            inputstring = "gnome-terminal -x bash -c 'source ~/catkin_ws_px4/setup.bash; roslaunch scenarios %s.launch;sleep 1'" % (self._widget.StartInputField.text())
+            inputstring = "cd ~/catkin_ws_px4/src/kampala/gui/scripts; echo 'source ~/catkin_ws_px4/setup.bash; roslaunch scenarios %s.launch' > pipefile" % (self._widget.StartInputField.text())
+            os.system(inputstring)
 
+        def Arm():
+            inputstring = "cd ~/catkin_ws_px4/src/kampala/gui/scripts; echo python -c 'from sml_setup import Arming_Quad;Arming_Quad()' > pipefile"
             os.system(inputstring)
 
         
@@ -72,7 +75,7 @@ class MyPlugin(Plugin):
 
         self._widget.ConnectButton.clicked.connect(Connect)
         self._widget.LANDButton.clicked.connect(Land)
-        self._widget.ArmButton.clicked.connect(Arming_Quad)
+        self._widget.ArmButton.clicked.connect(Arm)
         self._widget.StartButton.clicked.connect(Start)
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
 
