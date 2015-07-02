@@ -15,10 +15,8 @@ class MyPlugin(Plugin):
     def __init__(self, context):
         self.pwd = os.environ['PWD']
 
-        os.system("gnome-terminal -x bash -c 'source "+self.pwd+"/devel/setup.bash; roscd gui/scripts;./term-pipe-r.sh pipefile;bash'")
         
-
-
+        
         self.simulation = rospy.get_param('/simulation','false')
 
 
@@ -74,15 +72,17 @@ class MyPlugin(Plugin):
 
     def Param(self):
         self.name = self._widget.IrisInputBox.currentText()
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 10" % (self.name,self.simulation)
-
-
+        os.system("gnome-terminal -x bash -c 'source "+self.pwd+"/devel/setup.bash; roscd gui/scripts;./term-pipe-r.sh pipefile"+self.name+" ;bash'")
+        inputstring = "roslaunch scenarios %s.launch simulation:=%s" % (self.name,self.simulation)
+    
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"+self.name])
+        
     def Connect(self):
 
         
         inputstring = "roslaunch scenarios %s.launch simulation:=false" % (self.name)
-        #inputstring = "ls"
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"])
+        
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"+self.name])
         
 
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
@@ -95,11 +95,11 @@ class MyPlugin(Plugin):
 
     def Start(self):
         inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"])
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"+self.name])
 
     def Arm(self):
         inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s" % (self.name)
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"])
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"+self.name])
 
 
     def shutdown_plugin(self):
