@@ -14,12 +14,11 @@ class MyPlugin(Plugin):
     
     def __init__(self, context):
         self.pwd = os.environ['PWD']
-        os.system("gnome-terminal -x bash -c 'source "+self.pwd+"/devel/setup.bash; roscd gui/scripts;./term-pipe-r.sh pipefile;sleep(30)'")
+        os.system("gnome-terminal -x bash -c 'source "+self.pwd+"/devel/setup.bash; roscd gui/scripts;./term-pipe-r.sh pipefile;bash'")
         
         self.land_permission = Permission()
         self.lander_channel = []
 
-        
         super(MyPlugin, self).__init__(context)
         # Give QObjects reasonable names
         self.setObjectName('MyPlugin')
@@ -57,6 +56,7 @@ class MyPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
+        
 
         self._widget.ConnectButton.clicked.connect(self.Connect)
         self._widget.LANDButton.clicked.connect(self.Land)
@@ -70,12 +70,15 @@ class MyPlugin(Plugin):
         self.name = self._widget.IrisInputBox.currentText()
 
     def Connect(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=false;sleep 10" % (self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        
+        inputstring = "roslaunch scenarios %s.launch simulation:=false" % (self.name)
+        #inputstring = "ls"
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"])
+        
 
 
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
-        print self.lander_channel
+        
 
 
     def Land(self):
@@ -83,12 +86,12 @@ class MyPlugin(Plugin):
         self.lander_channel.publish(self.land_permission)
 
     def Start(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios %s ns:=%s;sleep 1" % (self._widget.StartInputField.text(),self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"])
 
     def Arm(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios iris_nodes.launch ns:=%s;sleep 10" % (self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s" % (self.name)
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"])
 
 
     def shutdown_plugin(self):
