@@ -62,11 +62,14 @@ class MyPlugin(Plugin):
         self._widget.LANDButton.clicked.connect(self.Land)
         self._widget.ArmButton.clicked.connect(self.Arm)
         self._widget.StartButton.clicked.connect(self.Start)
+        self._widget.ParamButton.clicked.connect(self.Param)
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
 
-    def Connect(self):
+    def Param(self):
         self.name = self._widget.IrisInputBox.currentText()
+
+    def Connect(self):
         inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=false;sleep 10" % (self.name)
         subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
 
@@ -80,7 +83,7 @@ class MyPlugin(Plugin):
         self.lander_channel.publish(self.land_permission)
 
     def Start(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios %s.launch;sleep 1" % (self._widget.StartInputField.text())
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios %s ns:=%s;sleep 1" % (self._widget.StartInputField.text(),self.name)
         subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
 
     def Arm(self):
