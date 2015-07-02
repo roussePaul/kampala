@@ -14,8 +14,14 @@ class MyPlugin(Plugin):
     
     def __init__(self, context):
         self.pwd = os.environ['PWD']
+
         os.system("gnome-terminal -x bash -c 'source "+self.pwd+"/devel/setup.bash; roscd gui/scripts;./term-pipe-r.sh pipefile;bash'")
         
+
+
+        self.simulation = rospy.get_param('/simulation','false')
+
+
         self.land_permission = Permission()
         self.lander_channel = []
 
@@ -68,13 +74,20 @@ class MyPlugin(Plugin):
 
     def Param(self):
         self.name = self._widget.IrisInputBox.currentText()
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 10" % (self.name,self.simulation)
+
 
     def Connect(self):
+
         
         inputstring = "roslaunch scenarios %s.launch simulation:=false" % (self.name)
         #inputstring = "ls"
         subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"])
         
+
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 10" % (self.name,self.simulation)
+        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+
 
 
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)

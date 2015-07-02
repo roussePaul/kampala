@@ -1,0 +1,21 @@
+<launch>
+<!-- Set the ROS environment variables -->
+  <env name="ROS_IP" value="172.17.42.1"/>
+  <env name="ROS_HOSTNAME" value="172.17.42.1"/>
+
+
+  <arg name="simulation"/>
+  <rosparam param="/simulation" subst_value="true">$(arg simulation)</rosparam>
+  
+<!-- GUI -->
+  <rosparam param="/gazebo/time_step">0.01</rosparam>
+  <rosparam param="/gazebo/max_update_rate">100</rosparam>
+  <include file="$(find scenarios)/launch/gui.launch">
+    <arg name="simulation" default="$(arg simulation)"/>
+  </include>
+
+  <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui"/>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find controller)/rviz_config/trajectory_following.rviz"/>
+
+</launch>

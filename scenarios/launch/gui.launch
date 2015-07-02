@@ -18,7 +18,5 @@
     </include>
   </group>
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find controller)/rviz_config/trajectory_following.rviz"/>
-
 
 </launch>
