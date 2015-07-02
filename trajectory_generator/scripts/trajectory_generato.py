@@ -93,7 +93,17 @@ class TrajectoryGenerator():
     e_r = [0.,0.,0.]
     for i in range(0,3):
       e_r[i] = vector1[i]-vector2[i]
-    return e_r/la.norm(e_r)
+    norm = la.norm(e_r)
+    if norm == 0. :
+      return [0.,0.,0.]
+    else:
+      return e_r/la.norm(e_r)
+
+  def is_zero_vector(self,vector):
+    if la.norm(vector) == 0.:
+      return True
+    else:
+      return False
 
   def get_message(self,pos,velo,acc):
     msg = QuadPositionDerived()

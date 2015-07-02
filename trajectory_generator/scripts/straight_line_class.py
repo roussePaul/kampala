@@ -102,7 +102,10 @@ class StraightLineGen(Trajectory):
 if __name__ == '__main__':
   try:
     rospy.sleep(5.)
-    StraightLineGen(TrajectoryNode(),[0.,0.,0.2],[0.,0.,0.6]).loop(0.)  
+    tn = TrajectoryNode()
+    StraightLineGen(tn,[0.,3.,0.2],[0.,0.1,0.6]).loop(0.)
+    rospy.sleep(40.)
+    StraightLineGen(tn,[0.,0.1,0.6],[0., 1, 0.6]).loop(0.)  
   except rospy.ROSInterruptException:
     pass
 
