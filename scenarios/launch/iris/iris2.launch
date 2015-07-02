@@ -2,7 +2,6 @@
 
 	<arg name="ns" value="iris2"/>
 	
-	<arg name="body_id" value="8"/>
 
 	<arg name="simulation"/>
 
@@ -11,44 +10,38 @@
 	<arg name="tgt_system" default="1" />
 	<arg name="tgt_component" default="1" />
 
-	<arg name="x" default="0.0"/>
-	<arg name="y" default="0.0"/>
-
-	<arg name="suspended_load"/>
-	<arg name="load_link_height"/> <!-- [m] -->
-	<arg name="load_mass"/> <!-- [kg] -->
-
-
-<!-- CONTROLLER -->
-<!-- Main values -->
-	<group ns="$(arg ns)">
-		<param name="PID_CONTROL_CANCEL_GRAVITY" value="1540"/>
-		<param name="PID_Ktt" value="1000"/>
-		<param name="PID_Kphi" value="700"/>
-		<param name="PID_w" value="1.1"/>
-		<param name="PID_w_z " value=" 1.7"/>
-		<param name="PID_N_yaw" value="500"/>
-		<param name="PID_K_yaw" value="2"/>
-		<param name="PID_w_inf" value="5"/>
-		<param name="PID_I_lim" value="0.5"/>
-		<param name="PID_K_i" value="7"/>
-
-<!-- Unimportant values -->
-	<!-- <param name="PID_CONTROL_MIN" value="1000"/>
-	<param name="PID_CONTROL_NEUTRAL" value="1500"/>
-	<param name="PID_CONTROL_MAX" value="2000"/>
-	<param name="PID_CONTROL_ARMING_MIN" value="1025"/>
-	<param name="PID_x_i" value="math.sqrt(2)/2"/>
-	<param name="PID_Kp" value="w*w"/>
-	<param name="PID_Kv" value="2*x_i*w"/>
-	<param name="PID_Kv_z" value=" w_z*w_z"/>
-	<param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
-	</group>
-
 
 
 	<group unless="$(arg simulation)">
+
+		<arg name="body_id" value="8"/>
+
 		<group ns="$(arg ns)">
+
+	<!-- CONTROLLER -->
+	<!-- Main values -->
+			<param name="PID_CONTROL_CANCEL_GRAVITY" value="1540"/>
+			<param name="PID_Ktt" value="1000"/>
+			<param name="PID_Kphi" value="700"/>
+			<param name="PID_w" value="1.1"/>
+			<param name="PID_w_z " value=" 1.7"/>
+			<param name="PID_N_yaw" value="500"/>
+			<param name="PID_K_yaw" value="2"/>
+			<param name="PID_w_inf" value="5"/>
+			<param name="PID_I_lim" value="0.5"/>
+			<param name="PID_K_i" value="7"/>
+
+	<!-- Unimportant values -->
+		<!-- <param name="PID_CONTROL_MIN" value="1000"/>
+		<param name="PID_CONTROL_NEUTRAL" value="1500"/>
+		<param name="PID_CONTROL_MAX" value="2000"/>
+		<param name="PID_CONTROL_ARMING_MIN" value="1025"/>
+		<param name="PID_x_i" value="math.sqrt(2)/2"/>
+		<param name="PID_Kp" value="w*w"/>
+		<param name="PID_Kv" value="2*x_i*w"/>
+		<param name="PID_Kv_z" value=" w_z*w_z"/>
+		<param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
+
 			<param name="body_id" value="$(arg body_id)"/>
 			<node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="screen">
 				<param name="fcu_url" value="$(arg fcu_url)" />
@@ -68,10 +61,22 @@
 	</group>
 
 	<group if="$(arg simulation)">
+
+		<arg name="body_id" value="2"/>
+
+		<arg name="x" default="0.0"/>
+		<arg name="y" default="0.0"/>
+
+		<arg name="suspended_load" default="false"/>
+		<arg name="load_link_height" default="1"/> <!-- [m] -->
+		<arg name="load_mass" default="1"/> <!-- [kg] -->
+
+
+
 		<include file="$(find simulator)/launch/iris.launch">
-		  <arg name="ns" value="iris1"/>
-		  <arg name="body_id" value="1"/>
-		  <arg name="docker" value="docker-iris-1"/>
+		  <arg name="ns" value="iris2"/>
+		  <arg name="body_id" value="2"/>
+		  <arg name="docker" value="docker-iris-2"/>
 		  <arg name="local" value="false"/>
 
 		  <arg name="x" value="$(arg x)"/>
