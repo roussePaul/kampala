@@ -85,11 +85,6 @@ class MyPlugin(Plugin):
         subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"])
         
 
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 10" % (self.name,self.simulation)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
-
-
-
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
         
 
