@@ -10,8 +10,8 @@
   <group unless="$(arg simulation)">
 	  <rosparam param="/body_array">[17,8,16]</rosparam>
 	  <rosparam param="/body_names">["iris1","iris2","iris3"]</rosparam>
-	  <node name="ros_mocap" pkg="mocap" type="ros_mocap.py" respawn="true">
+	  <node name="ros_mocap" pkg="mocap" type="ros_mocap.py" respawn="true" output="screen">
 	  </node>
   </group>
 
-</launch>
+</launch> 

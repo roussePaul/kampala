@@ -1,13 +1,25 @@
 import os
 import rospy
-
+import QtGui
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
+from controller.msg import Permission
+
+
+import os
+import subprocess
 
 class MyPlugin(Plugin):
-
+    
     def __init__(self, context):
+        self.pwd = os.environ['PWD']
+        os.system("gnome-terminal -x bash -c 'source "+self.pwd+"/devel/setup.bash; roscd gui/scripts;./term-pipe-r.sh pipefile;sleep(30)'")
+        
+        self.land_permission = Permission()
+        self.lander_channel = []
+
+        
         super(MyPlugin, self).__init__(context)
         # Give QObjects reasonable names
         self.setObjectName('MyPlugin')
@@ -23,7 +35,9 @@ class MyPlugin(Plugin):
         if not args.quiet:
             print 'arguments: ', args
             print 'unknowns: ', unknowns
-
+        
+        
+        
         # Create QWidget
         self._widget = QWidget()
         # Get path to UI file which is a sibling of this file
@@ -43,6 +57,37 @@ class MyPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
+
+        self._widget.ConnectButton.clicked.connect(self.Connect)
+        self._widget.LANDButton.clicked.connect(self.Land)
+        self._widget.ArmButton.clicked.connect(self.Arm)
+        self._widget.StartButton.clicked.connect(self.Start)
+
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
+
+    def Connect(self):
+        self.name = self._widget.IrisInputBox.currentText()
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=false;sleep 10" % (self.name)
+        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+
+
+        self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
+        print self.lander_channel
+
+
+    def Land(self):
+        self.land_permission.permission = True
+        self.lander_channel.publish(self.land_permission)
+
+    def Start(self):
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios %s.launch;sleep 1" % (self._widget.StartInputField.text())
+        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+
+    def Arm(self):
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios iris_nodes.launch ns:=%s;sleep 10" % (self.name)
+        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+
+
     def shutdown_plugin(self):
         # TODO unregister all publishers here
         pass
@@ -61,3 +106,5 @@ class MyPlugin(Plugin):
         # Comment in to signal that the plugin has a way to configure
         # This will enable a setting button (gear icon) in each dock widget title bar
         # Usually used to open a modal configuration dialog
+
+    

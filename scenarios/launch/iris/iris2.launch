@@ -1,0 +1,85 @@
+<launch>
+
+	<arg name="ns" value="iris2"/>
+	
+	<arg name="body_id" value="8"/>
+
+	<arg name="simulation"/>
+
+	<arg name="fcu_url" default="/dev/ttyUSB0:57600" />
+	<arg name="gcs_url" default="udp://127.0.0.1:14556@127.0.0.1:14551" />
+	<arg name="tgt_system" default="1" />
+	<arg name="tgt_component" default="1" />
+
+	<arg name="x" default="0.0"/>
+	<arg name="y" default="0.0"/>
+
+	<arg name="suspended_load"/>
+	<arg name="load_link_height"/> <!-- [m] -->
+	<arg name="load_mass"/> <!-- [kg] -->
+
+
+<!-- CONTROLLER -->
+<!-- Main values -->
+	<group ns="$(arg ns)">
+		<param name="PID_CONTROL_CANCEL_GRAVITY" value="1540"/>
+		<param name="PID_Ktt" value="1000"/>
+		<param name="PID_Kphi" value="700"/>
+		<param name="PID_w" value="1.1"/>
+		<param name="PID_w_z " value=" 1.7"/>
+		<param name="PID_N_yaw" value="500"/>
+		<param name="PID_K_yaw" value="2"/>
+		<param name="PID_w_inf" value="5"/>
+		<param name="PID_I_lim" value="0.5"/>
+		<param name="PID_K_i" value="7"/>
+
+<!-- Unimportant values -->
+	<!-- <param name="PID_CONTROL_MIN" value="1000"/>
+	<param name="PID_CONTROL_NEUTRAL" value="1500"/>
+	<param name="PID_CONTROL_MAX" value="2000"/>
+	<param name="PID_CONTROL_ARMING_MIN" value="1025"/>
+	<param name="PID_x_i" value="math.sqrt(2)/2"/>
+	<param name="PID_Kp" value="w*w"/>
+	<param name="PID_Kv" value="2*x_i*w"/>
+	<param name="PID_Kv_z" value=" w_z*w_z"/>
+	<param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
+	</group>
+
+
+
+	<group unless="$(arg simulation)">
+		<group ns="$(arg ns)">
+			<param name="body_id" value="$(arg body_id)"/>
+			<node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="screen">
+				<param name="fcu_url" value="$(arg fcu_url)" />
+				<param name="gcs_url" value="$(arg gcs_url)" />
+				<param name="target_system_id" value="$(arg tgt_system)" />
+				<param name="target_component_id" value="$(arg tgt_component)" />
+
+				<!-- remap mavlink bridge topics -->
+				<remap from="/mavlink/to" to="mavlink/to" />
+				<remap from="/mavlink/from" to="mavlink/from" />
+
+				<!-- load blacklist, config -->
+				<rosparam command="load" file="$(find mavros)/launch/apm_pluginlists.yaml" />
+				<rosparam command="load" file="$(find mavros)/launch/apm_config.yaml" />
+			</node>
+		</group>
+	</group>
+
+	<group if="$(arg simulation)">
+		<include file="$(find simulator)/launch/iris.launch">
+		  <arg name="ns" value="iris1"/>
+		  <arg name="body_id" value="1"/>
+		  <arg name="docker" value="docker-iris-1"/>
+		  <arg name="local" value="false"/>
+
+		  <arg name="x" value="$(arg x)"/>
+		  <arg name="y" value="$(arg y)"/>
+
+		  <arg name="suspended_load" value="$(arg suspended_load)"/>
+		  <arg name="load_link_height" value="$(arg load_link_height)"/> <!-- [m] -->
+		  <arg name="load_mass" value="$(arg load_mass)"/> <!-- [kg] -->
+		</include>
+	</group>
+</launch>
