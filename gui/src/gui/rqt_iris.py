@@ -5,7 +5,10 @@ from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
+from std_srvs.srv import Empty
 
+import analysis
+import utils
 
 import os
 import subprocess
@@ -69,11 +72,19 @@ class MyPlugin(Plugin):
 
     def Param(self):
         self.name = self._widget.IrisInputBox.currentText()
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 10" % (self.name,self.simulation)
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 1" % (self.name,self.simulation)
+        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        try: 
+            params_load = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
+            params_load()
+        except rospy.ServiceException as exc:
+            utils.loginfo("PID not reachable " + str(exc))
+
+
 
 
     def Connect(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 10" % (self.name,self.simulation)
+        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch; roslaunch connect.launch simulation:=%s ns:=%s;sleep 10" % (self.simulation,self.name)
         subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
 
 

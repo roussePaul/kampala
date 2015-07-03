@@ -40,6 +40,16 @@
       <node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>
     </group>
 
+
+
+    <node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
+    
+    <node name="rqt_plot_x_pos" pkg="rqt_plot" type="rqt_plot" args="error_vis/x_coord" respawn="true"/>
+    <!-- <node name="rqt_plot_x_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/x_velocity" respawn="true"/> -->
+    <node name="rqt_plot_y_pos" pkg="rqt_plot" type="rqt_plot" args="error_vis/y_coord" respawn="true"/>
+    <!-- <node name="rqt_plot_y_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/y_velocity" respawn="true"/> -->
+    <node name="rqt_plot_z_pos" pkg="rqt_plot" type="rqt_plot" args="error_vis/z_coord" respawn="true"/>
+    <!-- <node name="rqt_plot_z_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/z_velocity" respawn="true"/> -->
   </group>
 
 </launch>
