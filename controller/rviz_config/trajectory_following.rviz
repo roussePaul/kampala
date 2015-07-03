@@ -52,12 +52,12 @@ Visualization Manager:
       Reference Frame: <Fixed Frame>
       Value: true
     - Class: rviz/Axes
-      Enabled: false
-      Length: 1
+      Enabled: true
+      Length: 0.3
       Name: Axes
-      Radius: 0.1
+      Radius: 0.01
       Reference Frame: <Fixed Frame>
-      Value: false
+      Value: true
     - Class: rviz/Group
       Displays:
         - Alpha: 1
@@ -248,7 +248,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.29845
+      Distance: 5.19018
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -260,10 +260,10 @@ Visualization Manager:
         Z: 0.462613
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.479796
+      Pitch: 0.364796
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.25219
+      Yaw: 1.08219
     Saved: ~
 Window Geometry:
   Displays:
@@ -281,5 +281,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1600
-  X: 496
-  Y: 55
+  X: 309
+  Y: 34
