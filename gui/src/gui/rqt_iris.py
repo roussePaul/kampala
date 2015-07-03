@@ -72,7 +72,7 @@ class MyPlugin(Plugin):
 
     def Param(self):
         self.name = self._widget.IrisInputBox.currentText()
-        os.system("gnome-terminal -x bash -c 'source "+self.pwd+"/devel/setup.bash; roscd gui/scripts;./term-pipe-r.sh pipefile"+self.name+" ;bash'")
+        subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile'+self.name+';bash'])
         inputstring = "roslaunch scenarios %s.launch simulation:=%s" % (self.name,self.simulation)
     
         subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"+self.name])
