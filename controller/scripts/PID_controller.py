@@ -13,6 +13,9 @@ from controller.msg import PlotData
 from mavros.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
+from std_srvs.srv import Empty
+import analysis
+import utils
 
 
 #Constants
@@ -182,7 +185,7 @@ class PID:
 			#publish low value on the throttle channel, so the drone does not disarm while waiting
 			channel.publish(data)
 			rate.sleep()
-
+		self.load_PID_parameters()
 		rospy.loginfo('['+NODE_NAME+']: First point received')
 
 
@@ -229,6 +232,11 @@ class PID:
 		self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
 		self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
 
+	def update_parameters(self,msg):
+		utils.loginfo('PID parameters loaded')
+		self.load_PID_parameters()
+		return []
+
 if __name__=='__main__':
 	rospy.init_node('PID_controller')
 
@@ -249,6 +257,8 @@ if __name__=='__main__':
 	rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,pid.New_Point,current_point)
 	#Subscribe to /security_guard/controller to get permission to publish to rc/override
 	rospy.Subscriber('security_guard/controller',Permission,pid.Get_Permission,instr)
+
+	rospy.Service('PID_controller/update_parameters', Empty, pid.update_parameters)
 
 	data_init=OverrideRCIn()
 	command=[0,0,pid.CONTROL_ARMING_MIN,0,0,0,0,0]

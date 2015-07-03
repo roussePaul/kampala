@@ -5,7 +5,10 @@ from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
+from std_srvs.srv import Empty
 
+import analysis
+import utils
 
 import os
 import subprocess
@@ -70,21 +73,28 @@ class MyPlugin(Plugin):
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
 
+
+    def execute(self,cmd):
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"+self.name])
+
     def Param(self):
         self.name = self._widget.IrisInputBox.currentText()
         subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile'+self.name+';bash'])
         inputstring = "roslaunch scenarios %s.launch simulation:=%s" % (self.name,self.simulation)
-    
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"+self.name])
+        self.execute(inputstring)
         
+        try: 
+            params_load = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
+            params_load()
+        except rospy.ServiceException as exc:
+            utils.loginfo("PID not reachable " + str(exc))
+
+
     def Connect(self):
-
+        inputstring = "roslaunch scenarios connect.launch simulation:=%s ns:=%s" % (self.simulation,self.name)
+        self.execute(inputstring)
         
-        inputstring = "roslaunch scenarios %s.launch simulation:=false" % (self.name)
         
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"+self.name])
-        
-
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
         
 
@@ -95,11 +105,12 @@ class MyPlugin(Plugin):
 
     def Start(self):
         inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"+self.name])
+        utils.logerr(inputstring)
+        self.execute(inputstring)
 
     def Arm(self):
         inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s" % (self.name)
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+inputstring+" > pipefile"+self.name])
+        self.execute(inputstring)
 
 
     def shutdown_plugin(self):
