@@ -161,7 +161,6 @@ class PID():
     self.Kv_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv_z", self.w_z*self.w_z)
     self.Kp_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp_z", 2*self.x_i*self.w_z)
 
-
     self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
     self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
 
