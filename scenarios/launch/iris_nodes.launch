@@ -7,7 +7,7 @@
 
 
 <!-- Visualisation -->
-  <arg name="rviz" default="true"/> <!-- No more than one drone visualisable -->
+  <arg name="rviz" default="false"/> <!-- No more than one drone visualisable -->
   
 
 <!-- |||| LAUNCH |||| -->
@@ -50,6 +50,8 @@
     <!-- <node name="rqt_plot_y_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/y_velocity" respawn="true"/> -->
     <node name="rqt_plot_z_pos" pkg="rqt_plot" type="rqt_plot" args="error_vis/z_coord" respawn="true"/>
     <!-- <node name="rqt_plot_z_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/z_velocity" respawn="true"/> -->
+    
+    <node name="rqt_plot_rc" pkg="rqt_plot" type="rqt_plot" args="mavros/rc/override"/>
   </group>
 
 </launch>

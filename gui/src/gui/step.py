@@ -13,22 +13,21 @@ import utils
 import os
 import subprocess
 
-class MyPlugin(Plugin):
+import trajectory_generator
+from trajectory import Trajectory
+from trajectory_generato import TrajectoryGenerator
+from Trajectory_node import TrajectoryNode
+from mocap.msg import QuadPositionDerived
+from controller.msg import Permission
+
+import threading
+
+class StepPlugin(Plugin):
     
     def __init__(self, context):
-        self.pwd = os.environ['PWD']
-
-        
-        
-        self.simulation = rospy.get_param('/simulation','false')
-
-
-        self.land_permission = Permission()
-        self.lander_channel = []
-
-        super(MyPlugin, self).__init__(context)
+        super(StepPlugin, self).__init__(context)
         # Give QObjects reasonable names
-        self.setObjectName('MyPlugin')
+        self.setObjectName('StepPlugin')
 
         # Process standalone plugin command-line arguments
         from argparse import ArgumentParser
@@ -48,11 +47,11 @@ class MyPlugin(Plugin):
         self._widget = QWidget()
         # Get path to UI file which is a sibling of this file
         # in this example the .ui and .py file are in the same folder
-        ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'MyPlugin.ui')
+        ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Step.ui')
         # Extend the widget with all attributes and children from UI file
         loadUi(ui_file, self._widget)
         # Give QObjects reasonable names
-        self._widget.setObjectName('MyPluginUi')
+        self._widget.setObjectName('StepPluginUi')
         # Show _widget.windowTitle on left-top of each plugin (when 
         # it's set in _widget). This is useful when you open multiple 
         # plugins at once. Also if you open multiple instances of your 
@@ -63,49 +62,54 @@ class MyPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
-        
 
-        self._widget.ConnectButton.clicked.connect(self.Connect)
-        self._widget.LANDButton.clicked.connect(self.Land)
-        self._widget.ArmButton.clicked.connect(self.Arm)
-        self._widget.StartButton.clicked.connect(self.Start)
-        self._widget.ParamButton.clicked.connect(self.Param)
+        self.tg = TrajectoryGenerator()        
+
+        self._widget.bUp.clicked.connect(self.Up)
+        self._widget.bDown.clicked.connect(self.Down)
+        self._widget.bLeft.clicked.connect(self.Left)
+        self._widget.bRight.clicked.connect(self.Right)
+        self._widget.bFront.clicked.connect(self.Front)
+        self._widget.bBack.clicked.connect(self.Back)
+        self._widget.bStart.clicked.connect(self.Start)
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
 
-    def Param(self):
-        self.name = self._widget.IrisInputBox.currentText()
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 1" % (self.name,self.simulation)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
-        try: 
-            params_load = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
-            params_load()
-        except rospy.ServiceException as exc:
-            utils.loginfo("PID not reachable " + str(exc))
-
-
-
-
-    def Connect(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch; roslaunch connect.launch simulation:=%s ns:=%s;sleep 10" % (self.simulation,self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
-
-        
-        self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
-        
-
-
-    def Land(self):
-        self.land_permission.permission = True
-        self.lander_channel.publish(self.land_permission)
-
     def Start(self):
-        inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        abspath = "/"+self._widget.IrisInputBox.currentText()+"/"
+        self.pub = rospy.Publisher(abspath+'trajectory_gen/target',QuadPositionDerived, queue_size=10)
+        self.security_pub = rospy.Publisher(abspath+'trajectory_gen/done', Permission, queue_size=10)
 
-    def Arm(self):
-        inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s" % (self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+
+    def Up(self):
+        self.Goto([0.0,0.0,1.0])
+
+    def Down(self):
+        self.Goto([0.0,0.0,0.5])
+
+    def Left(self):
+        self.Goto([-1.0,0.0,0.5])
+
+    def Right(self):
+        self.Goto([1.0,0.0,0.5])
+
+    def Back(self):
+        self.Goto([0.0,-1.0,0.5])
+
+    def Front(self):
+        self.Goto([0.0,1.0,0.5])
+
+    def Goto(self, dest):
+        utils.logwarn(str(dest))
+        outpos = dest
+        outpos.append(0.0)
+        outvelo = [0.0]*3
+        outvelo.append(0.0)
+        outacc = [0.0]*3
+        outacc.append(0.0)
+        outmsg = self.tg.get_message(outpos, outvelo, outacc)
+        self.pub.publish(outmsg)
+        self.security_pub.publish(False)
 
 
     def shutdown_plugin(self):
@@ -126,3 +130,5 @@ class MyPlugin(Plugin):
         # Comment in to signal that the plugin has a way to configure
         # This will enable a setting button (gear icon) in each dock widget title bar
         # Usually used to open a modal configuration dialog
+
+    

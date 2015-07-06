@@ -72,7 +72,7 @@ def Interrupt_Flight(lander_channel,controller_channel):
 
 def Prepare_For_Flight():
 	#Set the flight mode to alt-hold (default)
-	mode_success=sml_setup.Set_Flight_Mode(NODE_NAME,'ALT_HOLD')
+	mode_success=sml_setup.Set_Flight_Mode(NODE_NAME,'STABILIZE')
 
 	#Set system ID to 1 to allow RC override
 	ID_success=sml_setup.Set_System_ID(NODE_NAME,1)

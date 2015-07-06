@@ -123,7 +123,7 @@ class PID:
 
 		for i in range(0,2):
 			u.append(x_acc_target[i]-self.Kv*e_dot[i]-self.Kp*e[i])
-	        u.append(x_acc_target[2]-self.Kv_z*e_dot[2]-self.Kp_z*e[2])
+		u.append(x_acc_target[2]-self.Kv_z*e_dot[2]-self.Kp_z*e[2])
 
 		u[2]=u[2]-new_d
 
@@ -217,7 +217,7 @@ class PID:
 		self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"PID_Kphi",1000)/(20*math.pi/180)
 
 		self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.1)
-		self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z ", 1.3)
+		self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
 		self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
 		self.Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
 		self.Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)

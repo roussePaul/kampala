@@ -13,7 +13,7 @@ class Mocap(object):
         #set IP and PORT of the Qtm PC
         if host is None:
             #host='130.237.50.87'
-            host = 'smlremote.no-ip.biz'
+            host = '130.237.50.71' #smlremote.no-ip.biz
         if port is None:
             port = 22224
         self.host = host

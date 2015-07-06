@@ -40,10 +40,10 @@ class mavrosSim:
 		return {'success':True, 'result':1}
 
 	def transformMessage(self,msg):
-		roll  	 = 0.1*(msg.channels[0]-1500.0)/500.0
-		pitch  	 = 0.1*(msg.channels[1]-1500.0)/500.0
-		thrust   = 0.9*(msg.channels[2]-1000.0)/1000.0
-		yaw_rate = 0.1*(msg.channels[3]-1500.0)/500.0
+		roll  	 = (msg.channels[0]-1500.0)/500.0
+		pitch  	 = (msg.channels[1]-1500.0)/500.0
+		thrust   = (msg.channels[2]-1000.0)/1000.0
+		yaw_rate = (msg.channels[3]-1500.0)/500.0
 
 		self.pubRC(roll, pitch, thrust, yaw_rate)
 

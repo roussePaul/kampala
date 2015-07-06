@@ -2,9 +2,9 @@
 
 import sys
 
-from gui.rqt_iris import MyPlugin
+from gui.step import StepPlugin
 from rqt_gui.main import Main
 
-plugin = 'rqt_iris'
+plugin = 'step'
 main = Main(filename=plugin)
 sys.exit(main.main(standalone=plugin))

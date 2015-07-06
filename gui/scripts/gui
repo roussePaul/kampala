@@ -2,7 +2,8 @@
 
 import sys
 
-from gui.rqt_iris import IrisPlugin
+from gui.rqt_iris import MyPlugin
+from gui.step import StepPlugin
 from rqt_gui.main import Main
 
 plugin = 'gui'
