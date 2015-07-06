@@ -42,6 +42,7 @@ class Blender():
     self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
     self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
     self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1400)
+    self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
     
   def init_subscriptions(self, target_point,current_point, instr):
     #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
@@ -158,7 +159,10 @@ class Blender():
     u = [0.,0.,0.]
     u_pid = self.PID.get_PID_output(current_point,target_point)
     u_obst = self.avoidance.get_potential_output()
-    alpha = self.avoidance.get_blending_constant()
+    if self.obstacle_avoidance:
+      alpha = self.avoidance.get_blending_constant()
+    else:
+      alpha = 0
     for i in range(0,2):
       u[i] = alpha * u_obst[i] + (1-alpha) * u_pid[i]
     u[2] = u_pid[2] 

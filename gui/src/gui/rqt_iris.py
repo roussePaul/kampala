@@ -105,7 +105,6 @@ class MyPlugin(Plugin):
 
     def Start(self):
         inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
-        utils.logerr(inputstring)
         self.execute(inputstring)
 
     def Arm(self):

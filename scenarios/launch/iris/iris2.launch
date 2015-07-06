@@ -6,6 +6,9 @@
 
 	<arg name="launch" default="false"/>
 
+	<group ns="$(arg ns)">
+        	<param name="obstacle_avoidance" type="bool" value="False"/>
+	</group>
 	<group unless="$(arg simulation)">
 
 
@@ -57,7 +60,7 @@
 				
 
 				<arg name="x" default="0.0"/>
-				<arg name="y" default="0.0"/>
+				<arg name="y" default="2.5"/>
 
 				<arg name="suspended_load" default="false"/>
 				<arg name="load_link_height" default="1"/> <!-- [m] -->
