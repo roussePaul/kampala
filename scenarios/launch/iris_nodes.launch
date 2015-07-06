@@ -33,7 +33,7 @@
 
 
     <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="true"/>
-    <node name="PID_controller" pkg="controller" type="PID_controller.py" output="screen"/> 
+    <node name="PID_controller" pkg="controller" type="blender.py" output="screen"/> 
 
     <!-- RVIZ LINK -->
     <group if="$(arg rviz)">
@@ -42,14 +42,7 @@
 
 
 
-    <node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
     
-    <node name="rqt_plot_x_pos" pkg="rqt_plot" type="rqt_plot" args="error_vis/x_coord" respawn="true"/>
-    <!-- <node name="rqt_plot_x_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/x_velocity" respawn="true"/> -->
-    <node name="rqt_plot_y_pos" pkg="rqt_plot" type="rqt_plot" args="error_vis/y_coord" respawn="true"/>
-    <!-- <node name="rqt_plot_y_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/y_velocity" respawn="true"/> -->
-    <node name="rqt_plot_z_pos" pkg="rqt_plot" type="rqt_plot" args="error_vis/z_coord" respawn="true"/>
-    <!-- <node name="rqt_plot_z_vel" pkg="rqt_plot" type="rqt_plot" args="error_vis/z_velocity" respawn="true"/> -->
   </group>
 
 </launch>

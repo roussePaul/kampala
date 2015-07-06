@@ -4,7 +4,7 @@ import sys
 import ast
 import math
 import numpy
-sys.path.insert(0, '/home/summer/catkin_sml/src/kampala/trajectory_generator/scripts')
+import trajectory_generator
 from trajectory_generato import TrajectoryGenerator
 from mocap.msg import QuadPositionDerived
 
@@ -13,7 +13,7 @@ class AvoidanceController():
   
  
   def __init__(self,my_id,bodies):
-    self.gain = 1.7                    #x,y direction
+    self.gain = 2.                    #x,y direction
     self.gain_z = 0.		      #z direction
     self.tg = TrajectoryGenerator()
     self.my_id = my_id

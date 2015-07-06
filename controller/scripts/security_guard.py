@@ -214,10 +214,10 @@ if __name__=='__main__':
 
 
 	#Prepare the Iris for flight (set system ID and arm)
-	ready_to_fly=Prepare_For_Flight()
+	#ready_to_fly=Prepare_For_Flight()
 
-	if not ready_to_fly:
-		Interrupt_Flight(lander_channel,controller_channel)
+	#if not ready_to_fly:
+	#	Interrupt_Flight(lander_channel,controller_channel)
 
 	
 	while not rospy.is_shutdown():
