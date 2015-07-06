@@ -99,17 +99,17 @@ class ArcGen(Trajectory):
    
 if __name__ == '__main__':
   try:
-    rospy.sleep(10.)
+    rospy.sleep(4.)
     tn = TrajectoryNode()
     sl_gen_1 = StraightLineGen(tn,[0.,0.,0.2],[0.,0.,0.6])
     sl_gen_1.loop(0.)
-    rospy.sleep(5.)
+    rospy.sleep(2.)
     sl_gen_2 = StraightLineGen(tn,[0.,0.,0.6],[0.8,0.,0.6])
     sl_gen_2.loop(0.)
     rospy.sleep(10.)
-    acc_gen = AccGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.4,0.],6*math.pi)
+    acc_gen = AccGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.4,0.],14*math.pi)
     t = acc_gen.get_t_f()
-    a_gen = ArcGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.4,0.],6*math.pi)
+    a_gen = ArcGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.4,0.],14*math.pi)
     a_gen.loop(t/2.0)
     
   except rospy.ROSInterruptException:
