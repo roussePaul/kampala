@@ -1,0 +1,24 @@
+<launch>
+	<arg name="simulation"/>
+	<arg name="ns"/>
+
+	<group unless="$(arg simulation)" ns="$(arg ns)">
+		<node pkg="mavros" type="mavros_node" name="mavros" required="true" output="screen">
+
+			<!-- remap mavlink bridge topics -->
+			<remap from="/mavlink/to" to="mavlink/to" />
+			<remap from="/mavlink/from" to="mavlink/from" />
+
+			<!-- load blacklist, config -->
+			<rosparam command="load" file="$(find mavros)/launch/apm_pluginlists.yaml" />
+			<rosparam command="load" file="$(find mavros)/launch/apm_config.yaml" />
+		</node>
+	</group>
+
+	<group if="$(arg simulation)">
+		<include file="$(find scenarios)/launch/iris/$(arg ns).launch">
+			<arg name="simulation" value="$(arg simulation)"/>
+			<arg name="launch" value="true"/>
+		</include>
+	</group>
+</launch>

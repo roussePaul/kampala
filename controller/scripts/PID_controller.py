@@ -13,6 +13,9 @@ from controller.msg import PlotData
 from mavros.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
+from std_srvs.srv import Empty
+import analysis
+import utils
 
 
 #Constants
@@ -79,6 +82,7 @@ class PID():
     self.load_PID_parameters()
     self.d_updated = 0
 
+    rospy.Service('PID_controller/update_parameters', Empty, pid.update_parameters)
   def get_d_updated(self):
     return self.d_updated
 
@@ -93,6 +97,7 @@ class PID():
 
     return e
 
+
   def get_PID_output(self,current, target):
     d_updated = self.get_d_updated()
     x,x_vel,x_acc=self.Get_Pos_Vel_Acc(current)  #current state
@@ -100,6 +105,13 @@ class PID():
     time_diff=current.time_diff 
     command_controlled=self.calculate_PID_output(x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,time_diff,d_updated)
     return command_controlled
+
+  def update_parameters(self,msg):
+    utils.loginfo('PID parameters loaded')
+    self.load_PID_parameters()
+    return []
+
+
 
   def calculate_PID_output(self,x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
     u=[]
@@ -119,7 +131,6 @@ class PID():
 
     return u
 
-
   def Saturation(self,value,minimum,maximum):
     value=max(minimum,min(maximum,value))
     return value
@@ -136,9 +147,13 @@ class PID():
 	
   def load_PID_parameters(self):		
     #Controller parameters	
-
+    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
+    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
+    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
+    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
+    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1370)
     self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.7)
-    self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z ", 1.3)
+    self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
     self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
     self.Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
     self.Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)

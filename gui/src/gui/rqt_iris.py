@@ -5,7 +5,10 @@ from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
+from std_srvs.srv import Empty
 
+import analysis
+import utils
 
 import os
 import subprocess
@@ -15,12 +18,14 @@ class MyPlugin(Plugin):
     def __init__(self, context):
         self.pwd = os.environ['PWD']
 
+        
+        
         self.simulation = rospy.get_param('/simulation','false')
+
 
         self.land_permission = Permission()
         self.lander_channel = []
 
-        
         super(MyPlugin, self).__init__(context)
         # Give QObjects reasonable names
         self.setObjectName('MyPlugin')
@@ -58,6 +63,7 @@ class MyPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
+        
 
         self._widget.ConnectButton.clicked.connect(self.Connect)
         self._widget.LANDButton.clicked.connect(self.Land)
@@ -67,18 +73,30 @@ class MyPlugin(Plugin):
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
 
+
+    def execute(self,cmd):
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"+self.name])
+
     def Param(self):
         self.name = self._widget.IrisInputBox.currentText()
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 10" % (self.name,self.simulation)
+        subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile'+self.name+';bash'])
+        inputstring = "roslaunch scenarios %s.launch simulation:=%s" % (self.name,self.simulation)
+        self.execute(inputstring)
+        
+        try: 
+            params_load = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
+            params_load()
+        except rospy.ServiceException as exc:
+            utils.loginfo("PID not reachable " + str(exc))
 
 
     def Connect(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 10" % (self.name,self.simulation)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
-
-
+        inputstring = "roslaunch scenarios connect.launch simulation:=%s ns:=%s" % (self.simulation,self.name)
+        self.execute(inputstring)
+        
+        
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
-        print self.lander_channel
+        
 
 
     def Land(self):
@@ -86,12 +104,13 @@ class MyPlugin(Plugin):
         self.lander_channel.publish(self.land_permission)
 
     def Start(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios %s ns:=%s;sleep 1" % (self._widget.StartInputField.text(),self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
+        utils.logerr(inputstring)
+        self.execute(inputstring)
 
     def Arm(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roslaunch scenarios iris_nodes.launch ns:=%s;sleep 10" % (self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s" % (self.name)
+        self.execute(inputstring)
 
 
     def shutdown_plugin(self):

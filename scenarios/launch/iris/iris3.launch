@@ -1,36 +1,38 @@
 <launch>
 
 	<arg name="ns" value="iris3"/>
-	
 
 	<arg name="simulation"/>
 
-	<arg name="fcu_url" default="/dev/ttyUSB0:57600" />
-	<arg name="gcs_url" default="udp://127.0.0.1:14556@127.0.0.1:14551" />
-	<arg name="tgt_system" default="1" />
-	<arg name="tgt_component" default="1" />
-
-
+	<arg name="launch" default="false"/>
 
 	<group unless="$(arg simulation)">
 
-		<arg name="body_id" value="16"/>
 
 		<group ns="$(arg ns)">
 
+
+			<group ns="mavros">
+				<param name="fcu_url" value="/dev/ttyUSB0:57600" />
+				<param name="gcs_url" value="udp://127.0.0.1:14556@127.0.0.1:14551" />
+				<param name="target_system_id" value="1" />
+				<param name="target_component_id" value="1" />
+			</group>
+			
+			<param name="body_id" value="16"/>
+
 	<!-- CONTROLLER -->
 	<!-- Main values -->
-			<param name="PID_CONTROL_CANCEL_GRAVITY" value="1540"/>
+			<param name="PID_CONTROL_CANCEL_GRAVITY" value="1450"/>
 			<param name="PID_Ktt" value="1000"/>
-			<param name="PID_Kphi" value="700"/>
+			<param name="PID_Kphi" value="1000"/>
 			<param name="PID_w" value="1.1"/>
-			<param name="PID_w_z " value=" 1.7"/>
+			<param name="PID_w_z " value=" 2"/>
 			<param name="PID_N_yaw" value="500"/>
 			<param name="PID_K_yaw" value="2"/>
 			<param name="PID_w_inf" value="5"/>
-			<param name="PID_I_lim" value="0.5"/>
+			<param name="PID_I_lim" value="1.5"/>
 			<param name="PID_K_i" value="7"/>
-
 	<!-- Unimportant values -->
 		<!-- <param name="PID_CONTROL_MIN" value="1000"/>
 		<param name="PID_CONTROL_NEUTRAL" value="1500"/>
@@ -41,50 +43,26 @@
 		<param name="PID_Kv" value="2*x_i*w"/>
 		<param name="PID_Kv_z" value=" w_z*w_z"/>
 		<param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
-
-			<param name="body_id" value="$(arg body_id)"/>
-			<node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="screen">
-				<param name="fcu_url" value="$(arg fcu_url)" />
-				<param name="gcs_url" value="$(arg gcs_url)" />
-				<param name="target_system_id" value="$(arg tgt_system)" />
-				<param name="target_component_id" value="$(arg tgt_component)" />
-
-				<!-- remap mavlink bridge topics -->
-				<remap from="/mavlink/to" to="mavlink/to" />
-				<remap from="/mavlink/from" to="mavlink/from" />
-
-				<!-- load blacklist, config -->
-				<rosparam command="load" file="$(find mavros)/launch/apm_pluginlists.yaml" />
-				<rosparam command="load" file="$(find mavros)/launch/apm_config.yaml" />
-			</node>
 		</group>
 	</group>
 
 	<group if="$(arg simulation)">
+		<group if="$(arg launch)">
+			<include file="$(find simulator)/launch/iris.launch">
 
-		<arg name="body_id" value="2"/>
+				<arg name="ns" value="$(arg ns)"/>
+				
+				<arg name="body_id" value="3"/>
+				<arg name="docker" value="docker-iris-3"/>
+				
 
-		<arg name="x" default="0.0"/>
-		<arg name="y" default="0.0"/>
+				<arg name="x" default="0.0"/>
+				<arg name="y" default="0.0"/>
 
-		<arg name="suspended_load" default="false"/>
-		<arg name="load_link_height" default="1"/> <!-- [m] -->
-		<arg name="load_mass" default="1"/> <!-- [kg] -->
-
-
-
-		<include file="$(find simulator)/launch/iris.launch">
-		  <arg name="ns" value="iris3"/>
-		  <arg name="body_id" value="3"/>
-		  <arg name="docker" value="docker-iris-3"/>
-		  <arg name="local" value="false"/>
-
-		  <arg name="x" value="$(arg x)"/>
-		  <arg name="y" value="$(arg y)"/>
-
-		  <arg name="suspended_load" value="$(arg suspended_load)"/>
-		  <arg name="load_link_height" value="$(arg load_link_height)"/> <!-- [m] -->
-		  <arg name="load_mass" value="$(arg load_mass)"/> <!-- [kg] -->
-		</include>
+				<arg name="suspended_load" default="false"/>
+				<arg name="load_link_height" default="1"/> <!-- [m] -->
+				<arg name="load_mass" default="1"/> <!-- [kg] -->
+			</include>
+		</group>
 	</group>
 </launch>
