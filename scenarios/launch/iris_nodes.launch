@@ -33,7 +33,7 @@
 
 
     <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="true"/>
-    <node name="PID_controller" pkg="controller" type="PID_controller.py" output="screen"/> 
+    <node name="blender" pkg="controller" type="blender.py" output="screen"/> 
 
     <!-- RVIZ LINK -->
     <group if="$(arg rviz)">

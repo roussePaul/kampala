@@ -4,7 +4,7 @@ import sys
 import ast
 import math
 import numpy
-sys.path.insert(0, '/home/summer/catkin_sml/src/kampala/trajectory_generator/scripts')
+import trajectory_generator
 from trajectory_generato import TrajectoryGenerator
 from mocap.msg import QuadPositionDerived
 

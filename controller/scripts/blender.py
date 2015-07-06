@@ -16,7 +16,7 @@ from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
 from PID_controller import Point, Instruction, PID
 
-
+from numpy import linalg
 
 
 #Constants
@@ -129,6 +129,8 @@ class Blender():
     AUX_rot.append(math.sin(math.radians(-x[3]))*AUX[0]+math.cos(math.radians(-x[3]))*AUX[1])
     AUX_rot.append(AUX[2])
 
+    norm_AUX=linalg.norm(AUX_rot)
+
     norm_AUX=math.sqrt(math.pow(AUX_rot[0],2)+math.pow(AUX_rot[1],2)+math.pow(AUX_rot[2],2))
 
     #yaw control:
@@ -137,7 +139,7 @@ class Blender():
 
     #set values:
     throttle=(self.CONTROL_CANCEL_GRAVITY/9.8)*norm_AUX
-    yaw=self.CONTROL_NEUTRAL - self.N_yaw*self.Saturation(w_yaw/self.w_inf,-1,1)
+    yaw_rate=self.CONTROL_NEUTRAL - self.N_yaw*self.Saturation(w_yaw/self.w_inf,-1,1)
     pitch=self.CONTROL_NEUTRAL-self.Ktt*math.asin(AUX_rot[0]/norm_AUX)
     roll=self.CONTROL_NEUTRAL-self.Kphi*math.asin(AUX_rot[1]/norm_AUX)
 
@@ -152,7 +154,7 @@ class Blender():
     pitch=self.Saturation(pitch,1350,1650)
     roll=self.Saturation(roll,1350,1650)
 
-    return [roll,pitch,throttle,yaw,0,0,0,0]
+    return [roll,pitch,throttle,yaw_rate,0,0,0,0]
 
 
   def blend(self,current_point,target_point,d_updated):
