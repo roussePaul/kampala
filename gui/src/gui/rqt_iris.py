@@ -70,19 +70,25 @@ class MyPlugin(Plugin):
         self._widget.ArmButton.clicked.connect(self.Arm)
         self._widget.StartButton.clicked.connect(self.Start)
         self._widget.ParamButton.clicked.connect(self.Param)
+        self._widget.TerminalButton.clicked.connect(self.Terminal)
         self._widget.StartInputField.returnPressed.connect(self.Autocomplete)
         self._widget.FileInputBox.currentIndexChanged.connect(self.FillIn)
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
         self._widget.FileInputBox.insertItems(0,self.filelist)
 
     def execute(self,cmd):
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"+self.name])
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"])
+
+    def executeBlocking(self,cmd):
+        os.system("bash -c 'cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile'")
+
+    def Terminal(self):
+        subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile;bash'])
 
     def Param(self):
         self.name = self._widget.IrisInputBox.currentText()
-        subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile'+self.name+';bash'])
         inputstring = "roslaunch scenarios %s.launch simulation:=%s" % (self.name,self.simulation)
-        self.execute(inputstring)
+        self.executeBlocking(inputstring)
         
         try: 
             params_load = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
