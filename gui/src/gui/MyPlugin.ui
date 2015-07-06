@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>292</width>
-    <height>217</height>
+    <height>286</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -88,6 +88,16 @@
       <string>Start</string>
      </property>
     </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Choose file:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" colspan="2">
+    <widget class="QComboBox" name="FileInputBox"/>
    </item>
   </layout>
  </widget>

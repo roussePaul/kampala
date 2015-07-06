@@ -71,9 +71,9 @@ class MyPlugin(Plugin):
         self._widget.StartButton.clicked.connect(self.Start)
         self._widget.ParamButton.clicked.connect(self.Param)
         self._widget.StartInputField.returnPressed.connect(self.Autocomplete)
-
+        self._widget.FileInputBox.currentIndexChanged.connect(self.FillIn)
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
-
+        self._widget.FileInputBox.insertItems(0,self.filelist)
 
     def execute(self,cmd):
         subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"+self.name])
@@ -126,6 +126,9 @@ class MyPlugin(Plugin):
                 completed_text = filename
         if exists and unique:
             self._widget.StartInputField.setText(completed_text)
+
+    def FillIn(self):
+        self._widget.StartInputField.setText(self._widget.FileInputBox.currentText())
 
 
 
