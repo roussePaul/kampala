@@ -12,6 +12,10 @@ source /opt/ros/indigo/setup.bash
 WDIR=`pwd`
 WORKSPACE=$WDIR/catkin_ws
 
+rm -r $WORKSPACE
+
+apt-get -y install zip
+
 # Setup workspace
 mkdir -p $WORKSPACE/src
 cd $WORKSPACE/src
@@ -51,7 +55,7 @@ export ROS_PARALLEL_JOBS=
 # Compile workspace
 cd $WORKSPACE
 source devel/setup.bash
-catkin_make
+catkin_make -j 1
 
 ## Kampala
 cd $WORKSPACE/src
