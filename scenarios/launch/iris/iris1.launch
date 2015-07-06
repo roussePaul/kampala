@@ -66,7 +66,7 @@
 
 	<!-- CONTROLLER -->
 	<!-- Main values -->
-			<param name="PID_CONTROL_CANCEL_GRAVITY" value="1450"/>
+			<param name="PID_CONTROL_CANCEL_GRAVITY" value="1550"/>
 			<param name="PID_CONTROL_ARMING_MIN" value="1030"/>
 			<param name="PID_Ktt" value="500"/>
 			<param name="PID_Kphi" value="1500"/>

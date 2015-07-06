@@ -30,7 +30,7 @@ class Blender():
     body_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',8)
     body_array = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
     self.PID = PID()
-    self.avoidance = AvoidanceController(body_id,body_array)
+    #self.avoidance = AvoidanceController(body_id,body_array)
     rospy.init_node(NODE_NAME)
     self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_N_yaw",500)
     self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_K_yaw",2)
@@ -138,7 +138,7 @@ class Blender():
     w_yaw=-self.K_yaw*(math.radians(diff))
 
     #set values:
-    throttle=(self.CONTROL_CANCEL_GRAVITY/9.8)*norm_AUX
+    throttle=(self.CONTROL_CANCEL_GRAVITY)*math.sqrt(norm_AUX/9.8)
     yaw_rate=self.CONTROL_NEUTRAL - self.N_yaw*self.Saturation(w_yaw/self.w_inf,-1,1)
     pitch=self.CONTROL_NEUTRAL-self.Ktt*math.asin(AUX_rot[0]/norm_AUX)
     roll=self.CONTROL_NEUTRAL-self.Kphi*math.asin(AUX_rot[1]/norm_AUX)
@@ -160,15 +160,15 @@ class Blender():
   def blend(self,current_point,target_point,d_updated):
     u = [0.,0.,0.]
     u_pid = self.PID.get_PID_output(current_point,target_point)
-    u_obst = self.avoidance.get_potential_output()
-    if self.obstacle_avoidance:
-      alpha = self.avoidance.get_blending_constant()
-    else:
-      alpha = 0
-    for i in range(0,2):
-      u[i] = alpha * u_obst[i] + (1-alpha) * u_pid[i]
-    u[2] = u_pid[2] 
-    return u
+    #u_obst = self.avoidance.get_potential_output()
+   # if self.obstacle_avoidance:
+     # alpha = self.avoidance.get_blending_constant()
+    #else:
+     # alpha = 0
+   # for i in range(0,2):
+      #u[i] = alpha * u_obst[i] + (1-alpha) * u_pid[i]
+   # u[2] = u_pid[2] 
+    return u_pid
  
 
   def New_Point(self,data,point_obj):
