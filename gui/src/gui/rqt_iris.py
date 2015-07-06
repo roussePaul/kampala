@@ -73,10 +73,16 @@ class MyPlugin(Plugin):
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
 
+
+    def execute(self,cmd):
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"+self.name])
+
     def Param(self):
         self.name = self._widget.IrisInputBox.currentText()
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch/iris; roslaunch %s.launch simulation:=%s;sleep 1" % (self.name,self.simulation)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile'+self.name+';bash'])
+        inputstring = "roslaunch scenarios %s.launch simulation:=%s" % (self.name,self.simulation)
+        self.execute(inputstring)
+        
         try: 
             params_load = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
             params_load()
@@ -84,12 +90,10 @@ class MyPlugin(Plugin):
             utils.loginfo("PID not reachable " + str(exc))
 
 
-
-
     def Connect(self):
-        inputstring = "source "+self.pwd+"/devel/setup.bash; roscd scenarios/launch; roslaunch connect.launch simulation:=%s ns:=%s;sleep 10" % (self.simulation,self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
-
+        inputstring = "roslaunch scenarios connect.launch simulation:=%s ns:=%s" % (self.simulation,self.name)
+        self.execute(inputstring)
+        
         
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
         
@@ -101,11 +105,12 @@ class MyPlugin(Plugin):
 
     def Start(self):
         inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        utils.logerr(inputstring)
+        self.execute(inputstring)
 
     def Arm(self):
         inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s" % (self.name)
-        subprocess.Popen(["gnome-terminal","-x","bash","-c", inputstring])
+        self.execute(inputstring)
 
 
     def shutdown_plugin(self):

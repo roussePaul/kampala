@@ -104,8 +104,9 @@ if __name__ == '__main__':
     traj = TrajectoryNode()
     traj.send_permission(True)
     rospy.sleep(5.)
-    tn = TrajectoryNode()
-    StraightLineGen(tn,[0.,0.0,0.2],[0.,0.0,0.6]).loop(0.)
+    StraightLineGen(traj,[0.,0.,0.],[0.,0.,0.6]).loop(0.)
+    rospy.sleep(15.)
+    StraightLineGen(traj,[0.,0.,0.6],[0., 4., 0.6]).loop(0.)
   except rospy.ROSInterruptException:
     pass
 
