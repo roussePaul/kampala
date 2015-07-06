@@ -46,7 +46,6 @@ class Point():
 		self.pitch_acc=0
 		self.roll_acc=0
 		self.time_diff=0
-
 		self.first_point_received=False
 
 	def update_point(self,new_data):
@@ -78,222 +77,93 @@ class Instruction():
 		self.permission=True
 
 
-class PID:
-	def __init__(self):
-		self.load_PID_parameters()
+class PID():
+  def __init__(self):
+    self.load_PID_parameters()
+    self.d_updated = 0
 
-	def AngularDifference(self,current_angle,target_angle):
-		ang_diff=current_angle-target_angle
+    rospy.Service('PID_controller/update_parameters', Empty, pid.update_parameters)
+  def get_d_updated(self):
+    return self.d_updated
 
-		if math.fabs(ang_diff)>180:
-			if ang_diff>0:
-				ang_diff=ang_diff-360
-			else:
-				ang_diff=ang_diff+360
-
-		return ang_diff
+  def set_d_updated(self, d):
+    self.d_updated = d
 
 
-	def Saturation(self,value,minimum,maximum):
+  def Get_Errors(self,current,target):
+    e=[]
+    for i in range (0,3):
+      e.append(current[i]-target[i])
 
-		value=max(minimum,min(maximum,value))
-
-		return value
-
-
-	def Get_Errors(self,current,target):
-		e=[]
-		for i in range (0,3):
-			e.append(current[i]-target[i])
-
-		return e
+    return e
 
 
-	def PID(self,x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
-		u=[]
-		AUX=[]
-		AUX_rot=[]
+  def get_PID_output(self,current, target):
+    d_updated = self.get_d_updated()
+    x,x_vel,x_acc=self.Get_Pos_Vel_Acc(current)  #current state
+    x_target,x_vel_target,x_acc_target=self.Get_Pos_Vel_Acc(target) #target state
+    time_diff=current.time_diff 
+    command_controlled=self.calculate_PID_output(x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,time_diff,d_updated)
+    return command_controlled
 
-		#Compute errors
-		e=self.Get_Errors(x,x_target)
-		e_dot=self.Get_Errors(x_vel,x_vel_target)
-
-		new_d=current_d+delta_t*(self.K_i*((e[2]*self.Kv/2)+e_dot[2]))
-		new_d=self.Saturation(new_d,-self.I_lim,self.I_lim)
-
-		for i in range(0,2):
-			u.append(x_acc_target[i]-self.Kv*e_dot[i]-self.Kp*e[i])
-	        u.append(x_acc_target[2]-self.Kv_z*e_dot[2]-self.Kp_z*e[2])
-
-		u[2]=u[2]-new_d
-
-		AUX.append(u[0])
-		AUX.append(u[1])
-		AUX.append(9.8+u[2])
-
-		#take into consideration the yaw angle
-		AUX_rot.append(math.cos(math.radians(-x[3]))*AUX[0]-math.sin(math.radians(-x[3]))*AUX[1])
-		AUX_rot.append(math.sin(math.radians(-x[3]))*AUX[0]+math.cos(math.radians(-x[3]))*AUX[1])
-		AUX_rot.append(AUX[2])
-
-		norm_AUX=math.sqrt(math.pow(AUX_rot[0],2)+math.pow(AUX_rot[1],2)+math.pow(AUX_rot[2],2))
-
-		#yaw control:
-		diff=self.AngularDifference(x[3],x_target[3])
-		w_yaw=-self.K_yaw*(math.radians(diff))
-
-		#set values:
-		throttle=(self.CONTROL_CANCEL_GRAVITY/9.8)*norm_AUX
-		yaw=self.CONTROL_NEUTRAL - self.N_yaw*self.Saturation(w_yaw/self.w_inf,-1,1)
-		pitch=self.CONTROL_NEUTRAL-self.Ktt*math.asin(AUX_rot[0]/norm_AUX)
-		roll=self.CONTROL_NEUTRAL-self.Kphi*math.asin(AUX_rot[1]/norm_AUX)
-
-		#if pitch<1400 or pitch>1600:
-	                #print(pitch)
-
-		#if roll<1400 or roll>1600:
-	                #print(roll)
-
-		#Implement some saturation
-		throttle=self.Saturation(throttle,1000,2000)
-		pitch=self.Saturation(pitch,1350,1650)
-		roll=self.Saturation(roll,1350,1650)
-
-		return [roll,pitch,throttle,yaw,0,0,0,0],new_d
+  def update_parameters(self,msg):
+    utils.loginfo('PID parameters loaded')
+    self.load_PID_parameters()
+    return []
 
 
-	def New_Point(self,data,point_obj):
-		if not point_obj.first_point_received:
-			point_obj.first_point_received=True
 
-		point_obj.update_point(data)
+  def calculate_PID_output(self,x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
+    u=[]
+    #Compute errors
+    e=self.Get_Errors(x,x_target)
+    e_dot=self.Get_Errors(x_vel,x_vel_target)
 
+    new_d=current_d+delta_t*(self.K_i*((e[2]*self.Kv/2)+e_dot[2]))
+    new_d=self.Saturation(new_d,-self.I_lim,self.I_lim)
 
-	def Get_Permission(self,data,instruction_obj):
-		if instruction_obj.permission:
-			if not data.permission:
-				instruction_obj.permission=False
+    for i in range(0,2):
+      u.append(x_acc_target[i]-self.Kv*e_dot[i]-self.Kp*e[i])
+    u.append(x_acc_target[2]-self.Kv_z*e_dot[2]-self.Kp_z*e[2])
 
-		if not instruction_obj.start:
-			if data.permission:
-				instruction_obj.start=True
+    u[2]=u[2]-new_d
+    self.set_d_updated(new_d)    
 
+    return u
 
-	def Wait_For_First_Point(self,target_obj,channel,data,rate):
-		rospy.loginfo('['+NODE_NAME+']: Waiting for first point ...')
-		while not target_obj.first_point_received:
-			#publish low value on the throttle channel, so the drone does not disarm while waiting
-			channel.publish(data)
-			rate.sleep()
-		self.load_PID_parameters()
-		rospy.loginfo('['+NODE_NAME+']: First point received')
+  def Saturation(self,value,minimum,maximum):
+    value=max(minimum,min(maximum,value))
+    return value
 
 
-	def Get_Pos_Vel_Acc(self,obj):
-		x=(obj.x,obj.y,obj.z,obj.yaw)
-		x_vel=(obj.x_vel,obj.y_vel,obj.z_vel,obj.yaw_vel)
-		x_acc=(obj.x_acc,obj.y_acc,obj.z_acc,obj.yaw_acc)
 
-		return x,x_vel,x_acc
-
-
-	def Wait_For_Security_Guard(self,obj):
-		rate=rospy.Rate(30)
-		rospy.loginfo('['+NODE_NAME+']: Waiting for security guard ...')
-		while not obj.start:
-			if rospy.is_shutdown():
-				return 
-			rate.sleep()
-
-	def load_PID_parameters(self):
-		self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
-		self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
-		self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
-		self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
-		self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1370)
-
-			#Controller parameters
-		self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"PID_Ktt",1000)/(20*math.pi/180)
-		self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"PID_Kphi",1000)/(20*math.pi/180)
-
-		self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.1)
-		self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z ", 1.3)
-		self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
-		self.Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
-		self.Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)
-
-		self.Kv_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv_z", self.w_z*self.w_z)
-		self.Kp_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp_z", 2*self.x_i*self.w_z)
-
-		self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_N_yaw",500)
-		self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_K_yaw",2)
-		self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"PID_w_inf",5)
-
-		self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
-		self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
-
-	def update_parameters(self,msg):
-		utils.loginfo('PID parameters loaded')
-		self.load_PID_parameters()
-		return []
-
-if __name__=='__main__':
-	rospy.init_node('PID_controller')
-
-	loop_rate=rospy.Rate(30)
-
-	pid = PID()
-
-	instr=Instruction()
-	current_point=Point()
-	target_point=Point()
-
-	#Publish to RC Override
-	rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
-
-	#Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
-	rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,pid.New_Point,target_point)
-	#Subscribe to /derivator/pos_data to get position, velocity and acceleration
-	rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,pid.New_Point,current_point)
-	#Subscribe to /security_guard/controller to get permission to publish to rc/override
-	rospy.Subscriber('security_guard/controller',Permission,pid.Get_Permission,instr)
-
-	rospy.Service('PID_controller/update_parameters', Empty, pid.update_parameters)
-
-	data_init=OverrideRCIn()
-	command=[0,0,pid.CONTROL_ARMING_MIN,0,0,0,0,0]
-	data_init.channels=command
+  def Get_Pos_Vel_Acc(self,obj):
+    x=(obj.x,obj.y,obj.z,obj.yaw)
+    x_vel=(obj.x_vel,obj.y_vel,obj.z_vel,obj.yaw_vel)
+    x_acc=(obj.x_acc,obj.y_acc,obj.z_acc,obj.yaw_acc)
+    return x,x_vel,x_acc
 
 
-	#Wait until the security guard is online
-	pid.Wait_For_Security_Guard(instr)
+	
+  def load_PID_parameters(self):		
+    #Controller parameters	
+    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
+    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
+    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
+    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
+    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1370)
+    self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.7)
+    self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
+    self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
+    self.Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
+    self.Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)
 
-	#integral term initialized to 0
-	d_updated=0
-
-	while not rospy.is_shutdown():
-
-		if not target_point.first_point_received:
-			pid.Wait_For_First_Point(target_point,rc_override,data_init,loop_rate)
-			#reinitialize d_updated
-			d_updated=0
-
-		#Extract the position, velocity and acceleration
-		x,x_vel,x_acc=pid.Get_Pos_Vel_Acc(current_point)
-		x_target,x_vel_target,x_acc_target=pid.Get_Pos_Vel_Acc(target_point)
-		time_diff=current_point.time_diff
-
-		#implement the PID controller
-		command_controlled,d_updated=pid.PID(x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,time_diff,d_updated)
-
-		#If OK from security guard, publish the messages via Mavros to the drone
-		if instr.permission:
-			data=OverrideRCIn()
-			data.channels=command_controlled
-			rc_override.publish(data)
+    self.Kv_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv_z", self.w_z*self.w_z)
+    self.Kp_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp_z", 2*self.x_i*self.w_z)
 
 
-		loop_rate.sleep()
+    self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
+    self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
 
 
 #EOF
