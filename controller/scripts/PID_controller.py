@@ -80,9 +80,8 @@ class PID():
   def __init__(self):
     self.load_PID_parameters()
     self.d_updated = 0
-
-    rospy.Service('PID_controller/update_parameters', Empty, pid.update_parameters)
-
+    rospy.Service('PID_controller/update_parameters', Empty, self.update_parameters)
+  
   def get_d_updated(self):
     return self.d_updated
 

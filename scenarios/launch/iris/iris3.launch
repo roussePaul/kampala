@@ -6,6 +6,9 @@
 
 	<arg name="launch" default="false"/>
 
+	<group ns="$(arg ns)">
+        	<param name="obstacle_avoidance" type="bool" value="True"/>
+	</group>
 	<group unless="$(arg simulation)">
 
 
