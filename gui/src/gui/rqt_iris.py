@@ -17,7 +17,7 @@ class MyPlugin(Plugin):
     
     def __init__(self, context):
         self.pwd = os.environ['PWD']
-
+        self.filelist = os.listdir(self.pwd+'/src/kampala/scenarios/launch')
         
         
         self.simulation = rospy.get_param('/simulation','false')
@@ -70,6 +70,7 @@ class MyPlugin(Plugin):
         self._widget.ArmButton.clicked.connect(self.Arm)
         self._widget.StartButton.clicked.connect(self.Start)
         self._widget.ParamButton.clicked.connect(self.Param)
+        self._widget.StartInputField.returnPressed.connect(self.Autocomplete)
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
 
@@ -110,6 +111,25 @@ class MyPlugin(Plugin):
     def Arm(self):
         inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s" % (self.name)
         self.execute(inputstring)
+
+    def Autocomplete(self):
+        exists = False
+        unique = True
+        completed_text=""
+        text = self._widget.StartInputField.text()
+        textlength = len(text)
+        for filename in self.filelist:
+            if text == filename[0:textlength]:
+                exists = True
+                if completed_text != "":
+                    unique = False
+                completed_text = filename
+        if exists and unique:
+            self._widget.StartInputField.setText(completed_text)
+
+
+
+
 
 
     def shutdown_plugin(self):
