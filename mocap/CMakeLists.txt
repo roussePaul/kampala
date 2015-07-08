@@ -52,6 +52,7 @@ catkin_python_setup()
    FILES
    QuadPosition.msg
    QuadPositionDerived.msg
+   QuadPositionDerivedExt.msg
  )
 
 ## Generate services in the 'srv' folder
