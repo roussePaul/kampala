@@ -22,9 +22,11 @@ class MyPlugin(Plugin):
         
         self.simulation = rospy.get_param('/simulation','false')
 
-
+        self.controller_channel = []
         self.land_permission = Permission()
+        self.controller_permission = Permission()
         self.lander_channel = []
+
 
         super(MyPlugin, self).__init__(context)
         # Give QObjects reasonable names
@@ -73,7 +75,7 @@ class MyPlugin(Plugin):
         self._widget.TerminalButton.clicked.connect(self.Terminal)
         self._widget.StartInputField.returnPressed.connect(self.Autocomplete)
         self._widget.FileInputBox.currentIndexChanged.connect(self.FillIn)
-        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
         self._widget.FileInputBox.insertItems(0,self.filelist)
 
     def execute(self,cmd):
@@ -91,8 +93,10 @@ class MyPlugin(Plugin):
         self.executeBlocking(inputstring)
         
         try: 
-            params_load = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
+            params_load = rospy.ServiceProxy("/%s/blender/update_parameters"%(self.name), Empty)
+            params_load_PID = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
             params_load()
+            params_load_PID()
         except rospy.ServiceException as exc:
             utils.loginfo("PID not reachable " + str(exc))
 
@@ -103,12 +107,17 @@ class MyPlugin(Plugin):
         
         
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
+        self.controller_channel = rospy.Publisher('/%s/security_guard/controller'%(self.name),Permission,queue_size=10)
         
 
 
     def Land(self):
-        self.land_permission.permission = True
-        self.lander_channel.publish(self.land_permission)
+      self.lander_channel.publish(Permission(True))
+      self.controller_channel.publish(Permission(False))
+      #land = rospy.ServiceProxy("/%s/SecurityGuard/land"%(self.name), Empty)
+      #land()
+      
+
 
     def Start(self):
         inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
