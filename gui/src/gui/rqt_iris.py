@@ -91,6 +91,7 @@ class MyPlugin(Plugin):
         self.name = self._widget.IrisInputBox.currentText()
         inputstring = "roslaunch scenarios %s.launch simulation:=%s" % (self.name,self.simulation)
         self.executeBlocking(inputstring)
+        rospy.sleep(2.)
         
         try: 
             params_load = rospy.ServiceProxy("/%s/blender/update_parameters"%(self.name), Empty)
