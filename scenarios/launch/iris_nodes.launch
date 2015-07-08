@@ -41,6 +41,7 @@
     </group>
 
 
+    <node pkg="mavros" type="mavparam" name="mavparam" args="-n mavros load $(find scenarios)/launch/iris/default_param_override.param"/>
 
     <node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
 
