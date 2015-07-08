@@ -13,7 +13,7 @@ class AvoidanceController():
   
  
   def __init__(self,my_id,bodies):
-    self.gain = 1.7                    #x,y direction
+    self.gain = 0.                    #x,y direction
     self.gain_z = 0.		      #z direction
     self.tg = TrajectoryGenerator()
     self.my_id = my_id

@@ -15,6 +15,8 @@ from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
 from PID_controller import Point, Instruction, PID
+from std_srvs.srv import Empty
+import utils
 
 from numpy import linalg
 
@@ -32,34 +34,27 @@ class Blender():
     self.PID = PID()
     #self.avoidance = AvoidanceController(body_id,body_array)
     rospy.init_node(NODE_NAME)
-    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_N_yaw",500)
-    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_K_yaw",2)
-    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"PID_w_inf",5)
-    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"PID_Ktt",1000)/(20*math.pi/180)
-    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"PID_Kphi",1000)/(20*math.pi/180)
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1400)
     self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
+    rospy.Service('blender/update_parameters', Empty, self.update_parameters)
+    self.instr = Instruction()
+    self.load_parameters()
     
-  def init_subscriptions(self, target_point,current_point, instr):
+  def init_subscriptions(self, target_point,current_point):
     #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
     rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.New_Point,target_point)
     #Subscribe to /derivator/pos_data to get position, velocity and acceleration
     rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.New_Point,current_point)
     #Subscribe to /security_guard/controller to get permission to publish to rc/override
-    rospy.Subscriber('security_guard/controller',Permission,self.Get_Permission,instr)
+    rospy.Subscriber('security_guard/controller',Permission,self.Get_Permission)
 
-  def Get_Permission(self,data,instruction_obj):
-    if instruction_obj.permission:
+  def Get_Permission(self,data):
+    if self.instr.permission:
       if not data.permission:
-        instruction_obj.permission=False
+        self.instr.permission=False
 
-    if not instruction_obj.start:
+    if not self.instr.start:
       if data.permission:
-        instruction_obj.start=True
+        self.instr.start=True
 
   def Wait_For_Security_Guard(self,obj):
     rate=rospy.Rate(30)
@@ -70,8 +65,7 @@ class Blender():
       rate.sleep()
 
   def Run_Blender(self):
-    loop_rate=rospy.Rate(30)
-    instr=Instruction()
+    loop_rate=rospy.Rate(self.FREQUENCY)
     current_point=Point()
     target_point=Point()
     my_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',1)
@@ -79,14 +73,14 @@ class Blender():
     #Publish to RC Override
     rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
 
-    self.init_subscriptions(target_point, current_point, instr)
+    self.init_subscriptions(target_point, current_point)
 
     data_init=OverrideRCIn()
-    command=[0,0,self.CONTROL_ARMING_MIN,0,0,0,0,0]
+    command=[self.CONTROL_NEUTRAL,self.CONTROL_NEUTRAL,self.CONTROL_ARMING_MIN,self.CONTROL_NEUTRAL,0,0,0,0]
     data_init.channels=command
-
+    rc_override.publish(data_init)
     #Wait until the security guard is online
-    self.Wait_For_Security_Guard(instr)
+    self.Wait_For_Security_Guard(self.instr)
 
     #integral term initialized to 0
     self.PID.set_d_updated(0)
@@ -104,12 +98,13 @@ class Blender():
       command_controlled = self.get_controloutput(u,x,x_target)
   
       #If OK from security guard, publish the messages via Mavros to the drone
-      if instr.permission:
+      if self.instr.permission:
         data=OverrideRCIn()
         data.channels=command_controlled
         rc_override.publish(data)
   	
-		
+      else:
+        break
 		
 
       loop_rate.sleep()
@@ -161,13 +156,13 @@ class Blender():
     u = [0.,0.,0.]
     u_pid = self.PID.get_PID_output(current_point,target_point)
     #u_obst = self.avoidance.get_potential_output()
-   # if self.obstacle_avoidance:
-     # alpha = self.avoidance.get_blending_constant()
-    #else:
+    #if self.obstacle_avoidance:
+      #alpha = self.avoidance.get_blending_constant()
+   #else:
      # alpha = 0
-   # for i in range(0,2):
-      #u[i] = alpha * u_obst[i] + (1-alpha) * u_pid[i]
-   # u[2] = u_pid[2] 
+    #for i in range(0,2):
+     # u[i] = alpha * u_obst[i] + (1-alpha) * u_pid[i]
+    #u[2] = u_pid[2] 
     return u_pid
  
 
@@ -204,8 +199,41 @@ class Blender():
 
     return ang_diff
      
-
+  def update_parameters(self,msg):
+    utils.loginfo('PID parameters loaded')
+    self.load_parameters()
+    return []
   
+
+  def load_parameters(self):		
+    #Controller parameters
+    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_N_yaw",500)
+    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_K_yaw",2)
+    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"PID_w_inf",5)
+    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"PID_Ktt",1000)/(20*math.pi/180)
+    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"PID_Kphi",1000)/(20*math.pi/180)
+    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
+    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
+    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
+    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
+    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1400)	
+    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
+    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
+    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
+    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
+    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1370)
+    self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.7)
+    self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
+    self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
+    self.Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
+    self.Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)
+
+    self.Kv_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv_z", self.w_z*self.w_z)
+    self.Kp_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp_z", 2*self.x_i*self.w_z)
+
+    self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
+    self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
+    self.FREQUENCY = sml_setup.Get_Parameter(NODE_NAME,"CONTROLLER_FREQUENCY",30)
 
 if __name__ == "__main__":
   bl = Blender()

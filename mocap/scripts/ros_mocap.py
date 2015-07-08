@@ -118,10 +118,12 @@ def Get_Derived_Data(current_data,past_data,time):
 
 
 def start_publishing():
-	rate=rospy.Rate(30)
+        frequency = rospy.get_param("frequency",30)
+        print(frequency)
+	rate=rospy.Rate(frequency)
 	timer=Time()
 	#Get parameters (all the body ID's that are requested)
-	body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[8,16,17])
+	body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[8,16,17,20])
 	if type(body_array) is str:
 		body_array=ast.literal_eval(body_array)
 
