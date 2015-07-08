@@ -10,8 +10,10 @@ from mavros.msg import OverrideRCIn
 
 def callback(data):
     if data.permission==True:
-        landmode()
         landpub()
+        rospy.sleep(0.5)
+        landmode()
+        
 
 def landmode():
     mode_set=False
