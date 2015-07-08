@@ -32,8 +32,10 @@ class RCDisplayPlugin(Plugin):
         if not args.quiet:
             print 'arguments: ', args
             print 'unknowns: ', unknowns
+
+
         
-        rospy.Subscriber('mavros/rc/override', OverrideRCIn, self.callback)
+        
         
         # Create QWidget
         self._widget = QWidget()
@@ -79,11 +81,16 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel6display.textChanged.connect(self.change_bar6)
         self._widget.channel7display.textChanged.connect(self.change_bar7)
         self._widget.channel8display.textChanged.connect(self.change_bar8)
+
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
+        self._widget.ListenButton.clicked.connect(self.Listen)
+        self.sub = ''
         
 
-
-
-        
+    def Listen(self):
+        if self.sub != '':
+            self.sub.unregister()
+        self.sub = rospy.Subscriber('/' + self._widget.IrisInputBox.currentText() + '/mavros/rc/override', OverrideRCIn, self.callback)    
 
     def callback(self,data):
         self._widget.channel1display.setText(str(data.channels[0]))
