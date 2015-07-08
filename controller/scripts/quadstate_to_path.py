@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+
+# This scripts listens to planned trajectory paths and enables a
+# visualization of them by converting them to Path msgs. It also
+# listens the the actual path of the robot and therefore enables a
+# visualization of the error.
+
+
 import rospy
 from mocap.msg import QuadPositionDerived
 from nav_msgs.msg import Path
@@ -7,11 +14,6 @@ from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, Point, PoseStamped, Quaternion, Vector3, Quaternion
 import tf
 import math
-
-# This scripts listens to planned trajectory paths and enables a
-# visualization of them by converting them to Path msgs. It also
-# listens the the actual path of the robot and therefore enables a
-# visualization of the error.
 
 
 def listener():
@@ -26,8 +28,10 @@ def planned_path_converter(quadstate):
     pose = Pose(Point(quadstate.x, quadstate.y, quadstate.z), Quaternion(*quat))
     pose_stamped = PoseStamped(Header(0, rospy.Time.now(), "/map"), pose)
     planned_path.poses.append(pose_stamped)
-    pub_planned.publish(planned_path)
+    if len(planned_path) > max_length:
+        planned_path.pop(0)
 
+    pub_planned.publish(planned_path)
     pub_planned_marker.publish(pose_stamped)
 
 # Publishes actual path
@@ -36,8 +40,10 @@ def actual_path_converter(quadstate):
     pose = Pose(Point(quadstate.x, quadstate.y, quadstate.z), Quaternion(*quat))
     pose_stamped = PoseStamped(Header(0, rospy.Time.now(), "/map"), pose)
     actual_path.poses.append(pose_stamped)
-    pub_actual.publish(actual_path)
+    if len(actual_path) > max_length:
+        actual_path.pop(0)
     
+    pub_actual.publish(actual_path)
     pub_actual_marker.publish(pose_stamped)
 
 if __name__ == '__main__':
@@ -45,6 +51,7 @@ if __name__ == '__main__':
     planned_path.header.frame_id = "/map"
     actual_path = Path()
     actual_path.header.frame_id = "/map"
+    max_length = 1000 # Max length of path vector
     pub_planned = rospy.Publisher('visualizer/planned_path',Path, queue_size=10)
     pub_actual = rospy.Publisher('visualizer/actual_path',Path, queue_size=10)
     pub_actual_marker = rospy.Publisher('visualizer/actual_marker',PoseStamped, queue_size=10)

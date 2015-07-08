@@ -24,8 +24,9 @@ class MyPlugin(Plugin):
 
         self.controller_channel = []
         self.land_permission = Permission()
+        self.controller_permission = Permission()
         self.lander_channel = []
-        
+
 
         super(MyPlugin, self).__init__(context)
         # Give QObjects reasonable names
@@ -116,6 +117,7 @@ class MyPlugin(Plugin):
       #land = rospy.ServiceProxy("/%s/SecurityGuard/land"%(self.name), Empty)
       #land()
       
+
 
     def Start(self):
         inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
