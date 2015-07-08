@@ -28,8 +28,8 @@ def planned_path_converter(quadstate):
     pose = Pose(Point(quadstate.x, quadstate.y, quadstate.z), Quaternion(*quat))
     pose_stamped = PoseStamped(Header(0, rospy.Time.now(), "/map"), pose)
     planned_path.poses.append(pose_stamped)
-    if len(planned_path) > max_length:
-        planned_path.pop(0)
+    if len(planned_path.poses) > max_length:
+        planned_path.poses.pop(0)
 
     pub_planned.publish(planned_path)
     pub_planned_marker.publish(pose_stamped)
@@ -40,8 +40,8 @@ def actual_path_converter(quadstate):
     pose = Pose(Point(quadstate.x, quadstate.y, quadstate.z), Quaternion(*quat))
     pose_stamped = PoseStamped(Header(0, rospy.Time.now(), "/map"), pose)
     actual_path.poses.append(pose_stamped)
-    if len(actual_path) > max_length:
-        actual_path.pop(0)
+    if len(actual_path.poses) > max_length:
+        actual_path.poses.pop(0)
     
     pub_actual.publish(actual_path)
     pub_actual_marker.publish(pose_stamped)
