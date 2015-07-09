@@ -125,7 +125,7 @@ class MyPlugin(Plugin):
         self.execute(inputstring)
 
     def Arm(self):
-        inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s" % (self.name)
+        inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s simulation:=%s" % (self.name,self.simulation)
         self.execute(inputstring)
 
     def Autocomplete(self):

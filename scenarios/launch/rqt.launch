@@ -14,7 +14,7 @@
     <arg name="simulation" default="$(arg simulation)"/>
   </include>
 
-  <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui"/>
+  <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" args="--on-top"/>
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find controller)/rviz_config/trajectory_following.rviz"/>
 
