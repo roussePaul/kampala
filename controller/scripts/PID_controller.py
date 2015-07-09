@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-#PID controller for the IRIS+ in the SML Lab 
-#Gets inputs from the Security Guard and the Trajectory Generator
-#Publishes commands via Mavros' rc/override topic
+# PID controller for the IRIS+ in the SML Lab 
+# Gets inputs from the Security Guard and the Trajectory Generator
+# Publishes commands via Mavros' rc/override topic
 
 
 import rospy
 import sml_setup
 import sys
 import math
-from points import *
+from controller_base import Controller
+from point import *
 from controller.msg import PlotData
 from mavros.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
@@ -25,12 +26,17 @@ NODE_NAME='PID'
 #*************************************
 
 
-class PID():
+class PID(Controller):
   def __init__(self):
     self.load_PID_parameters()
-    self.d_updated = 0
+    self.d_updated = 0 # Integral term
     rospy.Service('PID_controller/update_parameters', Empty, self.update_parameters)
   
+
+  # Resets PID
+  def reset(self):
+    self.d_updated = 0
+
 
   def get_d_updated(self):
     return self.d_updated
@@ -47,11 +53,11 @@ class PID():
 
     return e
 
-
-  def get_PID_output(self,current, target):
+  # Returns the output of the controller
+  def get_output(self,current,target):
     d_updated = self.get_d_updated()
-    x,x_vel,x_acc=get_pos_vel_acc(current)  #current state
-    x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target) #target state
+    x,x_vel,x_acc=get_pos_vel_acc(current)  # current state
+    x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target) # target state
     time_diff=current.time_diff 
     command_controlled=self.calculate_PID_output(x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,time_diff,d_updated)
     return command_controlled

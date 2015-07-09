@@ -9,13 +9,14 @@ import rospy
 import sml_setup
 import sys
 import math
+from controller_base import Controller
+from PID_controller import PID
+from point import *
 from controller.msg import PlotData
 from mavros.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
-from points import *
-from PID_controller import PID
 from std_srvs.srv import Empty
 import utils
 
@@ -40,6 +41,7 @@ class Blender():
     self.instr = Instruction()
     self.load_parameters()
     
+  # Gets target points and current points  
   def init_subscriptions(self, target_point,current_point):
     #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
     rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.new_point,target_point)
@@ -71,7 +73,7 @@ class Blender():
     target_point=Point()
     my_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',1)
     bodies = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
-    #Publish to RC Override
+    # Publish to RC Override
     rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
 
     self.init_subscriptions(target_point, current_point)
@@ -80,22 +82,21 @@ class Blender():
     command=[self.CONTROL_NEUTRAL,self.CONTROL_NEUTRAL,self.CONTROL_ARMING_MIN,self.CONTROL_NEUTRAL,0,0,0,0]
     data_init.channels=command
     rc_override.publish(data_init)
-    #Wait until the security guard is online
+    # Wait until the security guard is online
     self.wait_for_security_guard(self.instr)
 
-    #integral term initialized to 0
-    self.PID.set_d_updated(0)
-    while not rospy.is_shutdown():
-                
+    # Controller reset. For PID this means integral term initialized to 0.
+    self.PID.reset
 
+    # Main loop
+    while not rospy.is_shutdown():
       if not target_point.first_point_received:
-	self.wait_for_first_point(target_point,rc_override,data_init,loop_rate)
-	#reinitialize d_updated
-	self.PID.set_d_updated(0)
-      d = self.PID.get_d_updated()
+        self.wait_for_first_point(target_point,rc_override,data_init,loop_rate)
+        # Controller is reset. For the PID this means reinitialization of integral term.
+        self.PID.reset
       x,x_vel,x_acc=get_pos_vel_acc(current_point)  
       x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target_point) 
-      u = self.blend(current_point, target_point,d)
+      u = self.read_and_blend(current_point, target_point)
       command_controlled = self.get_controloutput(u,x,x_target)
   
       #If OK from security guard, publish the messages via Mavros to the drone
@@ -103,14 +104,14 @@ class Blender():
         data=OverrideRCIn()
         data.channels=command_controlled
         rc_override.publish(data)
-  	
       else:
         break
-		
 
       loop_rate.sleep()
                 
 
+  # From the required acceleration u, he control outputs are calculated: roll, pitch,
+  # throttle and yaw_rate
   def get_controloutput(self,u,x,x_target):
     AUX=[]
     AUX_rot=[]
@@ -143,26 +144,27 @@ class Blender():
     #if roll<1400 or roll>1600:
       #print(roll)
 
-  #Implement some saturation
+    # Implement some saturation
     throttle=self.saturation(throttle,1000,2000)
     pitch=self.saturation(pitch,1350,1650)
     roll=self.saturation(roll,1350,1650)
 
     return [roll,pitch,throttle,yaw_rate,0,0,0,0]
 
-
-  def blend(self,current_point,target_point,d_updated):
+  # Read the outputs of the controller and collision avoidance, then "blends"
+  # the outputs  
+  def read_and_blend(self,current_point,target_point):
     u = [0.,0.,0.]
-    u_pid = self.PID.get_PID_output(current_point,target_point)
+    u_cont = self.PID.get_output(current_point,target_point)
     #u_obst = self.avoidance.get_potential_output()
     #if self.obstacle_avoidance:
       #alpha = self.avoidance.get_blending_constant()
    #else:
      # alpha = 0
     #for i in range(0,2):
-     # u[i] = alpha * u_obst[i] + (1-alpha) * u_pid[i]
-    #u[2] = u_pid[2] 
-    return u_pid
+     # u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
+    #u[2] = u_cont[2] 
+    return u_cont
  
 
   def new_point(self,data,point_obj):

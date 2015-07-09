@@ -1,5 +1,7 @@
-# Class and function libraries for points.
-# (Used by Blende and the controllers.)
+#!/usr/bin/env python
+
+# Class and function library for points.
+# (Used by Blender and controllers.)
 
 
 class Point():
