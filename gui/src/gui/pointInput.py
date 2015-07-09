@@ -19,6 +19,7 @@ from trajectory_generato import TrajectoryGenerator
 from Trajectory_node import TrajectoryNode
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
+from straight_line_class import StraightLineGen
 
 import threading
 
@@ -63,11 +64,17 @@ class pointInputPlugin(Plugin):
         context.add_widget(self._widget)
 
 
-        self.tg = TrajectoryGenerator()        
+        #self.tn = TrajectoryNode('hej')
+        self.ID = 0
+        self.State = QuadPositionDerived()
+        self.sub = ''
+        self.pwd = os.environ['PWD']
+
+               
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
-        self._widget.GoButton.clicked.connect(self.Goto)
         self._widget.bStart.clicked.connect(self.Start)
+        self._widget.IDButton.clicked.connect(self.SetID)
 
         self._widget.XBox.setMinimum(-10.0)
         self._widget.XBox.setMaximum(10.0)
@@ -78,27 +85,24 @@ class pointInputPlugin(Plugin):
         self._widget.ZBox.setMinimum(-10.0)
         self._widget.ZBox.setMaximum(10.0)
         self._widget.ZBox.setSingleStep(0.1)
+
+    def execute(self,cmd):
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"])     
         
+    def SetID(self):
+        self.ID = self._widget.IDInput.text() 
+        if self.sub != '':
+            self.sub.unregister()
+        self.sub = rospy.Subscriber('/body_data/id_' + self.ID,QuadPositionDerived,self.UpdateState)
 
     def Start(self):
-        abspath = "/"+self._widget.IrisInputBox.currentText()+"/"
-        self.pub = rospy.Publisher(abspath+'trajectory_gen/target',QuadPositionDerived, queue_size=10)
-        self.security_pub = rospy.Publisher(abspath+'trajectory_gen/done', Permission, queue_size=10)
-
-
-    def Goto(self):
-        dest = [self._widget.XBox.value(),self._widget.YBox.value(),self._widget.ZBox.value()]
-        utils.logwarn(str(dest))
-        outpos = dest
-        outpos.append(0.0)
-        outvelo = [0.0]*3
-        outvelo.append(0.0)
-        outacc = [0.0]*3
-        outacc.append(0.0)
-        outmsg = self.tg.get_message(outpos, outvelo, outacc)
-        self.pub.publish(outmsg)
-        self.security_pub.publish(False)
-
+        self.name = self._widget.IrisInputBox.currentText()
+        inputstring = "roslaunch scenarios line_userinput.launch ns:=%s xstart:=%f ystart:=%f zstart:=%f xdest:=%f ydest:=%f zdest:=%f" % (self.name,self.State.x,self.State.y,self.State.z,self._widget.XBox.value(),self._widget.YBox.value(),self._widget.ZBox.value())
+        self.execute(inputstring)
+       
+    
+    def UpdateState(self,data):
+        self.State = data
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
