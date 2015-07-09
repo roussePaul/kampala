@@ -14,7 +14,8 @@ from mavros.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
-from PID_controller import Point, Instruction, PID
+from points import *
+from PID_controller import PID
 from std_srvs.srv import Empty
 import utils
 
@@ -41,9 +42,9 @@ class Blender():
     
   def init_subscriptions(self, target_point,current_point):
     #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
-    rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.New_Point,target_point)
+    rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.new_point,target_point)
     #Subscribe to /derivator/pos_data to get position, velocity and acceleration
-    rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.New_Point,current_point)
+    rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.new_point,current_point)
     #Subscribe to /security_guard/controller to get permission to publish to rc/override
     rospy.Subscriber('security_guard/controller',Permission,self.Get_Permission)
 
@@ -88,12 +89,12 @@ class Blender():
                 
 
       if not target_point.first_point_received:
-	self.Wait_For_First_Point(target_point,rc_override,data_init,loop_rate)
+	self.wait_for_first_point(target_point,rc_override,data_init,loop_rate)
 	#reinitialize d_updated
 	self.PID.set_d_updated(0)
       d = self.PID.get_d_updated()
-      x,x_vel,x_acc=self.PID.Get_Pos_Vel_Acc(current_point)  
-      x_target,x_vel_target,x_acc_target=self.PID.Get_Pos_Vel_Acc(target_point) 
+      x,x_vel,x_acc=get_pos_vel_acc(current_point)  
+      x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target_point) 
       u = self.blend(current_point, target_point,d)
       command_controlled = self.get_controloutput(u,x,x_target)
   
@@ -109,8 +110,6 @@ class Blender():
 
       loop_rate.sleep()
                 
-    
-   
 
   def get_controloutput(self,u,x,x_target):
     AUX=[]
@@ -129,12 +128,12 @@ class Blender():
     norm_AUX=math.sqrt(math.pow(AUX_rot[0],2)+math.pow(AUX_rot[1],2)+math.pow(AUX_rot[2],2))
 
     #yaw control:
-    diff=self.AngularDifference(x[3],x_target[3])
+    diff=self.angular_difference(x[3],x_target[3])
     w_yaw=-self.K_yaw*(math.radians(diff))
 
     #set values:
     throttle=(self.CONTROL_CANCEL_GRAVITY)*math.sqrt(norm_AUX/9.8)
-    yaw_rate=self.CONTROL_NEUTRAL - self.N_yaw*self.Saturation(w_yaw/self.w_inf,-1,1)
+    yaw_rate=self.CONTROL_NEUTRAL - self.N_yaw*self.saturation(w_yaw/self.w_inf,-1,1)
     pitch=self.CONTROL_NEUTRAL-self.Ktt*math.asin(AUX_rot[0]/norm_AUX)
     roll=self.CONTROL_NEUTRAL-self.Kphi*math.asin(AUX_rot[1]/norm_AUX)
 
@@ -145,9 +144,9 @@ class Blender():
       #print(roll)
 
   #Implement some saturation
-    throttle=self.Saturation(throttle,1000,2000)
-    pitch=self.Saturation(pitch,1350,1650)
-    roll=self.Saturation(roll,1350,1650)
+    throttle=self.saturation(throttle,1000,2000)
+    pitch=self.saturation(pitch,1350,1650)
+    roll=self.saturation(roll,1350,1650)
 
     return [roll,pitch,throttle,yaw_rate,0,0,0,0]
 
@@ -166,20 +165,18 @@ class Blender():
     return u_pid
  
 
-  def New_Point(self,data,point_obj):
+  def new_point(self,data,point_obj):
     if not point_obj.first_point_received:
       point_obj.first_point_received=True
 
     point_obj.update_point(data)
 
-  def Saturation(self,value,minimum,maximum):
-
+  def saturation(self,value,minimum,maximum):
     value=max(minimum,min(maximum,value))
-
     return value
 
 
-  def Wait_For_First_Point(self,target_obj,channel,data,rate):
+  def wait_for_first_point(self,target_obj,channel,data,rate):
     rospy.loginfo('['+NODE_NAME+']: Waiting for first point ...')
     while not target_obj.first_point_received:
       #publish low value on the throttle channel, so the drone does not disarm while waiting
@@ -188,7 +185,7 @@ class Blender():
 
     rospy.loginfo('['+NODE_NAME+']: First point received')      
 
-  def AngularDifference(self,current_angle,target_angle):
+  def angular_difference(self,current_angle,target_angle):
     ang_diff=current_angle-target_angle
 
     if math.fabs(ang_diff)>180:
