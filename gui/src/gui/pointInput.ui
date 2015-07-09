@@ -20,9 +20,6 @@
    <item row="5" column="1">
     <widget class="QDoubleSpinBox" name="YBox"/>
    </item>
-   <item row="6" column="1">
-    <widget class="QDoubleSpinBox" name="ZBox"/>
-   </item>
    <item row="4" column="1">
     <widget class="QDoubleSpinBox" name="XBox"/>
    </item>
@@ -36,10 +33,10 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0" alignment="Qt::AlignRight">
-    <widget class="QLabel" name="label">
+   <item row="8" column="0" alignment="Qt::AlignRight">
+    <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>x-position:</string>
+      <string>z-position:</string>
      </property>
     </widget>
    </item>
@@ -50,10 +47,10 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="0" alignment="Qt::AlignRight">
-    <widget class="QLabel" name="label_3">
+   <item row="4" column="0" alignment="Qt::AlignRight">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>z-position:</string>
+      <string>x-position:</string>
      </property>
     </widget>
    </item>
@@ -79,6 +76,9 @@
       <string>Set body id</string>
      </property>
     </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="QDoubleSpinBox" name="ZBox"/>
    </item>
   </layout>
  </widget>
