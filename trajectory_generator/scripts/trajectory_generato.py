@@ -116,9 +116,9 @@ class TrajectoryGenerator():
     msg.z_vel = velo[2]
     msg.yaw_vel = velo[3]
     msg.x_acc = velo[0]
-    msg.y_acc = velo[1]
-    msg.z_acc = velo[2]
-    msg.yaw_acc = velo[3]
+    msg.y_acc = acc[1]
+    msg.z_acc = acc[2]
+    msg.yaw_acc = acc[3]
     return msg
 
   def get_projection(self,vector,e_t):
