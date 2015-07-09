@@ -10,6 +10,11 @@
   <arg name="rviz" default="true"/> <!-- No more than one drone visualisable -->
   
 
+
+<!-- Simulation -->
+  <arg name="siöulation"/> <!-- No more than one drone visualisable -->
+  
+
 <!-- |||| LAUNCH |||| -->
 
   <group ns="$(arg ns)">
@@ -40,8 +45,10 @@
       <node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>
     </group>
 
-
-    <node pkg="mavros" type="mavparam" name="mavparam" args="-n mavros load $(find scenarios)/launch/iris/default_param_override.param"/>
+    <!-- PARAM INIT -->
+    <group unless="$(arg simulation)">
+      <node pkg="mavros" type="mavparam" name="mavparam" args="-n mavros load $(find scenarios)/launch/iris/default_param_override.param"/>
+    </group>
 
     <node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
 
