@@ -5,6 +5,7 @@ from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from mavros.msg import OverrideRCIn
+from mavros.msg import BatteryStatus
 from std_srvs.srv import Empty
 
 import analysis
@@ -72,6 +73,8 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel7bar.setMaximum(2000)
         self._widget.channel8bar.setMinimum(0)
         self._widget.channel8bar.setMaximum(2000)
+        self._widget.Batterybar.setMinimum(0)
+        self._widget.Batterybar.setMaximum(10000)
 
         self._widget.channel1display.textChanged.connect(self.change_bar1)
         self._widget.channel2display.textChanged.connect(self.change_bar2)
@@ -81,9 +84,11 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel6display.textChanged.connect(self.change_bar6)
         self._widget.channel7display.textChanged.connect(self.change_bar7)
         self._widget.channel8display.textChanged.connect(self.change_bar8)
+        self._widget.Batterydisplay.textChanged.connect(self.change_Batterybar)
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
         self._widget.ListenButton.clicked.connect(self.Listen)
+        self.batterysub = ''
         self.sub = ''
         
 
@@ -91,7 +96,10 @@ class RCDisplayPlugin(Plugin):
         if self.sub != '':
             self.sub.unregister()
         self.sub = rospy.Subscriber('/' + self._widget.IrisInputBox.currentText() + '/mavros/rc/override', OverrideRCIn, self.callback)    
-
+        if self.batterysub != '':
+            self.batterysub.unregister()
+        self.batterysub = rospy.Subscriber('/' + self._widget.IrisInputBox.currentText() + '/mavros/battery', BatteryStatus, self.batterycallback)
+#
     def callback(self,data):
         self._widget.channel1display.setText(str(data.channels[0]))
         self._widget.channel2display.setText(str(data.channels[1]))
@@ -101,13 +109,16 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel6display.setText(str(data.channels[5]))
         self._widget.channel7display.setText(str(data.channels[6]))
         self._widget.channel8display.setText(str(data.channels[7]))
+
+    def batterycallback(self,data):
+        self._widget.Batterydisplay.setText(str(data.voltage))
     
     def change_bar1(self,text):
         self._widget.channel1bar.setValue(int(text))
     def change_bar2(self,text):
         self._widget.channel2bar.setValue(int(text))
     def change_bar3(self,text):
-        self._widget.channel3bar.setValue(int(text))
+        self._widget.channel3bar.setValue(int(text)) 
     def change_bar4(self,text):
         self._widget.channel4bar.setValue(int(text))
     def change_bar5(self,text):
@@ -118,6 +129,9 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel7bar.setValue(int(text))
     def change_bar8(self,text):
         self._widget.channel8bar.setValue(int(text))
+    def change_Batterybar(self,text):
+        self._widget.Batterybar.setValue(float(text)*10000/12.5)
+        self._widget.Batterybar.setFormat(text+'/12.5')
 
 
 
