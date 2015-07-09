@@ -31,8 +31,10 @@ class PID():
     self.d_updated = 0
     rospy.Service('PID_controller/update_parameters', Empty, self.update_parameters)
   
+
   def get_d_updated(self):
     return self.d_updated
+
 
   def set_d_updated(self, d):
     self.d_updated = d
@@ -85,23 +87,9 @@ class PID():
     return value
 	
 
+  # Read parameters for PID
   def load_PID_parameters(self):		
     #Controller parameters	
-    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_N_yaw",500)
-    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_K_yaw",2)
-    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"PID_w_inf",5)
-    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"PID_Ktt",1000)/(20*math.pi/180)
-    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"PID_Kphi",1000)/(20*math.pi/180)
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1400)
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1370)
     self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.7)
     self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
     self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
@@ -113,7 +101,5 @@ class PID():
 
     self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
     self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
-    self.FREQUENCY = sml_setup.Get_Parameter(NODE_NAME,"CONTROLLER_FREQUENCY",30)
-
 
 #EOF

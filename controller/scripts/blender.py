@@ -46,9 +46,9 @@ class Blender():
     #Subscribe to /derivator/pos_data to get position, velocity and acceleration
     rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.new_point,current_point)
     #Subscribe to /security_guard/controller to get permission to publish to rc/override
-    rospy.Subscriber('security_guard/controller',Permission,self.Get_Permission)
+    rospy.Subscriber('security_guard/controller',Permission,self.get_permission)
 
-  def Get_Permission(self,data):
+  def get_permission(self,data):
     if self.instr.permission:
       if not data.permission:
         self.instr.permission=False
@@ -57,7 +57,7 @@ class Blender():
       if data.permission:
         self.instr.start=True
 
-  def Wait_For_Security_Guard(self,obj):
+  def wait_for_security_guard(self,obj):
     rate=rospy.Rate(30)
     rospy.loginfo('['+NODE_NAME+']: Waiting for security guard ...')
     while not obj.start:
@@ -65,7 +65,7 @@ class Blender():
         return 
       rate.sleep()
 
-  def Run_Blender(self):
+  def run_blender(self):
     loop_rate=rospy.Rate(self.FREQUENCY)
     current_point=Point()
     target_point=Point()
@@ -81,7 +81,7 @@ class Blender():
     data_init.channels=command
     rc_override.publish(data_init)
     #Wait until the security guard is online
-    self.Wait_For_Security_Guard(self.instr)
+    self.wait_for_security_guard(self.instr)
 
     #integral term initialized to 0
     self.PID.set_d_updated(0)
@@ -201,39 +201,23 @@ class Blender():
     self.load_parameters()
     return []
   
-
+  # Read parameters for Blender
   def load_parameters(self):		
-    #Controller parameters
-    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_N_yaw",500)
-    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_K_yaw",2)
-    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"PID_w_inf",5)
-    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"PID_Ktt",1000)/(20*math.pi/180)
-    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"PID_Kphi",1000)/(20*math.pi/180)
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1400)	
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1370)
-    self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.7)
-    self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
-    self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
-    self.Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
-    self.Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)
+    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"N_yaw",500)
+    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"K_yaw",2)
+    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"w_inf",5)
+    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"Ktt",1000)/(20*math.pi/180)
+    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"Kphi",1000)/(20*math.pi/180)
+    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MIN",1000)
+    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_NEUTRAL",1500)
+    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MAX",2000)
+    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_ARMING_MIN",1025)
+    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_CANCEL_GRAVITY",1400)	
 
-    self.Kv_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv_z", self.w_z*self.w_z)
-    self.Kp_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp_z", 2*self.x_i*self.w_z)
-
-    self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
-    self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
     self.FREQUENCY = sml_setup.Get_Parameter(NODE_NAME,"CONTROLLER_FREQUENCY",30)
 
 if __name__ == "__main__":
   bl = Blender()
-  bl.Run_Blender()
+  bl.run_blender()
 
 #EOF
