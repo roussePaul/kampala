@@ -16,8 +16,8 @@
 
 
 			<group ns="mavros">
-				<param name="fcu_url" value="/dev/ttyUSB0:57600" />
-				<param name="gcs_url" value="udp://127.0.0.1:14556@127.0.0.1:14551" />
+				<param name="fcu_url" value="/dev/ttyIRIS3:57600" />
+				<param name="gcs_url" value="" />
 				<param name="target_system_id" value="1" />
 				<param name="target_component_id" value="1" />
 			</group>
@@ -27,17 +27,22 @@
 	<!-- CONTROLLER -->
 	<!-- Main values -->
 			<param name="CONTROLLER_FREQUENCY" value="30"/>
+
 			<param name="CONTROL_CANCEL_GRAVITY" value="1400"/>
 			<param name="CONTROL_ARMING_MIN" value="1030"/>
+			<param name="Ktt" value="637."/>
+			<param name="Kphi" value="637."/>
+			
 			<param name="N_yaw" value="500"/>
 			<param name="K_yaw" value="2"/>
 			<param name="w_inf" value="2"/>
-			<param name="Ktt" value="1500"/>
-			<param name="Kphi" value="1500"/>
 			<param name="PID_w" value="1."/>
 			<param name="PID_w_z" value="1.0"/>
 			<param name="PID_I_lim" value="2."/>
 			<param name="PID_K_i" value="1."/>
+			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
+                        <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
+			<param name="my_id" value="16"/>
 	<!-- Unimportant values -->
 		<!-- <param name="CONTROL_MIN" value="1000"/>
 		<param name="CONTROL_NEUTRAL" value="1500"/>
@@ -83,6 +88,9 @@
 			<param name="PID_w_inf" value="2"/>
 			<param name="PID_I_lim" value="0.5"/>
 			<param name="PID_K_i" value="1"/>
+			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
+                        <param name="OBSTACLES_TO_AVOID" value="[2,1,4]"/>
+                        <param name="my_id" value="3"/>
 	<!-- Unimportant values -->
 		<!-- <param name="PID_CONTROL_MIN" value="1000"/>
 		<param name="PID_CONTROL_NEUTRAL" value="1500"/>

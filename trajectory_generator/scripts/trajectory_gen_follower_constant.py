@@ -20,22 +20,22 @@ class ConstantFollower(Follower):
     self.calculated_state.x = self.leader_state.x + self.offset[0]
     self.calculated_state.y = self.leader_state.y + self.offset[1]
     self.calculated_state.z = self.leader_state.z + self.offset[2]
-    self.calculated_state.yaw = self.leader_state.yaw
+    #self.calculated_state.yaw = self.leader_state.yaw
     self.calculated_state.x_vel = self.leader_state.x_vel
     self.calculated_state.y_vel = self.leader_state.y_vel
     self.calculated_state.z_vel = self.leader_state.z_vel
-    self.calculated_state.yaw_vel = self.leader_state.yaw_vel
-    self.calculated_state.x_acc = self.leader_state.x_acc
-    self.calculated_state.y_acc = self.leader_state.y_acc
-    self.calculated_state.z_acc = self.leader_state.z_acc
-    self.calculated_state.yaw_acc = self.leader_state.yaw_acc
+    #self.calculated_state.yaw_vel = self.leader_state.yaw_vel
+    #self.calculated_state.x_acc = self.leader_state.x_acc
+    #self.calculated_state.y_acc = self.leader_state.y_acc
+    #self.calculated_state.z_acc = self.leader_state.z_acc
+    #self.calculated_state.yaw_acc = self.leader_state.yaw_acc
 
 
 if __name__ == '__main__':
   try:
-    my_id = rospy.get_param("/trajectory_generator/follower_id")
-    leader_id = rospy.get_param("/trajectory_generator/leader_id")
-    follower = ConstantFollower(TrajectoryNode(),[0.,2.,0.],my_id,leader_id)
+    #my_id = rospy.get_param("/trajectory_generator/follower_id")
+    #leader_id = rospy.get_param("/trajectory_generator/leader_id")
+    follower = ConstantFollower(TrajectoryNode(),[0.,2.,0.],8,20)
     follower.loop()
   except rospy.ROSInterruptException:
     pass

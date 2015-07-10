@@ -31,10 +31,8 @@ NODE_NAME='Blender'
 class Blender():
 
   def __init__(self):
-    body_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',8)
-    body_array = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
     self.PID = PID()
-    #self.avoidance = AvoidanceController(body_id,body_array)
+    self.avoidance = AvoidanceController()
     rospy.init_node(NODE_NAME)
     self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
     rospy.Service('blender/update_parameters', Empty, self.update_parameters)
@@ -156,14 +154,14 @@ class Blender():
   def read_and_blend(self,current_point,target_point):
     u = [0.,0.,0.]
     u_cont = self.PID.get_output(current_point,target_point)
-    #u_obst = self.avoidance.get_potential_output()
-    #if self.obstacle_avoidance:
-      #alpha = self.avoidance.get_blending_constant()
-   #else:
-     # alpha = 0
-    #for i in range(0,2):
-     # u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
-    #u[2] = u_cont[2] 
+    u_obst = self.avoidance.get_potential_output()
+    if self.obstacle_avoidance:
+      alpha = self.avoidance.get_blending_constant()
+    else:
+      alpha = 0
+    for i in range(0,2):
+      u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
+    u[2] = u_cont[2] 
     return u_cont
  
 
