@@ -7,7 +7,7 @@
 	<arg name="launch" default="false"/>
 
 	<group ns="$(arg ns)">
-        	<param name="obstacle_avoidance" type="bool" value="True"/>
+        	<param name="obstacle_avoidance" type="bool" value="False"/>
 	</group>
 	<group unless="$(arg simulation)">
 
@@ -82,7 +82,7 @@
 			<param name="PID_I_lim" value="5.0"/>
 			<param name="PID_K_i" value="0.1"/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
-                        <param name="OBSTACLES_TO_AVOID" value="[2,3,4]"/>
+                        <param name="OBSTACLES_TO_AVOID" value="[]"/>
                         <param name="my_id" value="1"/>
 	<!-- Unimportant values -->
 		<!-- <param name="PID_CONTROL_MIN" value="1000"/>

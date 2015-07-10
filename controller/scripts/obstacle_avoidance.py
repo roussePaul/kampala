@@ -22,13 +22,17 @@ class AvoidanceController():
     self.states = []
     self.obstacles_exist = True
     if len(self.bodies)>1:
+      print("HERE!")
+      print(self.bodies)
+      print(len(self.bodies))
+      print(len("[]"))
       for i in range(0,len(self.bodies)):   
         self.states.append(QuadPositionDerived())
         rospy.Subscriber("/body_data/id_"+str(self.bodies[i]),QuadPositionDerived, self.__set_states)
     else:
       self.obstacles_exist = False
       self.gain = 0.
-      
+
   def get_potential_output(self):
     if self.obstacles_exist:
       distances = self.__get_distances()
@@ -103,7 +107,8 @@ class AvoidanceController():
 
   def load_params(self):
     self.gain = rospy.get_param("OBSTACLE_AVOIDANCE_K",1.)
-    self.bodies = rospy.get_param("OBSTACLES_TO_AVOID",[])
+    self.bodies = rospy.get_param("OBSTACLES_TO_AVOID","[]")
+    self.bodies = ast.literal_eval(self.bodies)
     self.my_id = rospy.get_param("my_id")
     
  
