@@ -9,12 +9,14 @@ import rospy
 import sml_setup
 import sys
 import math
+from controller_base import Controller
+from PID_controller import PID
+from point import *
 from controller.msg import PlotData
 from mavros.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
-from PID_controller import Point, Instruction, PID
 from std_srvs.srv import Empty
 import utils
 
@@ -39,15 +41,16 @@ class Blender():
     self.instr = Instruction()
     self.load_parameters()
     
+  # Gets target points and current points  
   def init_subscriptions(self, target_point,current_point):
     #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
-    rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.New_Point,target_point)
+    rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.new_point,target_point)
     #Subscribe to /derivator/pos_data to get position, velocity and acceleration
-    rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.New_Point,current_point)
+    rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.new_point,current_point)
     #Subscribe to /security_guard/controller to get permission to publish to rc/override
-    rospy.Subscriber('security_guard/controller',Permission,self.Get_Permission)
+    rospy.Subscriber('security_guard/controller',Permission,self.get_permission)
 
-  def Get_Permission(self,data):
+  def get_permission(self,data):
     if self.instr.permission:
       if not data.permission:
         self.instr.permission=False
@@ -56,7 +59,7 @@ class Blender():
       if data.permission:
         self.instr.start=True
 
-  def Wait_For_Security_Guard(self,obj):
+  def wait_for_security_guard(self,obj):
     rate=rospy.Rate(30)
     rospy.loginfo('['+NODE_NAME+']: Waiting for security guard ...')
     while not obj.start:
@@ -64,13 +67,13 @@ class Blender():
         return 
       rate.sleep()
 
-  def Run_Blender(self):
+  def run_blender(self):
     loop_rate=rospy.Rate(self.FREQUENCY)
     current_point=Point()
     target_point=Point()
     my_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',1)
     bodies = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
-    #Publish to RC Override
+    # Publish to RC Override
     rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
 
     self.init_subscriptions(target_point, current_point)
@@ -79,22 +82,21 @@ class Blender():
     command=[self.CONTROL_NEUTRAL,self.CONTROL_NEUTRAL,self.CONTROL_ARMING_MIN,self.CONTROL_NEUTRAL,0,0,0,0]
     data_init.channels=command
     rc_override.publish(data_init)
-    #Wait until the security guard is online
-    self.Wait_For_Security_Guard(self.instr)
+    # Wait until the security guard is online
+    self.wait_for_security_guard(self.instr)
 
-    #integral term initialized to 0
-    self.PID.set_d_updated(0)
+    # Controller reset. For PID this means integral term initialized to 0.
+    self.PID.reset
+
+    # Main loop
     while not rospy.is_shutdown():
-                
-
       if not target_point.first_point_received:
-	self.Wait_For_First_Point(target_point,rc_override,data_init,loop_rate)
-	#reinitialize d_updated
-	self.PID.set_d_updated(0)
-      d = self.PID.get_d_updated()
-      x,x_vel,x_acc=self.PID.Get_Pos_Vel_Acc(current_point)  
-      x_target,x_vel_target,x_acc_target=self.PID.Get_Pos_Vel_Acc(target_point) 
-      u = self.blend(current_point, target_point,d)
+        self.wait_for_first_point(target_point,rc_override,data_init,loop_rate)
+        # Controller is reset. For the PID this means reinitialization of integral term.
+        self.PID.reset
+      x,x_vel,x_acc=get_pos_vel_acc(current_point)  
+      x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target_point) 
+      u = self.read_and_blend(current_point, target_point)
       command_controlled = self.get_controloutput(u,x,x_target)
   
       #If OK from security guard, publish the messages via Mavros to the drone
@@ -102,16 +104,14 @@ class Blender():
         data=OverrideRCIn()
         data.channels=command_controlled
         rc_override.publish(data)
-  	
       else:
         break
-		
 
       loop_rate.sleep()
                 
-    
-   
 
+  # From the required acceleration u, he control outputs are calculated: roll, pitch,
+  # throttle and yaw_rate
   def get_controloutput(self,u,x,x_target):
     AUX=[]
     AUX_rot=[]
@@ -129,12 +129,12 @@ class Blender():
     norm_AUX=math.sqrt(math.pow(AUX_rot[0],2)+math.pow(AUX_rot[1],2)+math.pow(AUX_rot[2],2))
 
     #yaw control:
-    diff=self.AngularDifference(x[3],x_target[3])
+    diff=self.angular_difference(x[3],x_target[3])
     w_yaw=-self.K_yaw*(math.radians(diff))
 
     #set values:
     throttle=(self.CONTROL_CANCEL_GRAVITY)*math.sqrt(norm_AUX/9.8)
-    yaw_rate=self.CONTROL_NEUTRAL - self.N_yaw*self.Saturation(w_yaw/self.w_inf,-1,1)
+    yaw_rate=self.CONTROL_NEUTRAL - self.N_yaw*self.saturation(w_yaw/self.w_inf,-1,1)
     pitch=self.CONTROL_NEUTRAL-self.Ktt*math.asin(AUX_rot[0]/norm_AUX)
     roll=self.CONTROL_NEUTRAL-self.Kphi*math.asin(AUX_rot[1]/norm_AUX)
 
@@ -144,42 +144,41 @@ class Blender():
     #if roll<1400 or roll>1600:
       #print(roll)
 
-  #Implement some saturation
-    throttle=self.Saturation(throttle,1000,2000)
-    pitch=self.Saturation(pitch,1350,1650)
-    roll=self.Saturation(roll,1350,1650)
+    # Implement some saturation
+    throttle=self.saturation(throttle,1000,2000)
+    pitch=self.saturation(pitch,1350,1650)
+    roll=self.saturation(roll,1350,1650)
 
     return [roll,pitch,throttle,yaw_rate,0,0,0,0]
 
-
-  def blend(self,current_point,target_point,d_updated):
+  # Read the outputs of the controller and collision avoidance, then "blends"
+  # the outputs  
+  def read_and_blend(self,current_point,target_point):
     u = [0.,0.,0.]
-    u_pid = self.PID.get_PID_output(current_point,target_point)
+    u_cont = self.PID.get_output(current_point,target_point)
     #u_obst = self.avoidance.get_potential_output()
     #if self.obstacle_avoidance:
       #alpha = self.avoidance.get_blending_constant()
    #else:
      # alpha = 0
     #for i in range(0,2):
-     # u[i] = alpha * u_obst[i] + (1-alpha) * u_pid[i]
-    #u[2] = u_pid[2] 
-    return u_pid
+     # u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
+    #u[2] = u_cont[2] 
+    return u_cont
  
 
-  def New_Point(self,data,point_obj):
+  def new_point(self,data,point_obj):
     if not point_obj.first_point_received:
       point_obj.first_point_received=True
 
     point_obj.update_point(data)
 
-  def Saturation(self,value,minimum,maximum):
-
+  def saturation(self,value,minimum,maximum):
     value=max(minimum,min(maximum,value))
-
     return value
 
 
-  def Wait_For_First_Point(self,target_obj,channel,data,rate):
+  def wait_for_first_point(self,target_obj,channel,data,rate):
     rospy.loginfo('['+NODE_NAME+']: Waiting for first point ...')
     while not target_obj.first_point_received:
       #publish low value on the throttle channel, so the drone does not disarm while waiting
@@ -188,7 +187,7 @@ class Blender():
 
     rospy.loginfo('['+NODE_NAME+']: First point received')      
 
-  def AngularDifference(self,current_angle,target_angle):
+  def angular_difference(self,current_angle,target_angle):
     ang_diff=current_angle-target_angle
 
     if math.fabs(ang_diff)>180:
@@ -204,39 +203,23 @@ class Blender():
     self.load_parameters()
     return []
   
-
+  # Read parameters for Blender
   def load_parameters(self):		
-    #Controller parameters
-    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_N_yaw",500)
-    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"PID_K_yaw",2)
-    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"PID_w_inf",5)
-    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"PID_Ktt",1000)/(20*math.pi/180)
-    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"PID_Kphi",1000)/(20*math.pi/180)
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1400)	
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"PID_CONTROL_CANCEL_GRAVITY",1370)
-    self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.7)
-    self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
-    self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
-    self.Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
-    self.Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)
+    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"N_yaw",500)
+    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"K_yaw",2)
+    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"w_inf",5)
+    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"Ktt",1000)/(20*math.pi/180)
+    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"Kphi",1000)/(20*math.pi/180)
+    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MIN",1000)
+    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_NEUTRAL",1500)
+    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MAX",2000)
+    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_ARMING_MIN",1025)
+    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_CANCEL_GRAVITY",1400)	
 
-    self.Kv_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv_z", self.w_z*self.w_z)
-    self.Kp_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp_z", 2*self.x_i*self.w_z)
-
-    self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
-    self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
     self.FREQUENCY = sml_setup.Get_Parameter(NODE_NAME,"CONTROLLER_FREQUENCY",30)
 
 if __name__ == "__main__":
   bl = Blender()
-  bl.Run_Blender()
+  bl.run_blender()
 
 #EOF

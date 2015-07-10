@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>381</width>
-    <height>177</height>
+    <width>326</width>
+    <height>210</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,17 +17,30 @@
    <string notr="true"/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0" alignment="Qt::AlignRight">
-    <widget class="QLabel" name="label">
+   <item row="5" column="1">
+    <widget class="QDoubleSpinBox" name="YBox"/>
+   </item>
+   <item row="4" column="1">
+    <widget class="QDoubleSpinBox" name="XBox"/>
+   </item>
+   <item row="1" column="0">
+    <widget class="QComboBox" name="IrisInputBox"/>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="bStart">
      <property name="text">
-      <string>x-position:</string>
+      <string>Start</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
-    <widget class="QComboBox" name="IrisInputBox"/>
+   <item row="8" column="0" alignment="Qt::AlignRight">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>z-position:</string>
+     </property>
+    </widget>
    </item>
-   <item row="3" column="0" alignment="Qt::AlignRight">
+   <item row="5" column="0" alignment="Qt::AlignRight">
     <widget class="QLabel" name="label_2">
      <property name="text">
       <string>y-position:</string>
@@ -35,34 +48,37 @@
     </widget>
    </item>
    <item row="4" column="0" alignment="Qt::AlignRight">
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>z-position:</string>
+      <string>x-position:</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="0" colspan="2">
-    <widget class="QPushButton" name="GoButton">
-     <property name="text">
-      <string>Go!</string>
+   <item row="0" column="0">
+    <widget class="QLineEdit" name="IDInput">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
     </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QDoubleSpinBox" name="YBox"/>
-   </item>
-   <item row="4" column="1">
-    <widget class="QDoubleSpinBox" name="ZBox"/>
-   </item>
-   <item row="2" column="1">
-    <widget class="QDoubleSpinBox" name="XBox"/>
    </item>
    <item row="0" column="1">
-    <widget class="QPushButton" name="bStart">
+    <widget class="QPushButton" name="IDButton">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="text">
-      <string>Start</string>
+      <string>Set body id</string>
      </property>
     </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="QDoubleSpinBox" name="ZBox"/>
    </item>
   </layout>
  </widget>

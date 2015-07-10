@@ -1,0 +1,27 @@
+<launch>
+  <arg name="enable_logging" default="false"/>
+  <arg name="enable_ground_truth" default="true"/>
+  <arg name="log_file" default="iris"/>
+  <arg name="headless" default="false"/>
+  <arg name="gui" default="true"/>
+
+<!-- Set the ROS environment variables -->
+  <env name="ROS_IP" value="172.17.42.1"/>
+  <env name="ROS_HOSTNAME" value="172.17.42.1"/>
+
+
+
+  <arg name="ns"/>
+  <arg name="xstart"/>
+  <arg name="ystart"/>
+  <arg name="zstart"/>
+  <arg name="xdest"/>
+  <arg name="ydest"/>
+  <arg name="zdest"/>
+
+  
+
+  <group ns="$(arg ns)">
+    <node name="straight_line_class" pkg="trajectory_generator" type="straight_line_class_userinput.py" output="screen" args="$(arg xstart) $(arg ystart) $(arg zstart) $(arg xdest) $(arg ydest) $(arg zdest)"/>
+  </group>
+</launch>
