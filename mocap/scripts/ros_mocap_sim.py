@@ -102,20 +102,20 @@ class Mocap:
 					data.roll=degrees(roll)
 					data.yaw=degrees(yaw)
 					
-					print "Sending data for the body with id: "+str(body_id)
+					print "Data["+str(body_id)+"] sending"
 				else:
 					print 'Body not found'
 			
 		return(data)
 
 	def update_positions(self,msg):
-		utils.loginfo('receive data from Gazebo')
+		#utils.loginfo('receive data from Gazebo')
 		self.bodies = msg
 
 
 	def start_subscribes(self):
 		utils.loginfo('Suscrib')
-		rospy.Subscriber("/gazebo/model_states",ModelStates,self.update_positions)
+		rospy.Subscriber("/gazebo/link_states",ModelStates,self.update_positions)
 
 	def Get_Topic_Names(self,bodies):
 		a=len(bodies)
@@ -178,7 +178,7 @@ class Mocap:
 		rate=rospy.Rate(30)
 		timer=Time()
 		#Get parameters (all the body ID's that are requested)
-		self.body_names=sml_setup.Get_Parameter(NODE_NAME,'body_names',['iris1','iris2'])
+		self.body_names=sml_setup.Get_Parameter(NODE_NAME,'body_names',['iris1::base_link','iris2::base_link'])
 		self.body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
 		if type(self.body_array) is str:
 			self.body_array=ast.literal_eval(self.body_array)
@@ -201,11 +201,14 @@ class Mocap:
 
 			if self.bodies:
 				for i in range(0,len(self.body_array)):
-					utils.loginfo('body ' + str(i))
-					if self.body_names[i] in self.bodies.name:
-						indice = self.bodies.name.index(self.body_names[i])
+					if any(self.body_names[i] == s for s in self.bodies.name):
 
-						mocap_data=self.get_data(indice)
+						indice_from_gazebo = self.bodies.name.index(self.body_names[i])
+						body_id = self.body_array[i]
+
+						utils.loginfo('body ' + str(self.body_names[i]) + ' ' + str(body_id))
+
+						mocap_data=self.get_data(indice_from_gazebo)
 						mocap_data_derived=self.Get_Derived_Data(mocap_data,mocap_past_data[i],delta_time)
 
 						#update past mocap data
