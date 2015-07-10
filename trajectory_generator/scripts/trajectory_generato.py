@@ -76,19 +76,23 @@ class TrajectoryGenerator():
     phi = math.acos(np.dot([1,0,0],e_t))
     return math.degrees(phi)
     
+#This function returns the norm of a vector.
   def get_norm(self,vector):
     return la.norm(vector)
 
+#This function returns the distance between two points in R^3.
   def get_distance(self,vector1,vector2):
     vector = [0.,0.,0.]
     for i in range(0,3):
       vector[i] = vector1[i] - vector2[i]
     return la.norm(vector)
       
-
+#This function returns the unit vector associated with a given vector.
   def get_direction(self,vector):
     return vector/la.norm(vector)
 
+#This function returns the unit vector associated with the vector between two points.
+#The direction is away from vector2 towards vector1.
   def get_direction2(self,vector1,vector2):
     e_r = [0.,0.,0.]
     for i in range(0,3):
@@ -99,12 +103,13 @@ class TrajectoryGenerator():
     else:
       return e_r/la.norm(e_r)
 
+#This function checks if a given vector is the zero vector.
   def is_zero_vector(self,vector):
     if la.norm(vector) == 0.:
       return True
     else:
       return False
-
+#This function takes in a position, velocity and acceleration and returns the corresponding #QuadPositionDerived-message for ROS.
   def get_message(self,pos,velo,acc):
     msg = QuadPositionDerived()
     msg.x = pos[0]
@@ -121,9 +126,11 @@ class TrajectoryGenerator():
     msg.yaw_acc = acc[3]
     return msg
 
+#This function returns the projection of a vector onto a certain unit vector.
   def get_projection(self,vector,e_t):
     return math.acos(np.dot(vector,e_t)/la.norm(vector))
 
+#This function converts a vector into a list.
   def vector_to_list(self,vector):
     vector = vector.tolist()
     lis = vector[0]
