@@ -12,7 +12,7 @@
 
 
 <!-- Simulation -->
-  <arg name="siöulation"/> <!-- No more than one drone visualisable -->
+  <arg name="simulation"/> <!-- No more than one drone visualisable -->
   
 
 <!-- |||| LAUNCH |||| -->
@@ -37,12 +37,12 @@
     </node>
 
 
-    <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="true"/>
+    <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="false"/>
     <node name="blender" pkg="controller" type="blender.py" output="screen"/> 
 
     <!-- RVIZ LINK -->
     <group if="$(arg rviz)">
-      <node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>
+      <node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="false"/>
     </group>
 
     <!-- PARAM INIT -->
@@ -50,7 +50,7 @@
       <node pkg="mavros" type="mavparam" name="mavparam" args="-n mavros load $(find scenarios)/launch/iris/default_param_override.param"/>
     </group>
 
-    <node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
+    <node name="error_vis" pkg="controller" type="error_vis.py" respawn="false"/>
 
     <param name="perspective_file" type="string" command="$(find gui)/scripts/rqt_config_parser.sh $(find gui)/config/IrisPlot.perspective $(arg ns) $(find gui)/config/tmp/IrisPlot_$(arg ns).perspective" />
     <node name="rqt_perspective" pkg="rqt_gui" type="rqt_gui" args="--perspective-file $(find gui)/config/tmp/IrisPlot_$(arg ns).perspective"/>
