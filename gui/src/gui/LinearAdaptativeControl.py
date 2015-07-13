@@ -25,12 +25,12 @@ from straight_line_class import StraightLineGen
 
 import threading
 
-class pointInputPlugin(Plugin):
+class LinearAdaptativeControl(Plugin):
     
     def __init__(self, context):
-        super(pointInputPlugin, self).__init__(context)
+        super(LinearAdaptativeControl, self).__init__(context)
         # Give QObjects reasonable names
-        self.setObjectName('pointInputPlugin')
+        self.setObjectName('LinearAdaptativeControl')
 
         # Process standalone plugin command-line arguments
         from argparse import ArgumentParser
@@ -62,6 +62,30 @@ class pointInputPlugin(Plugin):
             self._widget.setWindowTitle(self._widget.windowTitle() + (' (%d)' % context.serial_number()))
         # Add widget to the user interface
         context.add_widget(self._widget)
+
+
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
+        self._widget.bStart.clicked.connect(self.Start)
+
+        self._widget.bAddPoint.clicked.connect(self.call_add_point)
+        self._widget.bUpdate.clicked.connect(self.call_update_controller)
+        self._widget.bSave.clicked.connect(self.call_save)
+
+
+    def Start(self):
+        self.name = self._widget.IrisInputBox.currentText()
+
+    def call_add_point(self):
+        add_point = rospy.ServiceProxy("/%s/LinearAC/add_point"%(self.name), Empty)
+        add_point()
+
+    def call_update_controller(self):
+        update_controller = rospy.ServiceProxy("/%s/LinearAC/update_controller"%(self.name), Empty)
+        update_controller()
+
+    def call_save(self):
+        save = rospy.ServiceProxy("/%s/LinearAC/save"%(self.name), Empty)
+        save()
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
