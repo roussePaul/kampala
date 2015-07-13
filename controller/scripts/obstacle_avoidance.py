@@ -12,31 +12,44 @@ class AvoidanceController():
   
   
  
-  def __init__(self,my_id,bodies):
-    self.gain = 0.                    #x,y direction
+  def __init__(self):
+    self.gain = 0.
     self.gain_z = 0.		      #z direction
     self.tg = TrajectoryGenerator()
-    self.my_id = my_id
-    self.bodies = bodies
+    self.my_id = 0.
+    self.bodies = []
+    self.load_params()
     self.states = []
-    for i in range(0,len(self.bodies)):   
-      self.states.append(QuadPositionDerived())
-      rospy.Subscriber("/body_data/id_"+str(self.bodies[i]),QuadPositionDerived, self.__set_states)
-      
+    self.obstacles_exist = True
+    if len(self.bodies)>1:
+      print("HERE!")
+      print(self.bodies)
+      print(len(self.bodies))
+      print(len("[]"))
+      for i in range(0,len(self.bodies)):   
+        self.states.append(QuadPositionDerived())
+        rospy.Subscriber("/body_data/id_"+str(self.bodies[i]),QuadPositionDerived, self.__set_states)
+    else:
+      self.obstacles_exist = False
+      self.gain = 0.
+
   def get_potential_output(self):
-    distances = self.__get_distances()
-    directions = self.__get_directions()
-    u = [0., 0., 0.]
-    for i in range(0,len(distances)):
-      if(distances[i] < 0.1):
-        for j in range(0,2):
-          u[j] += self.gain/0.1*directions[i][j]
-          u[2] += self.gain_z/0.1 * directions[i][2] 
-      else:
-        for j in range(0,2):
-          u[j] += self.gain/distances[i]*directions[i][j]
-          u[2] += self.gain_z/distances[i]*directions[i][2]
-    return u   
+    if self.obstacles_exist:
+      distances = self.__get_distances()
+      directions = self.__get_directions()
+      u = [0., 0., 0.]
+      for i in range(0,len(distances)):
+        if(distances[i] < 0.1):
+          for j in range(0,2):
+            u[j] += self.gain/0.1*directions[i][j]
+            u[2] += self.gain_z/0.1 * directions[i][2] 
+        else:
+          for j in range(0,2):
+            u[j] += self.gain/distances[i]*directions[i][j]
+            u[2] += self.gain_z/distances[i]*directions[i][2]
+      return u
+    else:
+      return [0.,0.,0.]   
     
 
   def get_blending_constant(self):
@@ -46,15 +59,18 @@ class AvoidanceController():
     r_max = 2.
     k = (alpha_min - alpha_max)/(r_max - r_min)
     m = alpha_max - k * r_min
-    distances = self.__get_distances()
-    if self.gain == 0:
-      return 0
-    elif min(distances) <= r_min:
-      return alpha_max
-    elif min(distances) > r_max:
-       return alpha_min
+    if self.obstacles_exist:
+      distances = self.__get_distances()
+      if self.gain == 0:
+        return 0
+      elif min(distances) <= r_min:
+        return alpha_max
+      elif min(distances) > r_max:
+         return alpha_min
+      else:
+        return (k*min(distances) + m)
     else:
-      return (k*min(distances) + m)
+      return 0
     
     
   def __set_states(self,data):
@@ -88,6 +104,13 @@ class AvoidanceController():
 
   def __get_pos_from_state(self, state):
     return [state.x,state.y,state.z]
+
+  def load_params(self):
+    self.gain = rospy.get_param("OBSTACLE_AVOIDANCE_K",1.)
+    self.bodies = rospy.get_param("OBSTACLES_TO_AVOID","[]")
+    self.bodies = ast.literal_eval(self.bodies)
+    self.my_id = rospy.get_param("my_id")
+    
  
   #def __get_acceleration(self):
     #distances = self.__get_distances()

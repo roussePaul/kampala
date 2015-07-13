@@ -38,6 +38,10 @@ def Set_Flight_Mode(NODE_NAME,MODE):
 	try:
 		change_param=rospy.ServiceProxy('mavros/set_mode',SetMode)
 		param=change_param(0,MODE)
+		while param.success==False:
+			param=change_param(0,MODE)
+			if param.success==False:
+				utils.logerr('Cannot change flight mode')
 		if param.success:
 			utils.loginfo('Flight mode changed to '+MODE)
 		else:

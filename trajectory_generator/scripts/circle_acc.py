@@ -11,10 +11,10 @@ from Trajectory_node import TrajectoryNode
 from straight_line_class import StraightLineGen
 
 #This script generates the points, velocities and accelerations to be used as a reference for the 
-#controller to to get the quad to move in a circle.
-#Given a midpoint, radius and speed a circle is generated such that the quad moves at a constant speed.
-#Constraints on maximum velocity and acceleration are used.
-#Everyhthing is calculated in a coordinatesystem that is rotated by an angle of theta about the z-axis of the SML-frame. The method transform_coordinates transforms a vector given in the rotated frame into the corresponding vector in the SML-frame. 
+#controller to to get the quad to accelerate into a circle.
+#Given a midpoint, starting point and target speed, the quad will accelerate up to this speed #tracking an arc.
+#The angle as a function of time is given by theta = v*t^2/(2*t_f*R), where v is the target speed, #R the radius of the circle and t_f the time the acceleration will take, calculated from #constraints on the acceleration. 
+#It is rather similar to arc.py.
 
 class AccGen(Trajectory):
   
@@ -22,7 +22,7 @@ class AccGen(Trajectory):
   a_max = 0.6**2.0/0.8
   t_f = 0
   
-  def __init__(self,trajectory_node,mid,start,velo,psi):
+  def __init__(self,trajectory_node,mid,start,velo):
     Trajectory.__init__(self,trajectory_node)
     self.tg = TrajectoryGenerator()
     self.midpoint = mid
@@ -35,7 +35,6 @@ class AccGen(Trajectory):
     self.e_n = self.tg.get_direction(n)
     self.yp = self.tg.get_direction(self.initial_velo)
     self.zp = numpy.cross(self.e_n,self.yp)
-    self.psi = psi #angle of rotation about initial e_n direction
     self.w = self.radius*self.velo
     self.theta_z = self.tg.get_projection([0,0,1],self.e_n)
   
