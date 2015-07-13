@@ -76,11 +76,16 @@ class MyPlugin(Plugin):
         self._widget.TerminalButton.clicked.connect(self.Terminal)
         self._widget.StartInputField.returnPressed.connect(self.Autocomplete)
         self._widget.FileInputBox.currentIndexChanged.connect(self.FillIn)
-        self._widget.TerminateButton.clicked.connect(self.Terminate)
+        
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
         self._widget.FileInputBox.insertItems(0,self.filelist)
+        if self.simulation:
+            self._widget.TerminateButton.clicked.connect(self.Terminate)
+        else:
+            self._widget.TerminateButton.setEnabled(False)
 
-        
+
+
 
 
     def execute(self,cmd):
