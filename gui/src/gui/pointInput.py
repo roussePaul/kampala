@@ -85,7 +85,6 @@ class pointInputPlugin(Plugin):
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
         self._widget.bStart.clicked.connect(self.Start)
-        self._widget.IDButton.clicked.connect(self.SetID)
         self._widget.AddPointButton.clicked.connect(self.AddPoint)
         self._widget.RemovePointButton.clicked.connect(self.RemovePoint)
         self.launch.connect(self.publish_trajectory_segment)
@@ -100,41 +99,25 @@ class pointInputPlugin(Plugin):
         self._widget.ZBox.setMaximum(10.0)
         self._widget.ZBox.setSingleStep(0.1)
         
-    def sleep(self):
-        try:
-            rospy.sleep(1.0)
-        except:
-            pass
+    
 
     def execute(self,cmd):
         subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"]) 
 
-    def go_through_list(self):
-        for point in self.pointlist:
-            inputstring = "roslaunch scenarios line_userinput.launch ns:=%s xstart:=%f ystart:=%f zstart:=%f xdest:=%f ydest:=%f zdest:=%f" % (self.name,self.State.x,self.State.y,self.State.z,point[0],point[1],point[2])
-            self.execute(inputstring)
 
-            while True:
-                targetpoint = [round(self.Target.x,3),round(self.Target.y,3),round(self.Target.z,3)]
-                if targetpoint == point:
-                    threading.Thread(target = self.sleep).start()
-                    break
-        utils.logwarn('instructions successfully executed')
 
     def publish_trajectory_segment(self):
         endpoint = self.pointlist[self.index]
         inputstring = "roslaunch scenarios line_userinput.launch ns:=%s xstart:=%f ystart:=%f zstart:=%f xdest:=%f ydest:=%f zdest:=%f" % (self.name,self.State.x,self.State.y,self.State.z,endpoint[0],endpoint[1],endpoint[2])
         self.execute(inputstring)
         
-    def SetID(self):
-        self.ID = self._widget.IDInput.text() 
-        if self.sub != '':
-            self.sub.unregister()
-        self.sub = rospy.Subscriber('/body_data/id_' + self.ID,QuadPositionDerived,self.UpdateState)
-
     def Start(self):
         self.name = self._widget.IrisInputBox.currentText()
         self.index = 0
+        self.ID = rospy.get_param(self.name + '/body_id')
+        if self.sub != '':
+            self.sub.unregister()
+        self.sub = rospy.Subscriber('/body_data/id_' + str(self.ID),QuadPositionDerived,self.UpdateState)
 
         if self.targetsub != '':
             self.targetsub.unregister()
@@ -142,8 +125,6 @@ class pointInputPlugin(Plugin):
 
         self.launch.emit()
         
-
-        #threading.Thread(target = self.go_through_list).start()
         
     def AddPoint(self):
         self.pointlist.append([round(self._widget.XBox.value(),3),round(self._widget.YBox.value(),3),round(self._widget.ZBox.value(),3)])
@@ -159,11 +140,8 @@ class pointInputPlugin(Plugin):
     def UpdateState(self,data):
         self.State = data
 
-    def UpdateTarget(self,data):
-        self.Target = data
-
     def target_track(self,target):
-        if self.index >= len(self.pointlist):
+        if self.index >= len(self.pointlist) - 1:
             pass
         else:
             targetpoint_rounded = [round(target.x,3),round(target.y,3),round(target.z,3)]
