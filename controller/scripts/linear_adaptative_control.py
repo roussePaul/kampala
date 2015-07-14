@@ -20,7 +20,8 @@ from scipy.interpolate import Rbf
 from scipy.interpolate import griddata
 from scipy.interpolate import NearestNDInterpolator
 
-import pickle
+import gnosis.xml.pickle
+
 
 
 class Point:
@@ -63,6 +64,7 @@ class LinearAC:
     rospy.Service('LinearAC/add_point', Empty, self.add_point)
     rospy.Service('LinearAC/update_controller', Empty, self.update_current_point)
     rospy.Service('LinearAC/save', Empty, self.cbSave)
+    rospy.Service('LinearAC/load', Empty, self.cbLoad)
 
   def update_current_point(self,msg):
     current_inputs = self.get_inputs()
@@ -70,30 +72,38 @@ class LinearAC:
     point_update = self.interpolate_point(current_inputs)
 
     point_update.write_param()
+
+    self.params_load()
+    self.params_load_PID()
     return []
 
-  # Give the linear interpolation within the convex set
-  # Give the nearest otherwise
-  def inter_extrapolate(self,inputs_grid,values,inputs):
-    val = griddata(inputs_grid,values,inputs, method="linear")
-    if np.isnan(val):
-      if len(inputs)>=2:
-        nnd = NearestNDInterpolator(inputs_grid,values)
-        val = nnd(inputs)
-      else:
-        imax = np.argmax(inputs_grid)
-        imin = np.argmin(inputs_grid)
-        if np.abs(inputs_grid[imax]-inputs) < np.abs(inputs_grid[imin]-inputs):
-          val = values[imax]
-        else:
-          val = values[imin]
+
+  def inter_extrapolate(self,inputs_grid,values,inputs,l):
+    if len(values)==1:
+      val = values[0].item()
+    else:
+      val = float('nan')
+      if len(values)>2:
+        val = griddata(inputs_grid,values,inputs, method="linear")
+        val = val.item()
+      if np.isnan(val):
+        d = []
+        sum_v = 0.0
+        sum_d = 0.0
+        for (x,v) in zip(inputs_grid,values):
+          d = np.linalg.norm(x-inputs)
+          if d==0.0:
+            return v.item()
+            break
+          f = math.exp(-d**2/l)
+          sum_v += v*f
+          sum_d += f
+
+        val = sum_v/sum_d
+
+        val = val.item()
+
     return val
-
-    pts.params_value = new_param
-
-    pts.set_inputs(current_inputs)
-
-    return pts
 
   def interpolate_point(self, current_inputs):
     pts = Point()
@@ -104,8 +114,8 @@ class LinearAC:
 
     for p_name in Point.params_name:
       values = [p.params_value[p_name] for p in self.points]
-      val = griddata(np.array(inputs_grid),np.array(values),tuple(current_inputs), method="linear")
-
+      val = self.inter_extrapolate(np.array(inputs_grid),np.array(values),tuple(current_inputs), 0.5)
+      new_param[p_name] = val
 
     pts.params_value = new_param
 
@@ -138,10 +148,15 @@ class LinearAC:
     self.save()
     return []
 
+  def cbLoad(self,msg):
+    self.load()
+    return []
+
   def save(self):
     with open(self.filename, 'w') as output:
       utils.loginfo("Save")
-      pickle.dump(self, output)
+      outxml = gnosis.xml.pickle.dumps(self.points)
+      output.write(outxml)
 
   def load(self):
     if self.filename != "":
@@ -149,10 +164,11 @@ class LinearAC:
       try:
         with open(self.filename, 'r') as input:
           utils.loginfo("File successfully loaded.")
-          self = pickle.load(input)
+          self.points = gnosis.xml.pickle.loads(input.read())
         return
       except IOError:
         self.newfile()
+        return 
 
 
   def newfile(self):

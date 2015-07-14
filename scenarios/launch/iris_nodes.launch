@@ -12,7 +12,7 @@
 
 
 <!-- Simulation -->
-  <arg name="simulation"/> <!-- No more than one drone visualisable -->
+  <arg name="siöulation"/> <!-- No more than one drone visualisable -->
   
 
 <!-- |||| LAUNCH |||| -->
@@ -37,16 +37,17 @@
     </node>
 
 
-    <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="false"/>
+    <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="true"/>
     <node name="blender" pkg="controller" type="blender.py" output="screen"/> 
+    <node name="LinearAC" pkg="controller" type="linear_adaptative_control.py" args="$(find scenarios)/launch/iris/$(arg ns)_lac.param" output="screen"/> 
 
     <!-- RVIZ LINK -->
     <group if="$(arg rviz)">
-      <node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="false"/>
+      <node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>
     </group>
 
 
-    <node name="error_vis" pkg="controller" type="error_vis.py" respawn="false"/>
+    <node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
 
     <param name="perspective_file" type="string" command="$(find gui)/scripts/rqt_config_parser.sh $(find gui)/config/IrisPlot.perspective $(arg ns) $(find gui)/config/tmp/IrisPlot_$(arg ns).perspective" />
     <node name="rqt_perspective" pkg="rqt_gui" type="rqt_gui" args="--perspective-file $(find gui)/config/tmp/IrisPlot_$(arg ns).perspective"/>

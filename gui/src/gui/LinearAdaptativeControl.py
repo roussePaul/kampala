@@ -65,25 +65,29 @@ class LinearAdaptativeControl(Plugin):
 
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
-        self._widget.bStart.clicked.connect(self.Start)
-
+        
+        self._widget.bLoad.clicked.connect(self.call_load)
         self._widget.bAddPoint.clicked.connect(self.call_add_point)
         self._widget.bUpdate.clicked.connect(self.call_update_controller)
         self._widget.bSave.clicked.connect(self.call_save)
 
 
-    def Start(self):
+    def call_load(self):
         self.name = self._widget.IrisInputBox.currentText()
+        add_point = rospy.ServiceProxy("/%s/LinearAC/load"%(self.name), Empty)
 
     def call_add_point(self):
+        self.name = self._widget.IrisInputBox.currentText()
         add_point = rospy.ServiceProxy("/%s/LinearAC/add_point"%(self.name), Empty)
         add_point()
 
     def call_update_controller(self):
+        self.name = self._widget.IrisInputBox.currentText()
         update_controller = rospy.ServiceProxy("/%s/LinearAC/update_controller"%(self.name), Empty)
         update_controller()
 
     def call_save(self):
+        self.name = self._widget.IrisInputBox.currentText()
         save = rospy.ServiceProxy("/%s/LinearAC/save"%(self.name), Empty)
         save()
 
