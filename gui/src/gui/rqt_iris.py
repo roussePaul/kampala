@@ -6,6 +6,7 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
 from std_srvs.srv import Empty
+from gazebo_msgs.srv import DeleteModel
 
 import analysis
 import utils
@@ -75,8 +76,17 @@ class MyPlugin(Plugin):
         self._widget.TerminalButton.clicked.connect(self.Terminal)
         self._widget.StartInputField.returnPressed.connect(self.Autocomplete)
         self._widget.FileInputBox.currentIndexChanged.connect(self.FillIn)
+        
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
         self._widget.FileInputBox.insertItems(0,self.filelist)
+        if self.simulation:
+            self._widget.TerminateButton.clicked.connect(self.Terminate)
+        else:
+            self._widget.TerminateButton.setEnabled(False)
+
+
+
+
 
     def execute(self,cmd):
         subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"])
@@ -86,6 +96,17 @@ class MyPlugin(Plugin):
 
     def Terminal(self):
         subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile;bash'])
+    
+    def Terminate(self):
+        inputstring = 'rosnode kill `rosnode list | grep ' + self.name + '`'
+        self.execute(inputstring)
+
+        try:
+            delete_model = rospy.ServiceProxy("gazebo/delete_model", DeleteModel)
+            delete_model(self.name)
+        except rospy.ServiceException as exc:
+            utils.loginfo('Failed to delete model ' + str(exc))
+
 
     def Param(self):
         self.name = self._widget.IrisInputBox.currentText()

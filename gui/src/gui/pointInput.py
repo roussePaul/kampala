@@ -6,6 +6,7 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
 from std_srvs.srv import Empty
+from PyQt4.QtCore import QObject, pyqtSignal
 
 import analysis
 import utils
@@ -25,7 +26,11 @@ from straight_line_class import StraightLineGen
 
 import threading
 
+
+
 class pointInputPlugin(Plugin):
+
+    launch = pyqtSignal()
     
     def __init__(self, context):
         super(pointInputPlugin, self).__init__(context)
@@ -66,17 +71,23 @@ class pointInputPlugin(Plugin):
         context.add_widget(self._widget)
 
 
-        #self.tn = TrajectoryNode('hej')
+        
         self.ID = 0
+        self.index = 0
         self.State = QuadPositionDerived()
+        self.Target = QuadPositionDerived()
         self.sub = ''
+        self.targetsub = ''
         self.pwd = os.environ['PWD']
+        self.pointlist = []
 
                
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
         self._widget.bStart.clicked.connect(self.Start)
-        self._widget.IDButton.clicked.connect(self.SetID)
+        self._widget.AddPointButton.clicked.connect(self.AddPoint)
+        self._widget.RemovePointButton.clicked.connect(self.RemovePoint)
+        self.launch.connect(self.publish_trajectory_segment)
 
         self._widget.XBox.setMinimum(-10.0)
         self._widget.XBox.setMaximum(10.0)
@@ -87,24 +98,62 @@ class pointInputPlugin(Plugin):
         self._widget.ZBox.setMinimum(-10.0)
         self._widget.ZBox.setMaximum(10.0)
         self._widget.ZBox.setSingleStep(0.1)
+        
+    
 
     def execute(self,cmd):
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"])     
-        
-    def SetID(self):
-        self.ID = self._widget.IDInput.text() 
-        if self.sub != '':
-            self.sub.unregister()
-        self.sub = rospy.Subscriber('/body_data/id_' + self.ID,QuadPositionDerived,self.UpdateState)
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"]) 
 
+
+
+    def publish_trajectory_segment(self):
+        endpoint = self.pointlist[self.index]
+        inputstring = "roslaunch scenarios line_userinput.launch ns:=%s xstart:=%f ystart:=%f zstart:=%f xdest:=%f ydest:=%f zdest:=%f" % (self.name,self.State.x,self.State.y,self.State.z,endpoint[0],endpoint[1],endpoint[2])
+        self.execute(inputstring)
+        
     def Start(self):
         self.name = self._widget.IrisInputBox.currentText()
-        inputstring = "roslaunch scenarios line_userinput.launch ns:=%s xstart:=%f ystart:=%f zstart:=%f xdest:=%f ydest:=%f zdest:=%f" % (self.name,self.State.x,self.State.y,self.State.z,self._widget.XBox.value(),self._widget.YBox.value(),self._widget.ZBox.value())
-        self.execute(inputstring)
+        self.index = 0
+        self.ID = rospy.get_param(self.name + '/body_id')
+        if self.sub != '':
+            self.sub.unregister()
+        self.sub = rospy.Subscriber('/body_data/id_' + str(self.ID),QuadPositionDerived,self.UpdateState)
+
+        if self.targetsub != '':
+            self.targetsub.unregister()
+        self.targetsub = rospy.Subscriber('/' + self.name + '/trajectory_gen/target',QuadPositionDerived,self.target_track)
+
+        self.launch.emit()
+        
+        
+    def AddPoint(self):
+        self.pointlist.append([round(self._widget.XBox.value(),3),round(self._widget.YBox.value(),3),round(self._widget.ZBox.value(),3)])
+        self._widget.Pointlist.insertItem(len(self.pointlist),str(self._widget.XBox.value()) + ',' +  str(self._widget.YBox.value()) + ',' + str(self._widget.ZBox.value()))
+
+    def RemovePoint(self):
+        rmindex = self._widget.Pointlist.currentIndex()
+        if self.pointlist != []:
+            del self.pointlist[rmindex]
+        self._widget.Pointlist.removeItem(rmindex)   
        
     
     def UpdateState(self,data):
         self.State = data
+
+    def target_track(self,target):
+        if self.index >= len(self.pointlist) - 1:
+            pass
+        else:
+            targetpoint_rounded = [round(target.x,3),round(target.y,3),round(target.z,3)]
+            endpoint = self.pointlist[self.index]
+            if targetpoint_rounded == endpoint:
+                self.index += 1
+                try:
+                    rospy.sleep(1.0)
+                except:
+                    pass
+                self.launch.emit()
+            
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here

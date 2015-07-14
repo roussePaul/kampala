@@ -19,6 +19,7 @@ from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
 from std_srvs.srv import Empty
 import utils
+from std_msgs.msg import Float64
 
 from numpy import linalg
 
@@ -73,6 +74,7 @@ class Blender():
     bodies = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
     # Publish to RC Override
     rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
+    d_pub = rospy.Publisher('theD',Float64,queue_size=10)
 
     self.init_subscriptions(target_point, current_point)
 
@@ -84,14 +86,14 @@ class Blender():
     self.wait_for_security_guard(self.instr)
 
     # Controller reset. For PID this means integral term initialized to 0.
-    self.PID.reset
+    self.PID.reset()
 
     # Main loop
     while not rospy.is_shutdown():
       if not target_point.first_point_received:
         self.wait_for_first_point(target_point,rc_override,data_init,loop_rate)
         # Controller is reset. For the PID this means reinitialization of integral term.
-        self.PID.reset
+        self.PID.reset()
       x,x_vel,x_acc=get_pos_vel_acc(current_point)  
       x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target_point) 
       u = self.read_and_blend(current_point, target_point)
@@ -102,6 +104,7 @@ class Blender():
         data=OverrideRCIn()
         data.channels=command_controlled
         rc_override.publish(data)
+        d_pub.publish(self.PID.get_xi()[2])
       else:
         break
 

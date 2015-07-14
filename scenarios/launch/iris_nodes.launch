@@ -39,6 +39,7 @@
 
     <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="true"/>
     <node name="blender" pkg="controller" type="blender.py" output="screen"/> 
+    <node name="LinearAC" pkg="controller" type="linear_adaptative_control.py" args="$(find scenarios)/launch/iris/$(arg ns)_lac.param" output="screen"/> 
 
     <!-- RVIZ LINK -->
     <group if="$(arg rviz)">
