@@ -96,7 +96,7 @@ class PID(Controller):
     e_dot=self.get_errors(x_vel,x_vel_target)
     for i in range(0,3):
       #d_dot[i] = self.K_i[i]*(self.Kv[i]/2*e[i]+e_dot[i])
-      new_d[i]=current_d[i]+delta_t*(self.K_i[i]*((e[2]*self.Kv[i]/2)+e_dot[2]))
+      new_d[i]=current_d[i]+delta_t*(self.K_i[i]*((e[i]*self.Kv[i]/2)+e_dot[i]))
       new_d[i]=self.saturation(new_d[i],-self.I_lim[i],self.I_lim[i])
       u.append(x_acc_target[i]-self.Kv[i]*e_dot[i]-self.Kp[i]*e[i])
       u[i] = u[i] - new_d[i]
