@@ -28,7 +28,7 @@
 	<!-- Main values -->
 			<param name="CONTROLLER_FREQUENCY" value="30"/>
 
-			<param name="CONTROL_CANCEL_GRAVITY" value="1400"/>
+			<param name="CONTROL_CANCEL_GRAVITY" value="1390"/>
 			<param name="CONTROL_ARMING_MIN" value="1030"/>
 			<param name="Ktt" value="637."/>
 			<param name="Kphi" value="637."/>
@@ -36,10 +36,12 @@
 			<param name="N_yaw" value="500"/>
 			<param name="K_yaw" value="2"/>
 			<param name="w_inf" value="2"/>
-			<param name="PID_w" value="1."/>
-			<param name="PID_w_z" value="1.0"/>
-			<param name="PID_I_lim" value="2."/>
-			<param name="PID_K_i" value="1."/>
+			<param name="PID_w" value="1.3"/>
+			<param name="PID_I_lim" value="0.5"/>
+			<param name="PID_K_i" value="0.5."/>
+			<param name="PID_w_z" value="1."/>
+			<param name="PID_I_lim_z" value="1.5"/>
+			<param name="PID_K_i_z" value="1."/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
                         <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
 			<param name="my_id" value="16"/>
@@ -51,8 +53,8 @@
 		<param name="PID_x_i" value="math.sqrt(2)/2"/>
 		<param name="PID_Kp" value="w*w"/>
 		<param name="PID_Kv" value="2*x_i*w"/>
-		<param name="PID_Kv_z" value=" w_z*w_z"/>
-		<param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
+		<param name="PID_Kv_z" value=" 2*x_i*w_z"/>
+		<param name="PID_Kp_z" value="w_z*w_z"/> -->
 		</group>
 	</group>
 
@@ -86,8 +88,10 @@
 			<param name="PID_N_yaw" value="500"/>
 			<param name="PID_K_yaw" value="2"/>
 			<param name="PID_w_inf" value="2"/>
-			<param name="PID_I_lim" value="0.5"/>
-			<param name="PID_K_i" value="1"/>
+			<param name="PID_I_lim_z" value="0.5"/>
+			<param name="PID_K_i_z" value="1."/>
+			<param name="PID_I_lim" value="0."/>
+			<param name="PID_K_i" value="0."/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
                         <param name="OBSTACLES_TO_AVOID" value="[2,1,4]"/>
                         <param name="my_id" value="3"/>

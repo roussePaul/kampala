@@ -1,36 +1,21 @@
 import os
 import rospy
 import QtGui
+
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
-from controller.msg import Permission
-from std_srvs.srv import Empty
 
-import analysis
-import utils
+from pid.srv import GetPIDParameters, SetPIDParameters
+from autotuner import Autotuner
+from identification import Identification
 
-import os
-import subprocess
-
-import trajectory_generator
-from trajectory import Trajectory
-from trajectory_generato import TrajectoryGenerator
-from Trajectory_node import TrajectoryNode
-from mocap.msg import QuadPositionDerived
-from controller.msg import Permission
-from straight_line_class import StraightLineGen
-
-
-
-import threading
-
-class LinearAdaptativeControl(Plugin):
+class AutotunerPlugin(Plugin):
     
     def __init__(self, context):
-        super(LinearAdaptativeControl, self).__init__(context)
+        super(AutotunerPlugin, self).__init__(context)
         # Give QObjects reasonable names
-        self.setObjectName('LinearAdaptativeControl')
+        self.setObjectName('AutotunerPlugin')
 
         # Process standalone plugin command-line arguments
         from argparse import ArgumentParser
@@ -44,15 +29,17 @@ class LinearAdaptativeControl(Plugin):
             print 'arguments: ', args
             print 'unknowns: ', unknowns
         
+        
+        
         # Create QWidget
         self._widget = QWidget()
         # Get path to UI file which is a sibling of this file
         # in this example the .ui and .py file are in the same folder
-        ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'LinearAdaptativeControl.ui')
+        ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'AutotunerPlugin.ui')
         # Extend the widget with all attributes and children from UI file
         loadUi(ui_file, self._widget)
         # Give QObjects reasonable names
-        self._widget.setObjectName('LinearAdaptativeControlUi')
+        self._widget.setObjectName('AutotunerPluginUi')
         # Show _widget.windowTitle on left-top of each plugin (when 
         # it's set in _widget). This is useful when you open multiple 
         # plugins at once. Also if you open multiple instances of your 
@@ -63,33 +50,25 @@ class LinearAdaptativeControl(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
+        self._widget.bUpdateControllerList.clicked.connect(self.UpdateControllerList)
+        self._widget.cIdentificationMethod.currentIndexChanged.connect(self.UpdateSynthesisList)
 
-        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
-        
-        self._widget.bLoad.clicked.connect(self.call_load)
-        self._widget.bAddPoint.clicked.connect(self.call_add_point)
-        self._widget.bUpdate.clicked.connect(self.call_update_controller)
-        self._widget.bSave.clicked.connect(self.call_save)
+        self.init_identification()
 
+    def UpdateControllerList(self):
+        controller_list = Autotuner.get_controller_list()
+        self._widget.cPID.clear()
+        self._widget.cPID.insertItems(0,controller_list)
 
-    def call_load(self):
-        self.name = self._widget.IrisInputBox.currentText()
-        add_point = rospy.ServiceProxy("/%s/LinearAC/load"%(self.name), Empty)
+    def init_identification(self):
+        identification_list = Identification.method_list.keys()
+        self._widget.cIdentificationMethod.insertItems(0,identification_list)
 
-    def call_add_point(self):
-        self.name = self._widget.IrisInputBox.currentText()
-        add_point = rospy.ServiceProxy("/%s/LinearAC/add_point"%(self.name), Empty)
-        add_point()
-
-    def call_update_controller(self):
-        self.name = self._widget.IrisInputBox.currentText()
-        update_controller = rospy.ServiceProxy("/%s/LinearAC/update_controller"%(self.name), Empty)
-        update_controller()
-
-    def call_save(self):
-        self.name = self._widget.IrisInputBox.currentText()
-        save = rospy.ServiceProxy("/%s/LinearAC/save"%(self.name), Empty)
-        save()
+    def UpdateSynthesisList(self):
+        identification_method = self._widget.cIdentificationMethod.currentText()
+        synthesis_list = Identification.method_list[identification_method]
+        self._widget.cSynthesisMethod.clear()
+        self._widget.cSynthesisMethod.insertItems(0,synthesis_list)
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
@@ -109,5 +88,3 @@ class LinearAdaptativeControl(Plugin):
         # Comment in to signal that the plugin has a way to configure
         # This will enable a setting button (gear icon) in each dock widget title bar
         # Usually used to open a modal configuration dialog
-
-    

@@ -48,7 +48,7 @@ class ArcGen(Trajectory):
 
   def loop(self, start_time):
     time = start_time
-    r = 30.0
+    r = 15.0
     rate = rospy.Rate(r)
     while not rospy.is_shutdown() and not self.is_done():
       #get point, velocity and acceleration
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     rospy.sleep(10.)
     acc_gen = AccGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.2,0.])
     t = acc_gen.get_t_f()
-    a_gen = ArcGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.2,0.],4*math.pi)
+    a_gen = ArcGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.2,0.],6*math.pi)
     a_gen.loop(t/2.0)
     
   except rospy.ROSInterruptException:
