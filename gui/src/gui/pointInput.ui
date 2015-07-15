@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>384</width>
-    <height>243</height>
+    <height>338</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,19 +17,6 @@
    <string notr="true"/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="9" column="1" alignment="Qt::AlignRight">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>z-position:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="2">
-    <widget class="QDoubleSpinBox" name="YBox"/>
-   </item>
-   <item row="5" column="2">
-    <widget class="QDoubleSpinBox" name="XBox"/>
-   </item>
    <item row="5" column="1" alignment="Qt::AlignRight">
     <widget class="QLabel" name="label">
      <property name="text">
@@ -44,8 +31,12 @@
      </property>
     </widget>
    </item>
-   <item row="9" column="2">
-    <widget class="QDoubleSpinBox" name="ZBox"/>
+   <item row="2" column="2">
+    <widget class="QPushButton" name="bStart">
+     <property name="text">
+      <string>Start</string>
+     </property>
+    </widget>
    </item>
    <item row="10" column="2">
     <widget class="QPushButton" name="AddPointButton">
@@ -54,25 +45,24 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="2">
-    <widget class="QPushButton" name="bStart">
-     <property name="text">
-      <string>Start</string>
-     </property>
-    </widget>
+   <item row="9" column="2">
+    <widget class="QDoubleSpinBox" name="ZBox"/>
    </item>
-   <item row="11" column="0">
-    <widget class="QLabel" name="label_4">
+   <item row="6" column="2">
+    <widget class="QDoubleSpinBox" name="YBox"/>
+   </item>
+   <item row="9" column="1" alignment="Qt::AlignRight">
+    <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>Target points:</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <string>z-position:</string>
      </property>
     </widget>
    </item>
    <item row="11" column="1">
     <widget class="QComboBox" name="Pointlist"/>
+   </item>
+   <item row="5" column="2">
+    <widget class="QDoubleSpinBox" name="XBox"/>
    </item>
    <item row="11" column="2">
     <widget class="QPushButton" name="RemovePointButton">
@@ -84,10 +74,60 @@
    <item row="2" column="1">
     <widget class="QComboBox" name="IrisInputBox"/>
    </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Target points:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="1">
+    <widget class="QComboBox" name="DXFInputBox"/>
+   </item>
    <item row="2" column="0">
     <widget class="QLabel" name="label_5">
      <property name="text">
       <string>Quad:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="2">
+    <widget class="QPushButton" name="LoadButton">
+     <property name="text">
+      <string>Load points</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QLabel" name="label_6">
+     <property name="text">
+      <string>Dxf files:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="2">
+    <widget class="QPushButton" name="SaveButton">
+     <property name="text">
+      <string>Save points</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="1">
+    <widget class="QLineEdit" name="FileInput"/>
+   </item>
+   <item row="13" column="0">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>File name:</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

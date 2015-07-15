@@ -73,7 +73,7 @@ class StepPlugin(Plugin):
         self._widget.bBack.clicked.connect(self.Back)
         self._widget.bStart.clicked.connect(self.Start)
 
-        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
 
     def Start(self):
         abspath = "/"+self._widget.IrisInputBox.currentText()+"/"
@@ -119,12 +119,13 @@ class StepPlugin(Plugin):
     def save_settings(self, plugin_settings, instance_settings):
         # TODO save intrinsic configuration, usually using:
         # instance_settings.set_value(k, v)
-        pass
+        instance_settings.set_value("irisindex", self._widget.IrisInputBox.currentIndex())
 
     def restore_settings(self, plugin_settings, instance_settings):
         # TODO restore intrinsic configuration, usually using:
         # v = instance_settings.value(k)
-        pass
+        index = instance_settings.value("irisindex",0)
+        self._widget.IrisInputBox.setCurrentIndex(int(index))
 
     #def trigger_configuration(self):
         # Comment in to signal that the plugin has a way to configure
