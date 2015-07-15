@@ -57,6 +57,7 @@ add_service_files(
   FILES
   GetPIDParameters.srv
   SetPIDParameters.srv
+  Autotune.srv
 )
 
 ## Generate actions in the 'action' folder

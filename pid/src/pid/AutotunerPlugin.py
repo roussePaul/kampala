@@ -6,7 +6,7 @@ from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 
-from pid.srv import GetPIDParameters, SetPIDParameters
+from pid.srv import GetPIDParameters, SetPIDParameters,Autotune
 from autotuner import Autotuner
 from identification import Identification
 
@@ -53,6 +53,8 @@ class AutotunerPlugin(Plugin):
         self._widget.bUpdateControllerList.clicked.connect(self.UpdateControllerList)
         self._widget.cIdentificationMethod.currentIndexChanged.connect(self.UpdateSynthesisList)
 
+        self._widget.bAutotune.clicked.connect(self.Autotune)
+
         self.init_identification()
 
     def UpdateControllerList(self):
@@ -69,6 +71,17 @@ class AutotunerPlugin(Plugin):
         synthesis_list = Identification.method_list[identification_method]
         self._widget.cSynthesisMethod.clear()
         self._widget.cSynthesisMethod.insertItems(0,synthesis_list)
+
+    def Autotune(self):
+        identification_method = self._widget.cIdentificationMethod.currentText()
+        synthesis_method = self._widget.cSynthesisMethod.currentText()
+
+        path = self._widget.cIdentificationMethod.currentText() +"/autotune"
+        rospy.wait_for_service(path)
+        autotune = rospy.ServiceProxy('autotune', Autotune)
+
+        autotune(identification_method,synthesis_method)
+
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
