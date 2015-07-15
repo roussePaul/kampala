@@ -76,14 +76,14 @@
 	<!-- Main values -->
 
 			<param name="CONTROL_CANCEL_GRAVITY" value="1480"/>
-			<param name="PID_CONTROL_ARMING_MIN" value="1030"/>
-			<param name="PID_Ktt" value="500"/>
-			<param name="PID_Kphi" value="1500"/>
+			<param name="CONTROL_ARMING_MIN" value="1030"/>
+			<param name="Ktt" value="500"/>
+			<param name="Kphi" value="1500"/>
 			<param name="PID_w" value="2.0"/>
 			<param name="PID_w_z" value="3."/>
-			<param name="PID_N_yaw" value="500"/>
-			<param name="PID_K_yaw" value="0.1"/>
-			<param name="PID_w_inf" value="0.2"/>
+			<param name="N_yaw" value="500"/>
+			<param name="K_yaw" value="0.1"/>
+			<param name="w_inf" value="0.2"/>
 			<param name="PID_I_lim" value="0.5"/>
 			<param name="PID_K_i" value="0.1"/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>

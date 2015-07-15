@@ -104,7 +104,7 @@ class Blender():
         data=OverrideRCIn()
         data.channels=command_controlled
         rc_override.publish(data)
-        d_pub.publish(self.PID.get_xi()[2])
+        d_pub.publish(self.PID.get_d_updated()[1])
       else:
         break
 
@@ -147,8 +147,8 @@ class Blender():
 
     # Implement some saturation
     throttle=self.saturation(throttle,1000,2000)
-    pitch=self.saturation(pitch,1350,1650)
-    roll=self.saturation(roll,1350,1650)
+    pitch=self.saturation(pitch,1350,1700)
+    roll=self.saturation(roll,1350,1700)
 
     return [roll,pitch,throttle,yaw_rate,0,0,0,0]
 
