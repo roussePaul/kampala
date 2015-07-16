@@ -13,4 +13,3 @@ class TrajectoryNodeExt(TrajectoryNode):
     	abspath = "/"+group
     self.pub = rospy.Publisher(abspath+'trajectory_gen/target_ext',QuadPositionDerivedExt, queue_size=10)
     self.security_pub = rospy.Publisher(abspath+'trajectory_gen/done', Permission, queue_size=10)
-

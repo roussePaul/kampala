@@ -1,20 +1,23 @@
 #!/usr/bin/env python
 
-#PID controller for the IRIS+ in the SML Lab 
-#Gets inputs from the Security Guard and the Trajectory Generator
-#Publishes commands via Mavros' rc/override topic
-
+# Blender script for the IRIS+ in the SML Lab 
+# Gets inputs from the Security Guard and the Trajectory Generator
+# Publishes commands via Mavros' rc/override topic
+ 
 
 import rospy
 import sml_setup
 import sys
 import math
+from copy import deepcopy
+import numpy
 from controller_base import Controller
 from PID_controller import PID
+from load_transport_controller import LoadTransportController
 from point import *
 from controller.msg import PlotData
 from mavros.msg import OverrideRCIn
-from mocap.msg import QuadPositionDerived
+from mocap.msg import QuadPositionDerived, QuadPositionDerivedExt
 from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
 from std_srvs.srv import Empty
@@ -33,7 +36,15 @@ class Blender():
   def __init__(self):
     body_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',8)
     body_array = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
-    self.PID = PID()
+    self.load_id = sml_setup.Get_Parameter(NODE_NAME,'load_id',body_id)
+
+    # Check what controller should be used
+    self.controller_type = sml_setup.Get_Parameter(NODE_NAME,"controller_type","PID")
+    if self.controller_type == "load_transport":
+      self.controller = LoadTransportController()
+    else:
+      self.controller = PID()
+
     #self.avoidance = AvoidanceController(body_id,body_array)
     rospy.init_node(NODE_NAME)
     self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
@@ -43,12 +54,22 @@ class Blender():
     
   # Gets target points and current points  
   def init_subscriptions(self, target_point,current_point):
-    #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
-    rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.new_point,target_point)
     #Subscribe to /derivator/pos_data to get position, velocity and acceleration
     rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.new_point,current_point)
     #Subscribe to /security_guard/controller to get permission to publish to rc/override
     rospy.Subscriber('security_guard/controller',Permission,self.get_permission)
+
+    
+    if self.controller_type == "load_transport":
+      #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
+      rospy.Subscriber('trajectory_gen/target_ext',QuadPositionDerivedExt,self.new_point,target_point)
+    else:
+      #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
+      rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.new_point,target_point)
+
+  # For load, if any
+  def init_load_subscription(self, current_load_point):
+    rospy.Subscriber("/body_data/id_"+str(self.load_id),QuadPositionDerived,self.new_point,current_load_point)
 
   def get_permission(self,data):
     if self.instr.permission:
@@ -64,19 +85,26 @@ class Blender():
     rospy.loginfo('['+NODE_NAME+']: Waiting for security guard ...')
     while not obj.start:
       if rospy.is_shutdown():
-        return 
+        return data_initdata_initdata_init
       rate.sleep()
 
   def run_blender(self):
     loop_rate=rospy.Rate(self.FREQUENCY)
     current_point=Point()
-    target_point=Point()
+    current_load_point=Point()
+    if self.controller_type == "load_transport":
+      target_point=PointExt()
+    else:
+      target_point=Point()
     my_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',1)
     bodies = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
     # Publish to RC Override
     rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
 
     self.init_subscriptions(target_point, current_point)
+
+    # For load
+    self.init_load_subscription(current_load_point)
 
     data_init=OverrideRCIn()
     command=[self.CONTROL_NEUTRAL,self.CONTROL_NEUTRAL,self.CONTROL_ARMING_MIN,self.CONTROL_NEUTRAL,0,0,0,0]
@@ -86,17 +114,28 @@ class Blender():
     self.wait_for_security_guard(self.instr)
 
     # Controller reset. For PID this means integral term initialized to 0.
-    self.PID.reset
+    self.controller.reset()
 
     # Main loop
     while not rospy.is_shutdown():
       if not target_point.first_point_received:
         self.wait_for_first_point(target_point,rc_override,data_init,loop_rate)
         # Controller is reset. For the PID this means reinitialization of integral term.
-        self.PID.reset
+        self.controller.reset()
       x,x_vel,x_acc=get_pos_vel_acc(current_point)  
       x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target_point) 
-      u = self.read_and_blend(current_point, target_point)
+
+
+      #current_load_point = deepcopy(current_point)
+      #current_load_point.z = current_point.z - 5.0
+
+      if type(self.controller) is PID:
+        u_cont = self.controller.get_output(current_point,target_point)
+        u_cont[2] = u_cont[2] + 9.8
+      elif type(self.controller) is LoadTransportController:
+        u_cont = self.controller.get_output(current_load_point,current_point,target_point)
+
+      u = self.blend(u_cont, current_point, target_point)
       command_controlled = self.get_controloutput(u,x,x_target)
   
       #If OK from security guard, publish the messages via Mavros to the drone
@@ -117,7 +156,7 @@ class Blender():
     AUX_rot=[]
     AUX.append(u[0])
     AUX.append(u[1])
-    AUX.append(9.8+u[2])
+    AUX.append(u[2])
 
     #take into consideration the yaw angle
     AUX_rot.append(math.cos(math.radians(-x[3]))*AUX[0]-math.sin(math.radians(-x[3]))*AUX[1])
@@ -145,17 +184,18 @@ class Blender():
       #print(roll)
 
     # Implement some saturation
-    throttle=self.saturation(throttle,1000,2000)
-    pitch=self.saturation(pitch,1350,1650)
-    roll=self.saturation(roll,1350,1650)
+    throttle=self.saturation(throttle,0,3000)
+    pitch=self.saturation(pitch,0,3000)
+    roll=self.saturation(roll,0,3000)
 
+    #rospy.loginfo(str([roll,pitch,throttle,yaw_rate]))
     return [roll,pitch,throttle,yaw_rate,0,0,0,0]
+
 
   # Read the outputs of the controller and collision avoidance, then "blends"
   # the outputs  
-  def read_and_blend(self,current_point,target_point):
+  def blend(self,u_cont,current_point,target_point):
     u = [0.,0.,0.]
-    u_cont = self.PID.get_output(current_point,target_point)
     #u_obst = self.avoidance.get_potential_output()
     #if self.obstacle_avoidance:
       #alpha = self.avoidance.get_blending_constant()
@@ -199,8 +239,15 @@ class Blender():
     return ang_diff
      
   def update_parameters(self,msg):
-    utils.loginfo('PID parameters loaded')
+    utils.loginfo('Blender parameters loaded')
     self.load_parameters()
+
+    # If controller type is changed
+    if self.controller_type == "load_transport" and self.controller is not LoadTransportController:
+      self.controller = LoadTransportController()
+    elif self.controller_type == "PID" and self.controller is not PID:
+      self.controller = PID()
+
     return []
   
   # Read parameters for Blender
@@ -217,6 +264,8 @@ class Blender():
     self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_CANCEL_GRAVITY",1400)	
 
     self.FREQUENCY = sml_setup.Get_Parameter(NODE_NAME,"CONTROLLER_FREQUENCY",30)
+
+    self.controller_type = sml_setup.Get_Parameter(NODE_NAME,"controller_type","PID")
 
 if __name__ == "__main__":
   bl = Blender()
