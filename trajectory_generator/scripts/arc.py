@@ -13,9 +13,8 @@ from circle_acc import AccGen
 
 #This script generates the points, velocities and accelerations to be used as a reference for the 
 #controller to to get the quad to move in a circle.
-#Given a midpoint, radius and speed a circle is generated such that the quad moves at a constant speed.
+#Given a midpoint, radius(R), starting point on the circle, initial velocity and angle(psi) in #radians, an arc of length R*psi is generated with the given midpoint, starting at the specified #starting point. Care has to be taken by the user as the input velocity has to be perpendicular #to the vector pointing from the starting point to the midpoint. 
 #Constraints on maximum velocity and acceleration are used.
-#Everyhthing is calculated in a coordinatesystem that is rotated by an angle of theta about the z-axis of the SML-frame. The method transform_coordinates transforms a vector given in the rotated frame into the corresponding vector in the SML-frame. 
 
 class ArcGen(Trajectory):
   
@@ -35,7 +34,8 @@ class ArcGen(Trajectory):
     self.e_n = self.tg.get_direction(n)
     self.yp = self.tg.get_direction(self.initial_velo)
     self.zp = numpy.cross(self.e_n,self.yp)
-    self.psi = psi #angle of rotation about initial e_n direction
+    #angle of rotation about initial e_n direction
+    self.psi = psi 
     self.w = self.radius*self.velo
     self.theta_z = self.tg.get_projection([0,0,1],self.e_n)
   
@@ -48,9 +48,10 @@ class ArcGen(Trajectory):
 
   def loop(self, start_time):
     time = start_time
-    r = 10.0
+    r = 15.0
     rate = rospy.Rate(r)
     while not rospy.is_shutdown() and not self.is_done():
+      #get point, velocity and acceleration
       outpos = self.tg.get_circle_point(self.radius,self.w*time)
       #outpos = self.tg.rotate_vector(outpos,[0,0,self.theta_z])
       #outpos = self.tg.vector_to_list(outpos)
@@ -64,12 +65,14 @@ class ArcGen(Trajectory):
       #outacc = self.tg.rotate_vector(outacc,[0,0,self.theta_z])
       #outacc = self.tg.vector_to_list(outacc)
       outacc.append(0)
+      #get the corresponding message and publish it
       outmsg = self.tg.get_message(outpos,outvelo,outacc)
       self.trajectory_node.send_msg(outmsg)
       self.trajectory_node.send_permission(False)
       rate.sleep()
       time += 1/r
       if self.w*time >= self.psi:
+        #If we are done get the last point and publish it
         outpos = self.tg.get_circle_point(self.radius,self.psi)
         #outpos = self.tg.rotate_vector(outpos,[0,0,self.theta_z])
         #outpos = self.tg.vector_to_list(outpos)
@@ -107,9 +110,9 @@ if __name__ == '__main__':
     sl_gen_2 = StraightLineGen(tn,[0.,0.,0.6],[0.8,0.,0.6])
     sl_gen_2.loop(0.)
     rospy.sleep(10.)
-    acc_gen = AccGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.4,0.],14*math.pi)
+    acc_gen = AccGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.2,0.])
     t = acc_gen.get_t_f()
-    a_gen = ArcGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.4,0.],14*math.pi)
+    a_gen = ArcGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.2,0.],6*math.pi)
     a_gen.loop(t/2.0)
     
   except rospy.ROSInterruptException:

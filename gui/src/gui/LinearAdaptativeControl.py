@@ -19,15 +19,18 @@ from trajectory_generato import TrajectoryGenerator
 from Trajectory_node import TrajectoryNode
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
+from straight_line_class import StraightLineGen
+
+
 
 import threading
 
-class StepPlugin(Plugin):
+class LinearAdaptativeControl(Plugin):
     
     def __init__(self, context):
-        super(StepPlugin, self).__init__(context)
+        super(LinearAdaptativeControl, self).__init__(context)
         # Give QObjects reasonable names
-        self.setObjectName('StepPlugin')
+        self.setObjectName('LinearAdaptativeControl')
 
         # Process standalone plugin command-line arguments
         from argparse import ArgumentParser
@@ -41,17 +44,15 @@ class StepPlugin(Plugin):
             print 'arguments: ', args
             print 'unknowns: ', unknowns
         
-        
-        
         # Create QWidget
         self._widget = QWidget()
         # Get path to UI file which is a sibling of this file
         # in this example the .ui and .py file are in the same folder
-        ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Step.ui')
+        ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'LinearAdaptativeControl.ui')
         # Extend the widget with all attributes and children from UI file
         loadUi(ui_file, self._widget)
         # Give QObjects reasonable names
-        self._widget.setObjectName('StepPluginUi')
+        self._widget.setObjectName('LinearAdaptativeControlUi')
         # Show _widget.windowTitle on left-top of each plugin (when 
         # it's set in _widget). This is useful when you open multiple 
         # plugins at once. Also if you open multiple instances of your 
@@ -63,54 +64,32 @@ class StepPlugin(Plugin):
         context.add_widget(self._widget)
 
 
-        self.tg = TrajectoryGenerator()        
-
-        self._widget.bUp.clicked.connect(self.Up)
-        self._widget.bDown.clicked.connect(self.Down)
-        self._widget.bLeft.clicked.connect(self.Left)
-        self._widget.bRight.clicked.connect(self.Right)
-        self._widget.bFront.clicked.connect(self.Front)
-        self._widget.bBack.clicked.connect(self.Back)
-        self._widget.bStart.clicked.connect(self.Start)
-
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
+        
+        self._widget.bLoad.clicked.connect(self.call_load)
+        self._widget.bAddPoint.clicked.connect(self.call_add_point)
+        self._widget.bUpdate.clicked.connect(self.call_update_controller)
+        self._widget.bSave.clicked.connect(self.call_save)
 
-    def Start(self):
-        abspath = "/"+self._widget.IrisInputBox.currentText()+"/"
-        self.pub = rospy.Publisher(abspath+'trajectory_gen/target',QuadPositionDerived, queue_size=10)
-        self.security_pub = rospy.Publisher(abspath+'trajectory_gen/done', Permission, queue_size=10)
 
+    def call_load(self):
+        self.name = self._widget.IrisInputBox.currentText()
+        add_point = rospy.ServiceProxy("/%s/LinearAC/load"%(self.name), Empty)
 
-    def Up(self):
-        self.Goto([0.0,0.0,1.0])
+    def call_add_point(self):
+        self.name = self._widget.IrisInputBox.currentText()
+        add_point = rospy.ServiceProxy("/%s/LinearAC/add_point"%(self.name), Empty)
+        add_point()
 
-    def Down(self):
-        self.Goto([0.0,0.0,0.5])
+    def call_update_controller(self):
+        self.name = self._widget.IrisInputBox.currentText()
+        update_controller = rospy.ServiceProxy("/%s/LinearAC/update_controller"%(self.name), Empty)
+        update_controller()
 
-    def Left(self):
-        self.Goto([-1.0,0.0,0.5])
-
-    def Right(self):
-        self.Goto([1.0,0.0,0.5])
-
-    def Back(self):
-        self.Goto([0.0,-1.0,0.5])
-
-    def Front(self):
-        self.Goto([0.0,1.0,0.5])
-
-    def Goto(self, dest):
-        utils.logwarn(str(dest))
-        outpos = dest
-        outpos.append(0.0)
-        outvelo = [0.0]*3
-        outvelo.append(0.0)
-        outacc = [0.0]*3
-        outacc.append(0.0)
-        outmsg = self.tg.get_message(outpos, outvelo, outacc)
-        self.pub.publish(outmsg)
-        self.security_pub.publish(False)
-
+    def call_save(self):
+        self.name = self._widget.IrisInputBox.currentText()
+        save = rospy.ServiceProxy("/%s/LinearAC/save"%(self.name), Empty)
+        save()
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
@@ -119,13 +98,12 @@ class StepPlugin(Plugin):
     def save_settings(self, plugin_settings, instance_settings):
         # TODO save intrinsic configuration, usually using:
         # instance_settings.set_value(k, v)
-        instance_settings.set_value("irisindex", self._widget.IrisInputBox.currentIndex())
+        pass
 
     def restore_settings(self, plugin_settings, instance_settings):
         # TODO restore intrinsic configuration, usually using:
         # v = instance_settings.value(k)
-        index = instance_settings.value("irisindex",0)
-        self._widget.IrisInputBox.setCurrentIndex(int(index))
+        pass
 
     #def trigger_configuration(self):
         # Comment in to signal that the plugin has a way to configure

@@ -22,6 +22,7 @@ from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
 from std_srvs.srv import Empty
 import utils
+from std_msgs.msg import Float64
 
 from numpy import linalg
 
@@ -45,7 +46,8 @@ class Blender():
     else:
       self.controller = PID()
 
-    #self.avoidance = AvoidanceController(body_id,body_array)
+    self.avoidance = AvoidanceController()
+
     rospy.init_node(NODE_NAME)
     self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
     rospy.Service('blender/update_parameters', Empty, self.update_parameters)
@@ -100,6 +102,8 @@ class Blender():
     bodies = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
     # Publish to RC Override
     rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
+    if type(self.controller) is PID:
+      d_pub = rospy.Publisher('theD',Float64,queue_size=10)
 
     self.init_subscriptions(target_point, current_point)
 
@@ -122,6 +126,7 @@ class Blender():
         self.wait_for_first_point(target_point,rc_override,data_init,loop_rate)
         # Controller is reset. For the PID this means reinitialization of integral term.
         self.controller.reset()
+
       x,x_vel,x_acc=get_pos_vel_acc(current_point)  
       x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target_point) 
 
@@ -143,6 +148,8 @@ class Blender():
         data=OverrideRCIn()
         data.channels=command_controlled
         rc_override.publish(data)
+        if type(self.controller) is PID:
+          d_pub.publish(self.controller.get_d_updated()[1])
       else:
         break
 
@@ -184,9 +191,9 @@ class Blender():
       #print(roll)
 
     # Implement some saturation
-    throttle=self.saturation(throttle,0,3000)
-    pitch=self.saturation(pitch,0,3000)
-    roll=self.saturation(roll,0,3000)
+    throttle=self.saturation(throttle,1000,2000)
+    pitch=self.saturation(pitch,1350,1700)
+    roll=self.saturation(roll,1350,1700)
 
     #rospy.loginfo(str([roll,pitch,throttle,yaw_rate]))
     return [roll,pitch,throttle,yaw_rate,0,0,0,0]
@@ -196,14 +203,15 @@ class Blender():
   # the outputs  
   def blend(self,u_cont,current_point,target_point):
     u = [0.,0.,0.]
-    #u_obst = self.avoidance.get_potential_output()
-    #if self.obstacle_avoidance:
-      #alpha = self.avoidance.get_blending_constant()
-   #else:
-     # alpha = 0
-    #for i in range(0,2):
-     # u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
-    #u[2] = u_cont[2] 
+
+    u_obst = self.avoidance.get_potential_output()
+    if self.obstacle_avoidance:
+      alpha = self.avoidance.get_blending_constant()
+    else:
+      alpha = 0
+    for i in range(0,2):
+      u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
+    u[2] = u_cont[2] 
     return u_cont
  
 

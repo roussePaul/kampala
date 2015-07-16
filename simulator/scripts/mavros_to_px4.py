@@ -6,7 +6,7 @@
 import sys
 import rospy
 
-from mavros.msg import OverrideRCIn
+from mavros.msg import OverrideRCIn,BatteryStatus
 from mavros.srv import ParamSet
 from mavros.srv import CommandBool
 from mavros.srv import SetMode
@@ -18,6 +18,7 @@ class mavrosSim:
 	def __init__(self):
 		self.px4_manual_control = rospy.Publisher('manual_control_setpoint',manual_control_setpoint, queue_size=10)
 		rospy.Subscriber('mavros/rc/override',OverrideRCIn,self.transformMessage)
+		rospy.Publisher('mavros/battery',BatteryStatus)
 		self.param_set = rospy.Service('mavros/param/set', ParamSet, self.cb_param_set)
 		self.set_mode = rospy.Service('mavros/set_mode', SetMode, self.cb_set_mode)
 		self.arming = rospy.Service('mavros/cmd/arming', CommandBool, self.cb_arming)

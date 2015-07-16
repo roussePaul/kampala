@@ -39,16 +39,13 @@
 
     <node name="lander" pkg="controller" type="lander.py" output="screen" respawn="true"/>
     <node name="blender" pkg="controller" type="blender.py" output="screen"/> 
+    <node name="LinearAC" pkg="controller" type="linear_adaptative_control.py" args="$(find scenarios)/launch/iris/$(arg ns)_lac.param" output="screen"/> 
 
     <!-- RVIZ LINK -->
     <group if="$(arg rviz)">
       <node name="quadstate_to_path" pkg="controller" type="quadstate_to_path.py" respawn="true"/>
     </group>
 
-    <!-- PARAM INIT -->
-    <group unless="$(arg simulation)">
-      <node pkg="mavros" type="mavparam" name="mavparam" args="-n mavros load $(find scenarios)/launch/iris/default_param_override.param"/>
-    </group>
 
     <node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
 

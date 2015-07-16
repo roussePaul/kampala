@@ -6,6 +6,7 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
 from std_srvs.srv import Empty
+from PyQt4.QtCore import QObject, pyqtSignal
 
 import analysis
 import utils
@@ -20,12 +21,18 @@ from Trajectory_node import TrajectoryNode
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from straight_line_class import StraightLineGen
+from dxfwrite import DXFEngine as dxfE
 
 
+import dxfgrabber
 
 import threading
 
+
+
 class pointInputPlugin(Plugin):
+
+    launch = pyqtSignal()
     
     def __init__(self, context):
         super(pointInputPlugin, self).__init__(context)
@@ -66,17 +73,28 @@ class pointInputPlugin(Plugin):
         context.add_widget(self._widget)
 
 
-        #self.tn = TrajectoryNode('hej')
+        
         self.ID = 0
+        self.index = 0
         self.State = QuadPositionDerived()
+        self.Target = QuadPositionDerived()
         self.sub = ''
+        self.targetsub = ''
+        self.name = ''
         self.pwd = os.environ['PWD']
+        self.pointlist = []
+        self.filelist = os.listdir(self.pwd + '/src/kampala/gui/src/gui/DXFFiles')
 
                
 
-        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3'])
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
+        self._widget.DXFInputBox.insertItems(0,self.filelist)
         self._widget.bStart.clicked.connect(self.Start)
-        self._widget.IDButton.clicked.connect(self.SetID)
+        self._widget.AddPointButton.clicked.connect(self.AddPoint)
+        self._widget.RemovePointButton.clicked.connect(self.RemovePoint)
+        self._widget.LoadButton.clicked.connect(self.LoadDXF)
+        self._widget.SaveButton.clicked.connect(self.SaveDXF)
+        self.launch.connect(self.publish_trajectory_segment)
 
         self._widget.XBox.setMinimum(-10.0)
         self._widget.XBox.setMaximum(10.0)
@@ -87,24 +105,98 @@ class pointInputPlugin(Plugin):
         self._widget.ZBox.setMinimum(-10.0)
         self._widget.ZBox.setMaximum(10.0)
         self._widget.ZBox.setSingleStep(0.1)
+        
+    
 
     def execute(self,cmd):
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"])     
-        
-    def SetID(self):
-        self.ID = self._widget.IDInput.text() 
-        if self.sub != '':
-            self.sub.unregister()
-        self.sub = rospy.Subscriber('/body_data/id_' + self.ID,QuadPositionDerived,self.UpdateState)
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile" + self.name]) 
 
+
+
+    def publish_trajectory_segment(self):
+        endpoint = self.pointlist[self.index]
+        inputstring = "roslaunch scenarios line_userinput.launch ns:=%s xstart:=%f ystart:=%f zstart:=%f xdest:=%f ydest:=%f zdest:=%f" % (self.name,self.State.x,self.State.y,self.State.z,endpoint[0],endpoint[1],endpoint[2])
+        self.execute(inputstring)
+        
     def Start(self):
         self.name = self._widget.IrisInputBox.currentText()
-        inputstring = "roslaunch scenarios line_userinput.launch ns:=%s xstart:=%f ystart:=%f zstart:=%f xdest:=%f ydest:=%f zdest:=%f" % (self.name,self.State.x,self.State.y,self.State.z,self._widget.XBox.value(),self._widget.YBox.value(),self._widget.ZBox.value())
-        self.execute(inputstring)
+        self.index = 0
+        self.ID = rospy.get_param(self.name + '/body_id')
+        if self.sub != '':
+            self.sub.unregister()
+        self.sub = rospy.Subscriber('/body_data/id_' + str(self.ID),QuadPositionDerived,self.UpdateState)
+
+        try:
+            rospy.sleep(1.0)
+        except:
+            pass
+
+        if self.targetsub != '':
+            self.targetsub.unregister()
+        self.targetsub = rospy.Subscriber('/' + self.name + '/trajectory_gen/target',QuadPositionDerived,self.target_track)
+
+        self.launch.emit()
+        
+        
+    def AddPoint(self):
+        self.pointlist.append([round(self._widget.XBox.value(),3),round(self._widget.YBox.value(),3),round(self._widget.ZBox.value(),3)])
+        self._widget.Pointlist.insertItem(len(self.pointlist),str(self._widget.XBox.value()) + ',' +  str(self._widget.YBox.value()) + ',' + str(self._widget.ZBox.value()))
+
+    def RemovePoint(self):
+        rmindex = self._widget.Pointlist.currentIndex()
+        if self.pointlist != []:
+            del self.pointlist[rmindex]
+        self._widget.Pointlist.removeItem(rmindex)   
        
     
     def UpdateState(self,data):
         self.State = data
+
+    def target_track(self,target):
+        if self.index >= len(self.pointlist) - 1:
+            pass
+        else:
+            targetpoint_rounded = [round(target.x,3),round(target.y,3),round(target.z,3)]
+            endpoint = self.pointlist[self.index]
+            if targetpoint_rounded == endpoint:
+                self.index += 1
+                try:
+                    rospy.sleep(1.0)
+                except:
+                    pass
+                self.launch.emit()
+
+    def LoadDXF(self):
+        dxf = dxfgrabber.readfile(self.pwd + '/src/kampala/gui/src/gui/DXFFiles/' + self._widget.DXFInputBox.currentText())
+        allpolylines = [entity for entity in dxf.entities.__iter__() if entity.dxftype == 'POLYLINE']
+        if allpolylines != []:
+            linepoints = allpolylines[0].points
+            self._widget.Pointlist.clear()
+            self.pointlist = []
+            for point in linepoints:
+                if point[2] < 0.5:
+                    safepoint = [round(point[0],3),round(point[1],3),0.5]
+                else:
+                    safepoint = [round(point[0],3),round(point[1],3),round(point[2])]
+                self.pointlist.append(safepoint)
+                self._widget.Pointlist.insertItem(len(self.pointlist),str(safepoint[0]) + ',' + str(safepoint[1]) + ',' + str(safepoint[2]))
+        else:
+            rospy.logwarn("no points in the selected DXFFile")
+
+    def SaveDXF(self):
+        filename = self._widget.FileInput.text()
+        l = len(filename)
+        if l > 3:
+            if filename[(l-4):l] != '.dxf':
+                filename = filename + '.dxf'
+        else:
+            filename = filename + '.dxf'
+        drawing = dxfE.drawing(self.pwd + '/src/kampala/gui/src/gui/DXFFiles/' + filename)
+        drawing.add(dxfE.polyline(self.pointlist))
+        drawing.save()
+        self.filelist = os.listdir(self.pwd + '/src/kampala/gui/src/gui/DXFFiles')
+        self._widget.DXFInputBox.clear()
+        self._widget.DXFInputBox.insertItems(0,self.filelist)
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
@@ -113,12 +205,13 @@ class pointInputPlugin(Plugin):
     def save_settings(self, plugin_settings, instance_settings):
         # TODO save intrinsic configuration, usually using:
         # instance_settings.set_value(k, v)
-        pass
+        instance_settings.set_value("irisindex", self._widget.IrisInputBox.currentIndex())
 
     def restore_settings(self, plugin_settings, instance_settings):
         # TODO restore intrinsic configuration, usually using:
         # v = instance_settings.value(k)
-        pass
+        index = instance_settings.value("irisindex",0)
+        self._widget.IrisInputBox.setCurrentIndex(int(index))
 
     #def trigger_configuration(self):
         # Comment in to signal that the plugin has a way to configure

@@ -1,0 +1,20 @@
+<library path="scripts">
+  <class name="Autotuner Plugin" type="pid.AutotunerPlugin.AutotunerPlugin" base_class_type="rqt_gui_py::Plugin">
+    <description>
+      Autotuner Plugin.
+    </description>
+    <qtgui>
+      <!-- optional grouping...
+      <group>
+        <label>Group</label>
+      </group>
+      <group>
+        <label>Subgroup</label>
+      </group>
+      -->
+      <label>Autotuner plugin interface for PIDs</label>
+      <icon type="theme">system-help</icon>
+      <statustip>Autotuner plugin interface for PIDs</statustip>
+    </qtgui>
+  </class>
+</library>
