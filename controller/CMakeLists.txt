@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   visualization_msgs
   analysis
+  pid
 )
 
 ## System dependencies are found with CMake's conventions
@@ -130,6 +131,7 @@ catkin_package(
    scripts/hover_controller.py
    scripts/security_guard.py
    scripts/PID_controller.py
+   scripts/PID_controller_2.py
    scripts/derivator.py
    scripts/lander.py
    scripts/trajectory_generator.py

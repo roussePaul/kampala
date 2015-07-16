@@ -10,7 +10,7 @@ import sml_setup
 import sys
 import math
 from controller_base import Controller
-from PID_controller import PID
+from PID_controller_2 import PID2
 from point import *
 from controller.msg import PlotData
 from mavros.msg import OverrideRCIn
@@ -31,9 +31,9 @@ NODE_NAME='Blender'
 class Blender():
 
   def __init__(self):
-    self.PID = PID()
-    self.avoidance = AvoidanceController()
     rospy.init_node(NODE_NAME)
+    self.PID = PID2()
+    self.avoidance = AvoidanceController()
     self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
     rospy.Service('blender/update_parameters', Empty, self.update_parameters)
     self.instr = Instruction()

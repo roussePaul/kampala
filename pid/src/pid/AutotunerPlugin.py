@@ -78,6 +78,7 @@ class AutotunerPlugin(Plugin):
 
         path = self._widget.cIdentificationMethod.currentText() +"/autotune"
         rospy.wait_for_service(path)
+        
         autotune = rospy.ServiceProxy('autotune', Autotune)
 
         autotune(identification_method,synthesis_method)
