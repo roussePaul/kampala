@@ -4,10 +4,38 @@ import rospy
 from autotuner import Autotuner
 from std_srvs.srv import Empty
 
+from mavros.msg import OverrideRCIn
+
 import math
 
+import control
+from system import System
+
+class Relay:
+	def __init__(self,D,E=0.0):
+		self.D = D
+		self.E = E
+		self.U = D
+
+	def output(self,I):
+		if I>=self.E:
+			U = self.D
+		elif I<-self.E:
+			U = -self.D
+		else:
+			U = self.U
+
+		switch = (self.U!=U)
+
+		self.U = U
+
+		return (self.U,switch)
+
 class Identification:
-	method_list = {"relay":["Ziegler & Nichols (CL)"],"areas":["Internal Model Control","Ziegler & Nichols (OL)","Kappa-Tau"]}
+	method_list = {"relay":["Ziegler & Nichols (CL)"],
+	"areas":["Internal Model Control","Ziegler & Nichols (OL)","Kappa-Tau"],
+	"ramp":["Hovering"],
+	"ramp_relay":["Ziegler & Nichols (CL)"]}
 
 	def __init__(self,method="areas"):
 		self.method = method
@@ -19,8 +47,8 @@ class Identification:
 
 		# parameters
 		self.s_param = {"amplitude":1.0, "step_size":2.0}
-
-		self.r_param = {"amplitude":0.5, "oscillations":4, "hysteresys":0.1}
+		self.r_param = {"amplitude":0.1, "oscillations":4, "hysteresys":0.1}
+		self.ramp_param = {"rate":0.01,"command_start":0.0}
 
 		# state if the identification process
 		# states: "wait", "initialize" "in progress", "identify", "done"
@@ -31,12 +59,12 @@ class Identification:
 
 	def get_command(self, input, time):
 		print self.method
-		if self.method == "areas":
-			return self.step(input,time)
-		if self.method == "relay":
-			return self.relay(input,time)
+		methodToCall = getattr(self, self.method)
+		if not methodToCall:
+			raise Exception("Method %s not implemented" % method_name)
+		return methodToCall(input,time)
 
-	def step(self, input, time):
+	def areas(self, input, time):
 		if self.state == "initialize":
 			self.initial_time = time 
 			self.y = []
@@ -89,7 +117,7 @@ class Identification:
 			self.identification = {"mu":mu_s,"T":T,"L":L}
 
 			self.state = "done"
-			return 0
+			return 0.0
 
 	def relay(self,input,time):
 
@@ -101,7 +129,7 @@ class Identification:
 		if self.state == "initialize":
 			self.n_switch = 0
 			self.T_switch = []
-			self.current_U = self.r_param["amplitude"]
+			self.R = Relay(self.r_param["amplitude"],self.r_param["hysteresys"])
 			self.initial_time = time 
 			self.y = []
 			self.time = []
@@ -110,21 +138,12 @@ class Identification:
 
 		if self.state == "in progress":
 
-
-			E = self.r_param["hysteresys"]
-			D = self.r_param["amplitude"]
-
 			self.y.append(input)
 			self.time.append(time-self.initial_time)
 
-			if input>E:
-				U = D
-			elif input<-E:
-				U = -D
-			else:
-				U = self.current_U
+			(U,switch) = self.R.output(input)
 
-			if U != self.current_U:
+			if switch:
 				self.n_switch += 1
 				self.T_switch.append(time)
 			
@@ -147,6 +166,125 @@ class Identification:
 			Ku = 4*D/(math.pi*A)
 
 			self.identification = {"Ku":Ku,"Tu":Tu}
+
+			self.state = "done"
+			return 0.0
+
+	def ramp(self,input,time):
+
+		print self.state
+
+		if self.state == "wait":
+			return 0.0
+
+		if self.state == "initialize":
+			self.R = Relay(self.ramp_param["rate"])
+			self.T = time
+			self.U = self.ramp_param["command_start"]
+			self.T0 = time
+			self.state = "in progress"
+			return 0.0
+
+		if self.state == "in progress":
+
+			(s,switch) = self.R.output(input)
+
+			self.U += (time-self.T)*s
+			
+			self.T = time
+
+			if switch and time-self.T0>1.0:
+				self.state = "identify"
+
+			return self.U
+
+		if self.state == "identify":
+			self.identification = {"u0":self.U}
+
+			self.state = "done"
+			return 0.0
+
+
+	def ramp_relay(self,input,time):
+
+		print 
+		print self.state
+
+		if self.state == "wait":
+			return 0.0
+
+		if self.state == "initialize":
+			self.R = Relay(self.ramp_param["rate"])
+			self.Rv = Relay(0.02)
+			self.T = time
+			self.U = self.ramp_param["command_start"]
+			self.T0 = time
+			self.state = "ramp"
+
+			s = control.tf([1.0,0.0],[1.0])
+			wc = 30.0*2.0*math.pi
+			d = s/(1+s/wc)
+			self.acc = System( d**2 )
+			self.vel = System( d )
+
+			return 0.0
+
+		if self.state == "ramp":
+
+			v = self.vel.output(input,time)
+			self.vel.next_state()
+			a = self.acc.output(input,time)
+			self.acc.next_state()
+
+			acc = 1.0
+			if math.fabs(v)>0.02:
+				acc = -1.0
+
+			(s,switch) = self.R.output(input)
+
+			self.U = s*acc
+
+			if switch and time-self.T0>1.0:
+				self.n_switch = 0
+				self.T_switch = []
+				self.R = Relay(self.r_param["amplitude"],self.r_param["hysteresys"])
+				self.initial_time = time 
+				self.y = []
+				self.time = []
+				self.state = "relay"
+				self.u0 = self.U
+
+
+			return self.U
+
+		if self.state == "relay":
+			self.y.append(input)
+			self.time.append(time-self.initial_time)
+
+			(U,switch) = self.R.output(input)
+
+			if switch:
+				self.n_switch += 1
+				self.T_switch.append(time)
+			
+			if self.n_switch>self.r_param["oscillations"]:
+				self.state = "identify"
+
+			print U
+			print input
+
+			return U+self.u0
+
+		if self.state == "identify":
+
+			Tu = self.T_switch[-1]-self.T_switch[-2]
+
+			A = (max(self.y) - min(self.y)) / 2.0
+			D = self.r_param["amplitude"]
+
+			Ku = 4*D/(math.pi*A)
+
+			self.identification = {"Ku":Ku,"Tu":Tu,"u0":self.u0}
 
 			self.state = "done"
 			return 0.0
