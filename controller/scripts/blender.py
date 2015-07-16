@@ -13,6 +13,7 @@ from controller_base import Controller
 from PID_controller import PID
 from point import *
 from controller.msg import PlotData
+from controller.srv import SetChannel6
 from mavros.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
@@ -20,7 +21,7 @@ from obstacle_avoidance import AvoidanceController
 from std_srvs.srv import Empty
 import utils
 from std_msgs.msg import Float64
-
+import numpy as np
 from numpy import linalg
 
 
@@ -33,12 +34,20 @@ class Blender():
 
   def __init__(self):
     self.PID = PID()
-    self.avoidance = AvoidanceController()
+    #self.avoidance = AvoidanceController()
     rospy.init_node(NODE_NAME)
-    self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
+    #self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
     rospy.Service('blender/update_parameters', Empty, self.update_parameters)
+    self.channel6 = 0
     self.instr = Instruction()
     self.load_parameters()
+    rospy.Service('blender/set_channel6', SetChannel6, self.set_channel6)
+
+  #Sets channel 6 to value
+  def set_channel6(self,channel6):
+    self.channel6 = channel6.value
+    return True
+    
     
   # Gets target points and current points  
   def init_subscriptions(self, target_point,current_point):
@@ -114,20 +123,18 @@ class Blender():
   # From the required acceleration u, he control outputs are calculated: roll, pitch,
   # throttle and yaw_rate
   def get_controloutput(self,u,x,x_target):
-    AUX=[]
-    AUX_rot=[]
-    AUX.append(u[0])
-    AUX.append(u[1])
-    AUX.append(9.8+u[2])
+    AUX=np.array([0.]*3)
+    AUX_rot=np.array([0.]*3)
+    AUX[0] = u[0]
+    AUX[1] = u[1]
+    AUX[2] = 9.8+u[2]
 
     #take into consideration the yaw angle
-    AUX_rot.append(math.cos(math.radians(-x[3]))*AUX[0]-math.sin(math.radians(-x[3]))*AUX[1])
-    AUX_rot.append(math.sin(math.radians(-x[3]))*AUX[0]+math.cos(math.radians(-x[3]))*AUX[1])
-    AUX_rot.append(AUX[2])
+    AUX_rot[0] = math.cos(math.radians(-x[3]))*AUX[0]-math.sin(math.radians(-x[3]))*AUX[1]
+    AUX_rot[1] = math.sin(math.radians(-x[3]))*AUX[0]+math.cos(math.radians(-x[3]))*AUX[1]
+    AUX_rot[2] = AUX[2]
 
     norm_AUX=linalg.norm(AUX_rot)
-
-    norm_AUX=math.sqrt(math.pow(AUX_rot[0],2)+math.pow(AUX_rot[1],2)+math.pow(AUX_rot[2],2))
 
     #yaw control:
     diff=self.angular_difference(x[3],x_target[3])
@@ -149,21 +156,20 @@ class Blender():
     throttle=self.saturation(throttle,1000,2000)
     pitch=self.saturation(pitch,1350,1700)
     roll=self.saturation(roll,1350,1700)
-
-    return [roll,pitch,throttle,yaw_rate,0,0,0,0]
+    return [roll,pitch,throttle,yaw_rate,0,self.channel6,0,0]
 
   # Read the outputs of the controller and collision avoidance, then "blends"
   # the outputs  
   def read_and_blend(self,current_point,target_point):
-    u = [0.,0.,0.]
+    u = np.array([0.,0.,0.])
     u_cont = self.PID.get_output(current_point,target_point)
-    u_obst = self.avoidance.get_potential_output()
-    if self.obstacle_avoidance:
-      alpha = self.avoidance.get_blending_constant()
-    else:
-      alpha = 0
-    for i in range(0,2):
-      u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
+    #u_obst = self.avoidance.get_potential_output()
+    #if self.obstacle_avoidance:
+     # alpha = self.avoidance.get_blending_constant()
+    #else:
+     # alpha = 0
+    #for i in range(0,2):
+     # u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
     u[2] = u_cont[2] 
     return u_cont
  
