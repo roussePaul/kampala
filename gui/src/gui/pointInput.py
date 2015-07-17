@@ -1,3 +1,7 @@
+# Erik Berlund 2015
+# A GUI plugin with which you can send listed instructions to the drone one at a time.
+# You can also create, modify, save and load instruction lists with the plugin.
+
 import os
 import rospy
 import QtGui
@@ -33,6 +37,8 @@ import json
 
 class pointInputPlugin(Plugin):
 
+    # The variable launch is a signal specific to this class, emitted to make the plugin
+    # send the next instruction on the current list.
     launch = pyqtSignal()
     
     def __init__(self, context):
@@ -74,7 +80,8 @@ class pointInputPlugin(Plugin):
         context.add_widget(self._widget)
 
 
-        
+        # Setting default values of the class variables
+
         self.ID = 0
         self.index = 0
         self.State = QuadPositionDerived()
@@ -85,13 +92,14 @@ class pointInputPlugin(Plugin):
         self.pwd = os.environ['PWD']
         self.pointlist = []
         self.filelist = os.listdir(self.pwd + '/src/kampala/gui/src/gui/DXFFiles')
-        self.filelist2 = os.listdir(self.pwd + '/src/kampala/gui/src/gui/ActionFiles')
-
-               
-
+        self.filelist2 = os.listdir(self.pwd + '/src/kampala/gui/src/gui/ActionFiles') 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
         self._widget.DXFInputBox.insertItems(0,self.filelist)
         self._widget.ActionInputBox.insertItems(0,self.filelist2)
+
+        # Connecting slots to signals. If a QWidget A has a signal X, then self._widget.A.X.connect(fun)
+        # means that the function fun will be called with any output of the signal as its argument each time the signal
+        # X is emitted.
         self._widget.bStart.clicked.connect(self.Start)
         self._widget.AddPointButton.clicked.connect(self.AddPoint)
         self._widget.RemovePointButton.clicked.connect(self.RemovePoint)
@@ -100,7 +108,7 @@ class pointInputPlugin(Plugin):
         self._widget.AddWaitButton.clicked.connect(self.AddWait)
         self._widget.SaveActionsButton.clicked.connect(self.SaveActions)
         self._widget.LoadActionsButton.clicked.connect(self.LoadActions)
-        self.launch.connect(self.parse)
+        self.launch.connect(self.manage_task)
 
         self._widget.XBox.setMinimum(-10.0)
         self._widget.XBox.setMaximum(10.0)
@@ -113,20 +121,36 @@ class pointInputPlugin(Plugin):
         self._widget.ZBox.setSingleStep(0.1)
     
     class EmitThread (threading.Thread):
+
+        # A thread class used to emit the launch signal. Instances of it are created with the outer class
+        # as the third argument.  
+
         def __init__(self,delay,launcher):
             threading.Thread.__init__(self)
             self.delay = delay
             self.launcher = launcher
         def run(self):
+
+            # Waits for a set delay time, then emits the launch signal. The reason for doing this in a separate thread
+            # is to not block the rest of the GUI for the delay time.
+
             time.sleep(self.delay)
             self.launcher.launch.emit()
 
 
     def execute(self,cmd):
+
+        # Writes the command cmd to the corresponding pipefile of the selected drone, so that the terminal reading
+        # from that pipefile can execute it.
+
         subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile" + self.name]) 
 
 
-    def parse(self):
+    def manage_task(self):
+
+        # Is called each time the launch signal is emitted. Checks what kind of instruction that shall be carried out
+        # and calls the corresponding functions.
+
         currentpoint = self.pointlist[self.index]
         if currentpoint[0] == 'go to: ':
             self.publish_trajectory_segment()
@@ -139,11 +163,19 @@ class pointInputPlugin(Plugin):
 
 
     def publish_trajectory_segment(self):
+
+        # Launches the file line_userinput.launch, publishing a linear trajectory between the drone's current position
+        # and its next target position according to its instructions.
+
         endpoint = self.pointlist[self.index][1]
         inputstring = "roslaunch scenarios line_userinput.launch ns:=%s xstart:=%f ystart:=%f zstart:=%f xdest:=%f ydest:=%f zdest:=%f" % (self.name,self.State.x,self.State.y,self.State.z,endpoint[0],endpoint[1],endpoint[2])
         self.execute(inputstring)
         
     def Start(self):
+        
+        # Resets the index keeping track of which instruction to execute, subscribes to the position and rcoutput topics
+        # of the selected drone and emits the launch signal in a separate thread after waiting for 1 second.
+
         self.name = self._widget.IrisInputBox.currentText()
         self.index = 0
         self.ID = rospy.get_param(self.name + '/body_id')
@@ -159,12 +191,19 @@ class pointInputPlugin(Plugin):
         
         
     def AddPoint(self):
+
+        # Adds an instruction to go to the currently selected point to both the internal and the displayed list.
+
         addindex = self._widget.Pointlist.currentIndex()+1
         self.pointlist.insert(addindex,['go to: ',[round(self._widget.XBox.value(),3),round(self._widget.YBox.value(),3),round(self._widget.ZBox.value(),3)]])
         self._widget.Pointlist.insertItem(addindex,'go to: ' + str(self._widget.XBox.value()) + ',' +  str(self._widget.YBox.value()) + ',' + str(self._widget.ZBox.value()))
         self._widget.Pointlist.setCurrentIndex(addindex)
 
     def AddWait(self):
+
+        # Add an instruction to wait at the last point for the currently selected waiting time to both the
+        # internal and the displayed list.
+
         addindex = self._widget.Pointlist.currentIndex()+1
         self.pointlist.insert(addindex,['wait: ',self._widget.WaitBox.value()])
         self._widget.Pointlist.insertItem(addindex,'wait: ' + str(self._widget.WaitBox.value()) + 's')
@@ -172,6 +211,9 @@ class pointInputPlugin(Plugin):
 
 
     def RemovePoint(self):
+
+        # Removes the currently displayed instruction from the list.
+
         rmindex = self._widget.Pointlist.currentIndex()
         if self.pointlist != []:
             del self.pointlist[rmindex]
@@ -179,9 +221,18 @@ class pointInputPlugin(Plugin):
        
     
     def UpdateState(self,data):
+
+        # Called each time data from /irisX/body_data/id_x is recieved. Updates the internal tracking of
+        # the drone's position.
+
         self.State = data
 
     def target_track(self,target):
+
+        # Called each time data from /irisX/trajectory_gen/target is received. Checks if the currently published
+        # target point is the endpoint of the current trajectory segment and if so, emits the launch signal in a
+        # separate thread after waiting for 1 second.
+
         if self.index >= len(self.pointlist) - 1:
             pass
         else:
@@ -193,6 +244,12 @@ class pointInputPlugin(Plugin):
                     self.EmitThread(1.0,self).start()
 
     def LoadDXF(self):
+
+        # Loads the dxf-file selected in the DXFInputBox, checks all entities in the file and appends those with the 
+        # dxftype 'POLYLINE' (a set of points interpolated by lines) to a list. The points of the first polyline are
+        # then loaded into the instruction list. NOTE: ALL POINTS WITH Z-COORDINATES LESS THAN 0,5m WILL HAVE THEIR
+        # Z-COORDINATE SET TO 0,5 WHEN LOADED!
+
         dxf = dxfgrabber.readfile(self.pwd + '/src/kampala/gui/src/gui/DXFFiles/' + self._widget.DXFInputBox.currentText())
         allpolylines = [entity for entity in dxf.entities.__iter__() if entity.dxftype == 'POLYLINE']
         if allpolylines != []:
@@ -209,7 +266,15 @@ class pointInputPlugin(Plugin):
         else:
             rospy.logwarn("no points in the selected DXFFile")
 
+
+
     def SaveDXF(self):
+
+        # Creates a dxf-file with the name written in the FileInput widget, adding the extension .dxf if it's not
+        # present. Then creates a polyline entity in that file resembling the planned trajectory of the list, ignoring 
+        # all instructions in the list other than those with the 'go to: '-tag. Finally, the list of the ActionInputBox
+        # widget is refreshed. 
+
         filename = self._widget.FileInput.text()
         l = len(filename)
         if l > 3:
@@ -231,6 +296,12 @@ class pointInputPlugin(Plugin):
         self._widget.DXFInputBox.insertItems(0,self.filelist)
 
     def SaveActions(self):
+
+        # Extracts all instructions from the current list that are not about going to a point and adds them to a new list
+        # together with the index of their position in the original list. Then creates a file with the name entered in the
+        # ActionFileInput widget, adding the extension .txt if it's not present. Finally, the json module is used to 
+        # write the nested list to the new file. 
+
         actions = []
         for i in range(len(self.pointlist)):
             instruction = self.pointlist[i] 
@@ -248,8 +319,16 @@ class pointInputPlugin(Plugin):
         self.filelist2 = os.listdir(self.pwd + '/src/kampala/gui/src/gui/ActionFiles')
         self._widget.ActionInputBox.clear()
         self._widget.ActionInputBox.insertItems(0,self.filelist2)
+
+    #NOTE: Both save functions will overwrite any existing files with the same name as the one entered if there is any.
         
     def LoadActions(self):
+
+        # Loads the txt-file selected in the ActionInputBox and loads the list of actions from it using the json module.
+        # Then inserts each action in the instruction list at the positions determined by its associated index in the
+        # file, as long as there is not an instruction for an identical instruction already there. The helper function
+        # actioninsert is used to insert the action in the displayed instruction list.    
+
         actions = []
         filename = self._widget.ActionInputBox.currentText()
         with open(self.pwd + '/src/kampala/gui/src/gui/ActionFiles/' + filename, 'r') as f:
