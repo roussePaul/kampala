@@ -96,7 +96,7 @@ class PID(Controller):
     #Controller parameters	
     self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.7)
     self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
-    self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",0.42)
+    self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",0.7)
     Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
     Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)
 

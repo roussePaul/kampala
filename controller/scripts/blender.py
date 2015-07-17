@@ -36,9 +36,9 @@ NODE_NAME='Blender'
 class Blender():
 
   def __init__(self):
-    #self.avoidance = AvoidanceController()
+    self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,'obstacle_avoidance',"False")
+    self.avoidance = AvoidanceController()
     body_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',8)
-    body_array = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
     self.load_id = sml_setup.Get_Parameter(NODE_NAME,'load_id',body_id)
 
     # Check what controller should be used
@@ -48,7 +48,6 @@ class Blender():
     else:
       self.controller = PID()
     rospy.init_node(NODE_NAME)
-    #self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
     rospy.Service('blender/update_parameters', Empty, self.update_parameters)
     self.channel6 = 0
     self.instr = Instruction()
@@ -105,8 +104,6 @@ class Blender():
       target_point=PointExt()
     else:
       target_point=Point()
-    my_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',1)
-    bodies = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
     # Publish to RC Override
     rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
     if type(self.controller) is PID:
@@ -208,15 +205,16 @@ class Blender():
   def blend(self,u_cont,current_point,target_point):
     u = np.array([0.,0.,0.])
     u_cont = self.controller.get_output(current_point,target_point)
-    #u_obst = self.avoidance.get_potential_output()
-    #if self.obstacle_avoidance:
-     # alpha = self.avoidance.get_blending_constant()
-    #else:
-     # alpha = 0
-    #for i in range(0,2):
-     # u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
+    u_obst = self.avoidance.get_potential_output()
+    if self.obstacle_avoidance:
+      alpha = self.avoidance.get_blending_constant()
+      print(alpha)
+    else:
+      alpha = 0
+    for i in range(0,2):
+      u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
     u[2] = u_cont[2] 
-    return u_cont
+    return u
  
 
   def new_point(self,data,point_obj):
