@@ -31,15 +31,13 @@ NODE_NAME='PID'
 class PID(Controller):
   def __init__(self):
     self.load_PID_parameters()
-    self.d_updated = [0.,0.,0.] # Integral term
-    self.xi = np.array([0.,0.,0.])
+    self.d_updated = np.array([0.,0.,0.]) # Integral term
     rospy.Service('PID_controller/update_parameters', Empty, self.update_parameters)
   
 
   # Resets PID
   def reset(self):
-    self.d_updated = [0.,0.,0.]
-    self.xi = (np.array([0.]*3))
+    self.d_updated = np.array([0.,0.,0.])
 
 
   def get_d_updated(self):
@@ -47,14 +45,8 @@ class PID(Controller):
 
 
   def set_d_updated(self, d):
-    self.d_updated = d
+    self.d_updated = np.copy(d)
 
-  def get_xi(self):
-    return self.xi
-
-#observe that array is a numpy array
-  def set_xi(self, array):
-    self.xi = np.copy(array)
 
   def get_errors(self,current,target):
     e=[]
@@ -80,34 +72,17 @@ class PID(Controller):
 
 
   def calculate_PID_output(self,x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
-    u=[]
-    new_d = [0.]*3
-    #d_dot = np.array([0.]*3)
-    #M = 1
-    #delta = 1
-    #n = 2.
-    #eps = 0.1
-    #n_1 = 0.
-    #aux = lg.norm(self.xi) - M**2.
-    #if aux > 0:
-      #n_1 = aux**(n+1)
+    u=np.array([0.]*3)
+    new_d = np.array([0.]*3)
     #Compute errors
-    e=self.get_errors(x,x_target)
-    e_dot=self.get_errors(x_vel,x_vel_target)
+    e=np.array(self.get_errors(x,x_target))
+    e_dot=np.array(self.get_errors(x_vel,x_vel_target))
     for i in range(0,3):
-      #d_dot[i] = self.K_i[i]*(self.Kv[i]/2*e[i]+e_dot[i])
       new_d[i]=current_d[i]+delta_t*(self.K_i[i]*((e[i]*self.Kv[i]/2)+e_dot[i]))
       new_d[i]=self.saturation(new_d[i],-self.I_lim[i],self.I_lim[i])
-      u.append(x_acc_target[i]-self.Kv[i]*e_dot[i]-self.Kp[i]*e[i])
+      u[i] = x_acc_target[i]-self.Kv[i]*e_dot[i]-self.Kp[i]*e[i]
       u[i] = u[i] - new_d[i]
-      #u.append(self.Kv[i]*e_dot[i]+self.Kp[i]*e[i]+new_d[i])
     self.set_d_updated(new_d)   
-    #temp = np.dot(self.xi,d_dot) 
-    #n_2 = temp+math.sqrt(temp**2.+delta**2.)
-    #self.xi = (d_dot - n_1*n_2*self.xi/(2*(eps**2.+2*eps*M)**3.)*M**2.)
-    #for j in range(0,3):
-     # u.append(x_acc_target[j]-self.Kv[j]*e_dot[j]-self.Kp[j]*e[j])
-      #u[j] = u[j] - self.xi[j]
     return u
 
 
@@ -132,9 +107,9 @@ class PID(Controller):
     K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
     I_lim_z = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim_z",0.5)
     K_i_z = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i_z",7)
-    self.Kp = [Kp,Kp,Kp_z]
-    self.Kv = [Kv,Kv,Kv_z]
-    self.K_i = [K_i,K_i,K_i_z]
-    self.I_lim = [I_lim,I_lim,I_lim_z]
+    self.Kp = np.array([Kp,Kp,Kp_z])
+    self.Kv = np.array([Kv,Kv,Kv_z])
+    self.K_i = np.array([K_i,K_i,K_i_z])
+    self.I_lim = np.array([I_lim,I_lim,I_lim_z])
 
 #EOF

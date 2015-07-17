@@ -24,19 +24,32 @@ class StraightLineGen(Trajectory):
     self.start_point = start
     self.end_point = end
     self.tg = TrajectoryGenerator()
-    self.dist = self.tg.get_distance(self.start_point, self.end_point)
-    n = [0.,0.,0.]
-    for i in range(0,3):
-      n[i] = self.end_point[i] - self.start_point[i]
-    self.e_t = self.tg.get_direction(n) 
-    self.t_f = math.sqrt(6*self.dist/0.9*self.a_max)
-    self.constant = -2.0/self.t_f**3.0 * self.dist
     
+    
+    
+
+  def set_start(self, point):
+    self.start_point = point
+
+  def set_end(self, point):
+    self.end_point = point 
 
   def begin(self):
     self.__set_done(False)
 
   def loop(self,start_time):
+    self.dist = self.tg.get_distance(self.start_point, self.end_point)
+    if self.dist == 0:
+      self.t_f = 0
+      self.constant = 0
+      self.e_t = [0.,0.,0.]
+    else:
+      n = [0.,0.,0.]
+      for i in range(0,3):
+        n[i] = self.end_point[i] - self.start_point[i]
+      self.e_t = self.tg.get_direction(n) 
+      self.t_f = math.sqrt(6*self.dist/0.9*self.a_max)
+      self.constant = -2.0/self.t_f**3.0 * self.dist
     r = 10.0
     rate = rospy.Rate(10)
     time = start_time
