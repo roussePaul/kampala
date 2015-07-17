@@ -91,6 +91,14 @@ class TrajectoryGenerator():
   def get_direction(self,vector):
     return vector/la.norm(vector)
 
+#Returns vector = vec1 - vec2
+  def get_vector(self,vec1,vec2):
+    vector = [0.,0.,0.]
+    for i in range(0,3):
+      vector[i] = vec1[i] - vec2[i]
+    return vector
+      
+
 #This function returns the unit vector associated with the vector between two points.
 #The direction is away from vector2 towards vector1.
   def get_direction2(self,vector1,vector2):

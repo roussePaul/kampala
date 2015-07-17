@@ -26,9 +26,6 @@ class StraightLineGen(Trajectory):
     self.start_point = start
     self.end_point = end
     self.tg = TrajectoryGenerator()
-    
-    
-    
 
   def set_start(self, point):
     self.start_point = point

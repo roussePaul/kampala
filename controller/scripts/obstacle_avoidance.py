@@ -3,7 +3,7 @@ import rospy
 import sys
 import ast
 import math
-import numpy
+import numpy as np
 import trajectory_generator
 from trajectory_generato import TrajectoryGenerator
 from mocap.msg import QuadPositionDerived
@@ -40,7 +40,7 @@ class AvoidanceController():
     if self.obstacles_exist:
       distances = self.__get_distances()
       directions = self.__get_directions()
-      u = [0., 0., 0.]
+      u = np.array([0., 0., 0.])
       for i in range(0,len(distances)):
         if(distances[i] < 0.1):
           for j in range(0,2):
@@ -94,7 +94,7 @@ class AvoidanceController():
 #Returns all distances between the drone and each object in an array. These are needed to 
 #calculate the potential.    
   def __get_distances(self):
-    distances = []
+    distances = np.array([0.] * (len(self.states)-1))
     for i in range(0,len(self.states)):
       if self.bodies[i] != self.my_id:
         distance = self.tg.get_distance(self.__get_pos_from_state(self.__get_my_state()),self.__get_pos_from_state(self.states[i]))
@@ -103,7 +103,7 @@ class AvoidanceController():
 
 #Returns an array of all the directions from each obstacle to the drone.
   def __get_directions(self):
-    directions = []
+    directions = np.array([0.]*(len(self.states)-1))
     for i in range(0,len(self.states)):
       if self.bodies[i] != self.my_id:
         direction = self.tg.get_direction2(self.__get_pos_from_state(self.__get_my_state()),self.__get_pos_from_state(self.states[i]))
@@ -122,39 +122,6 @@ class AvoidanceController():
     self.my_id = rospy.get_param("my_id")
     
  
-  #def __get_acceleration(self):
-    #distances = self.__get_distances()
-    #directions = self.__get_directions()
-    #alpha = 0.1
-    #r_0  = 10
-    #acc = [0.,0.,0.]
-    #for j in range(0,len(self.states)):
-     # for i in range(0,2):
-    #    acc[i] += alpha/r_0 * math.e**(-distances[j]/r_0) * directions[j][i] 
-   # return acc
-
-  #def __get_velocity(self, current_velocity, acceleration,dt):
-    #velocity = [0.,0.,0.]
-    #for i in range(0,2):
-     # velocity[i] = current_velocity[i] + acceleration[i]*dt
-    #return velocity
-  
-  #def __get_position(self, current_position,velocity, dt):
-   # position = [0.,0.,0.]
-    #for i in range(0,2):
-     # position[i] = current_position[i] + velocity[i] *dt    
-    #return position
-
-  #def get_reference(self,dt):
-   # my_state = self.__get_my_state()
-    #acc = self.__get_acceleration()
-    #vel = self.__get_velocity([my_state.x_vel,my_state.y_vel,my_state.z_vel], acc, dt)
-    #pos = self.__get_position([my_state.x,my_state.y,my_state.z],vel,dt)
-    #acc.append(0)
-    #vel.append(0)
-    #pos.append(0)
-    #ref = self.tg.get_message(pos,vel,acc)
-    #return ref
 
   
       
