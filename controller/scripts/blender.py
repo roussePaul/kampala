@@ -47,8 +47,6 @@ class Blender():
       self.controller = LoadTransportController()
     else:
       self.controller = PID()
-
-    self.avoidance = AvoidanceController()
     rospy.init_node(NODE_NAME)
     #self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
     rospy.Service('blender/update_parameters', Empty, self.update_parameters)
@@ -207,9 +205,9 @@ class Blender():
 
   # Read the outputs of the controller and collision avoidance, then "blends"
   # the outputs  
-  def blend(self,current_point,target_point):
+  def blend(self,u_cont,current_point,target_point):
     u = np.array([0.,0.,0.])
-    u_cont = self.PID.get_output(current_point,target_point)
+    u_cont = self.controller.get_output(current_point,target_point)
     #u_obst = self.avoidance.get_potential_output()
     #if self.obstacle_avoidance:
      # alpha = self.avoidance.get_blending_constant()
