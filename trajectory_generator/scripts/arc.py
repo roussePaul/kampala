@@ -1,4 +1,14 @@
 #!/usr/bin/env python
+
+# This script generates the points, velocities and accelerations to be used as
+# a reference for the controller to to get the quad to move in a circle.
+# Given a midpoint, radius (R), starting point on the circle, initial velocity
+# and angle (psi) in #radians, an arc of length R*psi is generated with the
+# given midpoint, starting at the specified #starting point. Care has to be
+# taken by the user as the input velocity has to be perpendicular to the vector
+# pointing from the starting point to the midpoint. Constraints on maximum
+# velocity and acceleration are used.
+
 import rospy
 import sys
 import ast
@@ -7,14 +17,9 @@ import numpy
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
 from trajectory import Trajectory
-from Trajectory_node import TrajectoryNode
+from trajectory_node import TrajectoryNode
 from straight_line_class import StraightLineGen
 from circle_acc import AccGen
-
-#This script generates the points, velocities and accelerations to be used as a reference for the 
-#controller to to get the quad to move in a circle.
-#Given a midpoint, radius(R), starting point on the circle, initial velocity and angle(psi) in #radians, an arc of length R*psi is generated with the given midpoint, starting at the specified #starting point. Care has to be taken by the user as the input velocity has to be perpendicular #to the vector pointing from the starting point to the midpoint. 
-#Constraints on maximum velocity and acceleration are used.
 
 class ArcGen(Trajectory):
   

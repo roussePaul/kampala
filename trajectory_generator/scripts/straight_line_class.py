@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+
+# Generates a straight line between startpoint and endpoint with velocity zero
+# at the start and #endpoint. The time law is of the form
+# s(t) = t^2*constant*(t-3/2*t_f). Here t_f is calculated so that the speed at
+# the end_point is zero. Respects constraints on acceleration.
+
 import rospy
 import sys
 import ast
@@ -7,11 +13,7 @@ from trajectory import Trajectory
 from controller.msg import Permission
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
-from Trajectory_node import TrajectoryNode
-#Generates a straight line between startpoint and endpoint with velocity zero at the start and #endpoint.
-#The time law is of the form s(t) = t^2*constant*(t-3/2*t_f). Here t_f is calculated so that the 
-#speed at the end_point is zero.
-#Respects constraints on acceleration.
+from trajectory_node import TrajectoryNode
 
 class StraightLineGen(Trajectory):
   
