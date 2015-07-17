@@ -54,7 +54,7 @@ class PID:
                 gains = self.synthesiser.synthetise(params)
                 self.set_params(gains)
                 self.mode = "controller"
-                return self.get_command(ym,y0,time)
+                return self.get_command(y0-ym,time)
 
 
     def autotune(self,msg):

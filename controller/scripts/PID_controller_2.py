@@ -87,7 +87,6 @@ class PID2(Controller):
     u[1] = self.pid_y.controller(x[1],x_target[1],time)
     u[2] = self.pid_z.controller(x[2],x_target[2],time)
 
-    print u
     return u
 
 

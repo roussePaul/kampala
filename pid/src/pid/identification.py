@@ -10,6 +10,9 @@ import math
 
 import control
 from system import System
+from scipy import stats
+import matplotlib.pyplot as plt
+import numpy as np
 
 class Relay:
 	def __init__(self,D,E=0.0):
@@ -35,7 +38,8 @@ class Identification:
 	method_list = {"relay":["Ziegler & Nichols (CL)"],
 	"areas":["Internal Model Control","Ziegler & Nichols (OL)","Kappa-Tau"],
 	"ramp":["Hovering"],
-	"ramp_relay":["Ziegler & Nichols (CL)"]}
+	"ramp_relay":["Ziegler & Nichols (CL)"],
+	"stairs":["Stairs"]}
 
 	def __init__(self,method="areas"):
 		self.method = method
@@ -48,7 +52,7 @@ class Identification:
 		# parameters
 		self.s_param = {"amplitude":1.0, "step_size":2.0}
 		self.r_param = {"amplitude":0.1, "oscillations":4, "hysteresys":0.1}
-		self.ramp_param = {"rate":0.01,"command_start":0.0}
+		self.ramp_param = {"rate":0.1,"command_start":0.2}
 
 		# state if the identification process
 		# states: "wait", "initialize" "in progress", "identify", "done"
@@ -58,7 +62,7 @@ class Identification:
 		self.state = "initialize"
 
 	def get_command(self, input, time):
-		print self.method
+		#print self.method
 		methodToCall = getattr(self, self.method)
 		if not methodToCall:
 			raise Exception("Method %s not implemented" % method_name)
@@ -215,36 +219,56 @@ class Identification:
 
 		if self.state == "initialize":
 			self.R = Relay(self.ramp_param["rate"])
-			self.Rv = Relay(0.02)
+			self.Rv = Relay(1)
 			self.T = time
 			self.U = self.ramp_param["command_start"]
 			self.T0 = time
 			self.state = "ramp"
 
 			s = control.tf([1.0,0.0],[1.0])
-			wc = 30.0*2.0*math.pi
+			wc = 1.0*2.0*math.pi
 			d = s/(1+s/wc)
 			self.acc = System( d**2 )
 			self.vel = System( d )
+			self.int = System( 1.0/s )
 
+			self.datax = []
+			self.datay = []
 			return 0.0
 
 		if self.state == "ramp":
 
-			v = self.vel.output(input,time)
-			self.vel.next_state()
-			a = self.acc.output(input,time)
+			acc = self.acc.output(input,time)
 			self.acc.next_state()
-
-			acc = 1.0
-			if math.fabs(v)>0.02:
-				acc = -1.0
+			vel = self.vel.output(input,time)
+			self.vel.next_state()
 
 			(s,switch) = self.R.output(input)
+			(v,sw) = self.Rv.output(0.05+vel)
 
-			self.U = s*acc
+			self.U = self.ramp_param["command_start"] + self.int.output(s,time)
+			self.int.next_state()
+
+
+			print self.U
+
+			if math.fabs(vel) >= 0.1:
+				self.datax = np.append(self.datax,input)
+				self.datay = np.append(self.datay,self.U)
+
 
 			if switch and time-self.T0>1.0:
+				print self.datax
+				print self.datay
+				fig1 = plt.figure()
+				ax1 = fig1.add_subplot(111)
+				ax1.plot(self.datax, 'ro')
+				plt.show()
+				slope, intercept, r_value, p_value, std_err = stats.linregress(self.datax,self.datay)
+
+				# K = 1.0/slope
+				# T0
+
 				self.n_switch = 0
 				self.T_switch = []
 				self.R = Relay(self.r_param["amplitude"],self.r_param["hysteresys"])
@@ -288,3 +312,222 @@ class Identification:
 
 			self.state = "done"
 			return 0.0
+
+
+	def stairs(self,input,time):
+
+		# print self.state
+
+		if self.state == "wait":
+			return 0.0
+
+		if self.state == "initialize":
+			self.datax = []
+			self.datay = []
+			self.takeoff = False
+			self.time = time
+			self.state = "takeoff"
+
+			s = control.tf([1.0,0.0],[1.0])
+			wc = 5.0*2.0*math.pi
+			d = s/(1+s/wc)
+			self.vel = System( d )
+			self.acc = System( d**2 )
+			return 0.0
+
+		if self.state == "takeoff":
+
+			i = math.floor(time-self.time)
+			self.U = self.ramp_param["command_start"] + 0.02*i
+
+
+			vel = self.vel.output(input,time)
+			self.vel.next_state()
+
+			acc = self.vel.output(input,time)
+			self.vel.next_state()
+
+			# print self.U
+			# print "U {0:+.4f}  vel {1:+.4f}  acc {2:+.4f}".format(self.U,vel,acc)
+
+			if math.fabs(vel)>=0.05 and time-self.time>1.0:
+				self.u0 = self.U-0.1
+				self.datax = []
+				self.datay = []
+				self.time = time
+				self.o = 5
+				self.accX = []
+				self.accY = []
+				self.state = "opt2"
+				self.R = Relay(1)
+				self.R.output(input)
+
+			return self.U
+
+		if self.state == "opt2":
+
+			if self.o==0:
+				self.state = "identify1"
+				return self.U
+
+			self.datax = np.append(self.datax,time)
+			self.datay = np.append(self.datay,input)
+
+			vel = self.vel.output(input,time)
+			self.vel.next_state()
+
+			(v,s) = self.R.output(input)
+
+			if self.time-time>1.0 or s:
+				print self.datay
+				print self.datax
+				coeffs = np.polyfit(self.datax, self.datay, 2)
+				self.accX.append(-coeffs[0])
+				self.accY.append(self.U)
+				print self.accX
+				self.o -= 1
+				self.datax = []
+				self.datay = []
+				self.time = time
+
+
+				if len(self.accX)>=2:
+					c = self.accX
+					u = self.accY
+
+					vel = self.vel.output(input,time)
+					self.vel.next_state()
+
+					p = np.polyfit(c, u, 1)
+					self.u0 = float(p[1])
+					self.K = float(2.0/p[0])
+
+					print "--------------------------------------"
+					print self.K
+					print self.u0
+					print "--------------------------------------"
+					dt = 3.0
+					self.U = self.u0 + v*math.fabs(vel*2.0/(self.K*dt))
+
+					print "U "+ str(self.U)
+					print "V "+ str(v)
+				else:
+					self.U = self.u0 + v*0.3
+
+
+
+
+			return self.U
+
+		if self.state == "optimize":
+
+			if self.o==0:
+				self.state = "identify1"
+				return self.U
+
+			self.datax = np.append(self.datax,time)
+			self.datay = np.append(self.datay,input)
+
+			vel = self.vel.output(input,time)
+			self.vel.next_state()
+
+
+			if self.time-time>3.0 or input<0:
+				print self.datay
+				print self.datax
+				coeffs = np.polyfit(self.datax, self.datay, 2)
+				self.accX.append(-coeffs[0])
+				self.accY.append(self.U)
+				print self.accX
+				self.U += 0.2
+				self.o -= 1
+				self.datax = []
+				self.datay = []
+				self.time = time
+
+			return self.U
+		if self.state == "identify1":
+
+			c = self.accX
+			u = self.accY
+
+			vel = self.vel.output(input,time)
+			self.vel.next_state()
+
+
+			p = np.polyfit(c, u, 1)
+			self.u0 = float(p[1])
+			self.K = float(2.0/p[0])
+
+			print "--------------------------------------"
+			print self.K
+			print self.u0
+			print "--------------------------------------"
+
+
+			self.n_osc = 0
+			self.time = time
+			self.R = Relay(1)
+			self.state = "osc1"
+			return self.U
+
+		if self.state == "osc1":
+			vel = self.vel.output(input,time)
+			self.vel.next_state()
+
+
+			self.datax = np.append(self.datax,time)
+			self.datay = np.append(self.datay,input)
+
+			(v,s) = self.R.output(input)
+
+			print s
+
+			if s:
+				dt = 3.0
+				self.time = time + dt 
+				self.U = self.u0 - vel/(self.K*dt)
+
+				if self.n_osc>0:
+					coeffs = np.polyfit(self.datax, self.datay, 2)
+					self.accX.append(-coeffs[0])
+					self.accY.append(self.U)
+					self.datax = []
+					self.datay = []
+
+				self.n_osc += 1
+
+				if self.n_osc>3:
+					self.state = "identify2"
+
+			return self.U
+
+		if self.state == "identify2":
+
+			c = self.accX
+			u = self.accY
+
+			vel = self.vel.output(input,time)
+			self.vel.next_state()
+
+
+			p = np.polyfit(c, u, 1)
+			self.u0 = float(p[1])
+			self.K = float(2.0/p[0])
+
+			print "--------------------------------------"
+			print self.K
+			print self.u0
+			print "--------------------------------------"
+
+
+			fig1 = plt.figure()
+			ax1 = fig1.add_subplot(111)
+			ax1.plot(c,u, 'ro')
+			plt.show()
+
+
+			self.n_osc = 0
+			self.time = time
+			self.state = "done"
+			return self.U
