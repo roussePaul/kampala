@@ -28,7 +28,7 @@
 	<!-- Main values -->
 	     	  	<param name="controller_type" value="PID"/>
 			<param name="CONTROLLER_FREQUENCY" value="30"/>
-			<param name="CONTROL_CANCEL_GRAVITY" value="1470"/>
+			<param name="CONTROL_CANCEL_GRAVITY" value="1430"/>
 			<param name="CONTROL_ARMING_MIN" value="1030"/>
 			<param name="Ktt" value="637."/>
 			<param name="Kphi" value="637."/>
@@ -103,7 +103,7 @@
 			<param name="PID_I_lim" value="0."/>
 			<param name="PID_K_i" value="0."/>
 			<param name="PID_I_lim_z" value="5."/>
-			<param name="PID_K_i_z" value="0.1"/>
+			<param name="PID_K_i_z" value="0.1"/>     
 	<!-- Unimportant values -->
 		<!-- <param name="CONTROL_MIN" value="1000"/>
 		<param name="CONTROL_NEUTRAL" value="1500"/>
