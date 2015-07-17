@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-# Abstract follower base class
+
+# Abstract base class for leader following. This scripts provides implementations of some
+# common methods and some abstract methods.
 
 import rospy
 from abc import ABCMeta, abstractmethod
@@ -7,7 +9,7 @@ from numpy import linalg as lg
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from trajectory import Trajectory
-from Trajectory_node import TrajectoryNode
+from trajectory_node import TrajectoryNode
 
 
 class Follower(Trajectory):
@@ -22,8 +24,8 @@ class Follower(Trajectory):
     super(Follower, self).__init__(trajectory_node)
     self.id = my_id
     self.leader_id = leader_id
-    rospy.Subscriber("/body_data/id_"+str(self.leader_id),QuadPositionDerived, self.setLeaderState)
-    rospy.Subscriber("/body_data/id_"+str(self.id),QuadPositionDerived, self.setMyState)
+    rospy.Subscriber("/body_data/id_"+str(self.leader_id),QuadPositionDerived, self.set_leader_state)
+    rospy.Subscriber("/body_data/id_"+str(self.id),QuadPositionDerived, self.set_my_state)
     self.calculated_state = QuadPositionDerived()
     self.real_state = QuadPositionDerived() 
 
@@ -40,8 +42,10 @@ class Follower(Trajectory):
     rate = rospy.Rate(15.)
     leader_init_state = self.leader_state
     rospy.sleep(5)
+
+    # Main loop for publishing points.
     while not rospy.is_shutdown() and not self.is_done():
-      self.calculateState()
+      self.calculate_state()
       self.trajectory_node.send_msg(self.calculated_state)
       self.trajectory_node.send_permission(False)
       distance = self.__getDistance()
@@ -51,12 +55,15 @@ class Follower(Trajectory):
         self.__set_done(True)
     self.trajectory_node.send_permission(True)
 
-  def setLeaderState(self, data):
+  # Sets state of leader.
+  def set_leader_state(self, data):
     self.leader_state = data
     
-  def setMyState(self, data):
+  # Sets the state of follower - the quadcopter for which the trajectory is generated. 
+  def set_my_state(self, data):
     self.real_state = data  
 
+  # Calculates distance between leader and follower.
   def __getDistance(self):
     my_pos = [self.real_state.x, self.real_state.y, self.real_state.z]
     leader_pos = [self.leader_state.x, self.leader_state.y, self.leader_state.z]
@@ -65,9 +72,9 @@ class Follower(Trajectory):
       temp[i] = my_pos[i] - leader_pos[i]
     return lg.norm(temp)
 
-  # Calculates the state of the follower from the leader state
+  # Calculates the state of the follower from the leader state.
   @abstractmethod
-  def calculateState(self):
+  def calculate_state(self):
     pass
 
   def __set_done(self,boolean):
