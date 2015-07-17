@@ -85,17 +85,21 @@ class pointInputPlugin(Plugin):
         self.pwd = os.environ['PWD']
         self.pointlist = []
         self.filelist = os.listdir(self.pwd + '/src/kampala/gui/src/gui/DXFFiles')
+        self.filelist2 = os.listdir(self.pwd + '/src/kampala/gui/src/gui/ActionFiles')
 
                
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
         self._widget.DXFInputBox.insertItems(0,self.filelist)
+        self._widget.ActionInputBox.insertItems(0,self.filelist2)
         self._widget.bStart.clicked.connect(self.Start)
         self._widget.AddPointButton.clicked.connect(self.AddPoint)
         self._widget.RemovePointButton.clicked.connect(self.RemovePoint)
         self._widget.LoadButton.clicked.connect(self.LoadDXF)
         self._widget.SaveButton.clicked.connect(self.SaveDXF)
         self._widget.AddWaitButton.clicked.connect(self.AddWait)
+        self._widget.SaveActionsButton.clicked.connect(self.SaveActions)
+        self._widget.LoadActionsButton.clicked.connect(self.LoadActions)
         self.launch.connect(self.parse)
 
         self._widget.XBox.setMinimum(-10.0)
@@ -124,9 +128,9 @@ class pointInputPlugin(Plugin):
 
     def parse(self):
         currentpoint = self.pointlist[self.index]
-        if currentpoint[0] == 'go to:':
+        if currentpoint[0] == 'go to: ':
             self.publish_trajectory_segment()
-        if currentpoint[0] == 'wait:':
+        if currentpoint[0] == 'wait: ':
             if self.index >= len(self.pointlist):
                 pass
             else:
@@ -156,13 +160,13 @@ class pointInputPlugin(Plugin):
         
     def AddPoint(self):
         addindex = self._widget.Pointlist.currentIndex()+1
-        self.pointlist.insert(addindex,['go to:',[round(self._widget.XBox.value(),3),round(self._widget.YBox.value(),3),round(self._widget.ZBox.value(),3)]])
+        self.pointlist.insert(addindex,['go to: ',[round(self._widget.XBox.value(),3),round(self._widget.YBox.value(),3),round(self._widget.ZBox.value(),3)]])
         self._widget.Pointlist.insertItem(addindex,'go to: ' + str(self._widget.XBox.value()) + ',' +  str(self._widget.YBox.value()) + ',' + str(self._widget.ZBox.value()))
         self._widget.Pointlist.setCurrentIndex(addindex)
 
     def AddWait(self):
         addindex = self._widget.Pointlist.currentIndex()+1
-        self.pointlist.insert(addindex,['wait:',self._widget.WaitBox.value()])
+        self.pointlist.insert(addindex,['wait: ',self._widget.WaitBox.value()])
         self._widget.Pointlist.insertItem(addindex,'wait: ' + str(self._widget.WaitBox.value()) + 's')
         self._widget.Pointlist.setCurrentIndex(addindex)
 
@@ -182,7 +186,7 @@ class pointInputPlugin(Plugin):
             pass
         else:
             targetpoint_rounded = [round(target.x,3),round(target.y,3),round(target.z,3)]
-            if self.pointlist[self.index][0] == 'go to:':
+            if self.pointlist[self.index][0] == 'go to: ':
                 endpoint = self.pointlist[self.index][1]
                 if targetpoint_rounded == endpoint:
                     self.index += 1
@@ -200,7 +204,7 @@ class pointInputPlugin(Plugin):
                     safepoint = [round(point[0],3),round(point[1],3),0.5]
                 else:
                     safepoint = [round(point[0],3),round(point[1],3),round(point[2])]
-                self.pointlist.append(['go to:',safepoint])
+                self.pointlist.append(['go to: ',safepoint])
                 self._widget.Pointlist.insertItem(len(self.pointlist),'go to: ' + str(safepoint[0]) + ',' + str(safepoint[1]) + ',' + str(safepoint[2]))
         else:
             rospy.logwarn("no points in the selected DXFFile")
@@ -217,7 +221,7 @@ class pointInputPlugin(Plugin):
 
         trajectory_points = []
         for point in self.pointlist:
-            if point[0] == 'go to:':
+            if point[0] == 'go to: ':
                 trajectory_points.append(point[1])
 
         drawing.add(dxfE.polyline(trajectory_points))
@@ -229,10 +233,43 @@ class pointInputPlugin(Plugin):
     def SaveActions(self):
         actions = []
         for i in range(len(self.pointlist)):
-            instruction = pointlist[i] 
-            if instruction[0] != 'go to:':
-                actions.append(instruction,i)
-        utils.logwarn(str(actions))
+            instruction = self.pointlist[i] 
+            if instruction[0] != 'go to: ':
+                actions.append([instruction,i])
+        filename = self._widget.ActionFileInput.text()
+        l = len(filename)
+        if l > 3:
+            if filename[(l-4):l] != '.txt':
+                filename = filename + '.txt'
+        else:
+            filename = filename + '.txt'
+        with open(self.pwd + '/src/kampala/gui/src/gui/ActionFiles/' + filename, 'w') as f:
+            json.dump(actions,f)
+        self.filelist2 = os.listdir(self.pwd + '/src/kampala/gui/src/gui/ActionFiles')
+        self._widget.ActionInputBox.clear()
+        self._widget.ActionInputBox.insertItems(0,self.filelist2)
+        
+    def LoadActions(self):
+        actions = []
+        filename = self._widget.ActionInputBox.currentText()
+        with open(self.pwd + '/src/kampala/gui/src/gui/ActionFiles/' + filename, 'r') as f:
+            actions = json.load(f)
+        for action in actions:
+            index = action[1]
+            instruction = action[0]
+            if index < len(self.pointlist):
+                if self.pointlist[index] != instruction:
+                    self.pointlist.insert(index,instruction)
+                    self.actioninsert(instruction,index)
+            else:
+                self.pointlist.insert(index,instruction)
+                self.actioninsert(instruction,index)
+                    
+    def actioninsert(self,instruction,index):
+        if instruction[0] == 'wait: ':
+            self._widget.Pointlist.insertItem(index, instruction[0] + str(instruction[1]) + 's')
+
+        
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
