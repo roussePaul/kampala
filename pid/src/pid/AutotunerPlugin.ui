@@ -29,7 +29,9 @@
       <string>U</string>
      </property>
      <property name="icon">
-      <iconset theme="edit-redo"/>
+      <iconset theme="edit-redo">
+       <normaloff/>
+      </iconset>
      </property>
     </widget>
    </item>
@@ -61,13 +63,6 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="0" colspan="2">
-    <widget class="QPushButton" name="bAutotune">
-     <property name="text">
-      <string>Autotunes</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="0">
     <widget class="QGroupBox" name="gIdentification">
      <property name="title">
@@ -79,6 +74,16 @@
       </item>
      </layout>
     </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="bMode">
+     <property name="text">
+      <string>Set mode</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QComboBox" name="cMode"/>
    </item>
   </layout>
  </widget>

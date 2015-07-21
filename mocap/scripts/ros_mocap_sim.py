@@ -28,8 +28,6 @@ import copy
 import control
 
 import pid
-print sys.path
-
 
 from system import System
 import math

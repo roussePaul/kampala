@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   rqt_gui_py
   std_msgs
   message_generation
+  analysis
 )
 
 ## System dependencies are found with CMake's conventions
@@ -58,6 +59,7 @@ add_service_files(
   GetPIDParameters.srv
   SetPIDParameters.srv
   Autotune.srv
+  Mode.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -88,6 +90,7 @@ catkin_package(
   CATKIN_DEPENDS 
   message_runtime
   std_msgs
+  analysis
 #  DEPENDS system_lib
 )
 
@@ -128,7 +131,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
   scripts/autotuner.py
-  scripts/pid.py
+  scripts/pid_controller.py
   scripts/identification.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

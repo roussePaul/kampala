@@ -19,7 +19,8 @@ from std_srvs.srv import Empty
 import analysis
 import utils
 
-from pid import pid_controller
+import pid
+import pid_controller
 
 print 
 print sys.path

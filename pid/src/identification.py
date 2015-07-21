@@ -50,8 +50,8 @@ class TimeSequence:
 		self.time = []
 
 	def append(self,s,t):
-		self.data.append(d)
-		self.data.append(t)
+		self.data.append(s)
+		self.time.append(t)
 		while t-self.time[0]>self.T:
 			self.data.pop(0)
 			self.time.pop(0)
@@ -79,16 +79,13 @@ class Identification:
 		# state if the identification process
 		# states: "wait", "initialize" "in progress", "identify", "done"
 		self.state = "wait"
+		self.U_seq = TimeSequence(100)
+		self.Y_seq = TimeSequence(100)
+		self.state = "online"
+
 
 	def start(self):
 		self.state = "initialize"
-		
-		if self.online_identification == True:
-			self.U_seq = TimeSequence(30)
-			self.Y_seq = TimeSequence(30)
-			self.state = "online"
-
-
 
 	def online(self, u, ym, t):
 		self.U_seq.append(u,t)
@@ -106,11 +103,12 @@ class Identification:
 			i2u_0.append( (self.U_seq.time[i]-self.U_seq.time[0])**2/2.0 )
 
 		A = np.vstack([i2u,i2u_0]).T
-		a, b = np.linalg.lstsq(A, y)[0]
+		a, b = np.linalg.lstsq(A, self.Y_seq.data)[0]
 		K = a
 		u_0 = -b/K
 
 		self.identification = {"K":K,"u0":u_0}
+		print self.identification
 
 
 	def get_command(self, input, time):
