@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+
+# Generates a straight line between startpoint and endpoint with velocity zero
+# at the start and endpoint respects constraints on acceleration.
+
 import rospy
 import sys
 import ast
@@ -7,9 +11,7 @@ from trajectory import Trajectory
 from controller.msg import Permission
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
-from Trajectory_node import TrajectoryNode
-#generates a straight line between startpoint and endpoint with velocity zero at the start and endpoint
-#respects constraints on acceleration
+from trajectory_node import TrajectoryNode
 
 class StraightLineGen(Trajectory):
   

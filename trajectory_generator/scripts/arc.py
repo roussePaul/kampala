@@ -1,4 +1,14 @@
 #!/usr/bin/env python
+
+# This script generates the points, velocities and accelerations to be used as
+# a reference for the controller to to get the quad to move in a circle.
+# Given a midpoint, radius (R), starting point on the circle, initial velocity
+# and angle (psi) in #radians, an arc of length R*psi is generated with the
+# given midpoint, starting at the specified #starting point. Care has to be
+# taken by the user as the input velocity has to be perpendicular to the vector
+# pointing from the starting point to the midpoint. Constraints on maximum
+# velocity and acceleration are used.
+
 import rospy
 import sys
 import ast
@@ -7,14 +17,9 @@ import numpy
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
 from trajectory import Trajectory
-from Trajectory_node import TrajectoryNode
+from trajectory_node import TrajectoryNode
 from straight_line_class import StraightLineGen
 from circle_acc import AccGen
-
-#This script generates the points, velocities and accelerations to be used as a reference for the 
-#controller to to get the quad to move in a circle.
-#Given a midpoint, radius(R), starting point on the circle, initial velocity and angle(psi) in #radians, an arc of length R*psi is generated with the given midpoint, starting at the specified #starting point. Care has to be taken by the user as the input velocity has to be perpendicular #to the vector pointing from the starting point to the midpoint. 
-#Constraints on maximum velocity and acceleration are used.
 
 class ArcGen(Trajectory):
   
@@ -48,7 +53,7 @@ class ArcGen(Trajectory):
 
   def loop(self, start_time):
     time = start_time
-    r = 30.0
+    r = 15.0
     rate = rospy.Rate(r)
     while not rospy.is_shutdown() and not self.is_done():
       #get point, velocity and acceleration
@@ -106,13 +111,13 @@ if __name__ == '__main__':
     tn = TrajectoryNode()
     sl_gen_1 = StraightLineGen(tn,[0.,0.,0.2],[0.,0.,0.6])
     sl_gen_1.loop(0.)
-    rospy.sleep(2.)
+    rospy.sleep(20.)
     sl_gen_2 = StraightLineGen(tn,[0.,0.,0.6],[0.8,0.,0.6])
     sl_gen_2.loop(0.)
-    rospy.sleep(10.)
+    rospy.sleep(5.)
     acc_gen = AccGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.2,0.])
     t = acc_gen.get_t_f()
-    a_gen = ArcGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.2,0.],4*math.pi)
+    a_gen = ArcGen(tn,[0.,0.,0.6],[0.8,0.,0.6],[0.,0.2,0.],6*math.pi)
     a_gen.loop(t/2.0)
     
   except rospy.ROSInterruptException:

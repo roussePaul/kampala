@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+
+# Generates a straight line between startpoint and endpoint with velocity zero
+# at the start and #endpoint. The time law is of the form
+# s(t) = t^2*constant*(t-3/2*t_f). Here t_f is calculated so that the speed at
+# the end_point is zero. Respects constraints on acceleration.
+
 import rospy
 import sys
 import ast
@@ -7,11 +13,7 @@ from trajectory import Trajectory
 from controller.msg import Permission
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
-from Trajectory_node import TrajectoryNode
-#Generates a straight line between startpoint and endpoint with velocity zero at the start and #endpoint.
-#The time law is of the form s(t) = t^2*constant*(t-3/2*t_f). Here t_f is calculated so that the 
-#speed at the end_point is zero.
-#Respects constraints on acceleration.
+from trajectory_node import TrajectoryNode
 
 class StraightLineGen(Trajectory):
   
@@ -24,19 +26,29 @@ class StraightLineGen(Trajectory):
     self.start_point = start
     self.end_point = end
     self.tg = TrajectoryGenerator()
-    self.dist = self.tg.get_distance(self.start_point, self.end_point)
-    n = [0.,0.,0.]
-    for i in range(0,3):
-      n[i] = self.end_point[i] - self.start_point[i]
-    self.e_t = self.tg.get_direction(n) 
-    self.t_f = math.sqrt(6*self.dist/0.9*self.a_max)
-    self.constant = -2.0/self.t_f**3.0 * self.dist
-    
+
+  def set_start(self, point):
+    self.start_point = point
+
+  def set_end(self, point):
+    self.end_point = point 
 
   def begin(self):
     self.__set_done(False)
 
   def loop(self,start_time):
+    self.dist = self.tg.get_distance(self.start_point, self.end_point)
+    if self.dist == 0:
+      self.t_f = 0
+      self.constant = 0
+      self.e_t = [0.,0.,0.]
+    else:
+      n = [0.,0.,0.]
+      for i in range(0,3):
+        n[i] = self.end_point[i] - self.start_point[i]
+      self.e_t = self.tg.get_direction(n) 
+      self.t_f = math.sqrt(6*self.dist/0.9*self.a_max)
+      self.constant = -2.0/self.t_f**3.0 * self.dist
     r = 10.0
     rate = rospy.Rate(10)
     time = start_time

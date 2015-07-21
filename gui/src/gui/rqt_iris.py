@@ -27,6 +27,7 @@ class MyPlugin(Plugin):
         self.land_permission = Permission()
         self.controller_permission = Permission()
         self.lander_channel = []
+        self.name = ''
 
 
         super(MyPlugin, self).__init__(context)
@@ -89,13 +90,14 @@ class MyPlugin(Plugin):
 
 
     def execute(self,cmd):
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile"])
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile" + self.name])
 
     def executeBlocking(self,cmd):
-        os.system("bash -c 'cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile'")
+        os.system("bash -c 'cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile" + self.name + "'")
 
     def Terminal(self):
-        subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile;bash'])
+        self.name = self._widget.IrisInputBox.currentText()
+        subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile' + self.name + ';bash'])
     
     def Terminate(self):
         inputstring = 'rosnode kill `rosnode list | grep ' + self.name + '`'
@@ -179,12 +181,13 @@ class MyPlugin(Plugin):
     def save_settings(self, plugin_settings, instance_settings):
         # TODO save intrinsic configuration, usually using:
         # instance_settings.set_value(k, v)
-        pass
+        instance_settings.set_value("irisindex", self._widget.IrisInputBox.currentIndex())
 
     def restore_settings(self, plugin_settings, instance_settings):
         # TODO restore intrinsic configuration, usually using:
         # v = instance_settings.value(k)
-        pass
+        index = instance_settings.value("irisindex",0)
+        self._widget.IrisInputBox.setCurrentIndex(int(index))
 
     #def trigger_configuration(self):
         # Comment in to signal that the plugin has a way to configure

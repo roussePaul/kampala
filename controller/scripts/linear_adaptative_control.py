@@ -25,7 +25,7 @@ import gnosis.xml.pickle
 
 
 class Point:
-  params_name = ["CONTROL_CANCEL_GRAVITY","CONTROL_ARMING_MIN","N_yaw","K_yaw","w_inf","Ktt","Kphi","PID_w","PID_w_z","PID_I_lim","PID_K_i"]
+  params_name = ["CONTROL_CANCEL_GRAVITY","N_yaw","K_yaw","w_inf","Ktt","Kphi","PID_w","PID_w_z","PID_I_lim_z","PID_K_i_z"]
 
   def __init__(self):  
     self.params_value = dict()

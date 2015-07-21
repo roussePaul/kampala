@@ -1,4 +1,14 @@
 #!/usr/bin/env python
+
+# This script generates the points, velocities and accelerations to be used as
+# a reference for the controller to to get the quad to accelerate into a
+# circle. Given a midpoint, starting point and target speed, the quad will
+# accelerate up to this speed #tracking an arc. The angle as a function of time
+# is given by theta = v*t^2/(2*t_f*R), where v is the target speed, #R the
+# radius of the circle and t_f the time the acceleration will take, calculated
+# from #constraints on the acceleration. 
+# It is rather similar to arc.py.
+
 import rospy
 import sys
 import ast
@@ -7,14 +17,8 @@ import numpy
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
 from trajectory import Trajectory
-from Trajectory_node import TrajectoryNode
+from trajectory_node import TrajectoryNode
 from straight_line_class import StraightLineGen
-
-#This script generates the points, velocities and accelerations to be used as a reference for the 
-#controller to to get the quad to accelerate into a circle.
-#Given a midpoint, starting point and target speed, the quad will accelerate up to this speed #tracking an arc.
-#The angle as a function of time is given by theta = v*t^2/(2*t_f*R), where v is the target speed, #R the radius of the circle and t_f the time the acceleration will take, calculated from #constraints on the acceleration. 
-#It is rather similar to arc.py.
 
 class AccGen(Trajectory):
   
