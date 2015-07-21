@@ -20,11 +20,6 @@ import analysis
 import utils
 
 
-#Constants
-#*************************************
-NODE_NAME='PID'
-#*************************************
-
 
 class PID(Controller):
   def __init__(self):
@@ -96,16 +91,16 @@ class PID(Controller):
   # Read parameters for PID
   def load_PID_parameters(self):		
     #Controller parameters	
-    self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.7)
-    self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
-    self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
-    self.Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
-    self.Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)
+    self.w = utils.Get_Parameter("PID_w",1.7)
+    self.w_z  = utils.Get_Parameter("PID_w_z", 1.3)
+    self.x_i = utils.Get_Parameter("PID_x_i",math.sqrt(2)/2)
+    self.Kp = utils.Get_Parameter("PID_Kp",self.w*self.w)
+    self.Kv = utils.Get_Parameter("PID_Kv",2*self.x_i*self.w)
 
-    self.Kv_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv_z", self.w_z*self.w_z)
-    self.Kp_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp_z", 2*self.x_i*self.w_z)
+    self.Kv_z = utils.Get_Parameter("PID_Kv_z", self.w_z*self.w_z)
+    self.Kp_z = utils.Get_Parameter("PID_Kp_z", 2*self.x_i*self.w_z)
 
-    self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
-    self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
+    self.I_lim = utils.Get_Parameter("PID_I_lim",0.5)
+    self.K_i = utils.Get_Parameter("PID_K_i",7)
 
 #EOF

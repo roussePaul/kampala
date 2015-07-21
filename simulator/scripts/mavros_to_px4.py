@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-#Vinzenz Minnig, 2015
 
-# mavros to px4
+## Convert the mavros interace so that it behave exactly like APM
 
 import sys
 import rospy
@@ -14,7 +13,10 @@ from px4.msg import manual_control_setpoint
 import std_msgs.msg
 import ctypes
 
+## Class to create the suscrib to the rc/override topic and to publish it to the px4 simulated quadcopter. Create also the services.
 class mavrosSim:
+	## Constructor
+	# Suscrib to the topics and create the publisher
 	def __init__(self):
 		self.px4_manual_control = rospy.Publisher('manual_control_setpoint',manual_control_setpoint, queue_size=10)
 		rospy.Subscriber('mavros/rc/override',OverrideRCIn,self.transformMessage)
@@ -24,22 +26,26 @@ class mavrosSim:
 		self.arming = rospy.Service('mavros/cmd/arming', CommandBool, self.cb_arming)
 		rospy.spin()
 
+	## Emulate the services of parameter set
 	def cb_param_set(self,msg):
 		print 'Receive set param commande:'
 		print msg
 		return {'success':True, 'integer':0, 'real':0.0}
 
+	## Emulate the services of mode set
 	def cb_set_mode(self,msg):
 		print 'Receive set mode commande:'
 		print msg
 		return {'success':True}
 
+	## Emulate the services of arming
 	def cb_arming(self,msg):
 		self.pubRC(0, 0, 0, 1)
 		rospy.sleep(0.1)
 		self.pubRC(0, 0, 0, 0)
 		return {'success':True, 'result':1}
 
+	## Emulate the topic of rc override
 	def transformMessage(self,msg):
 		roll  	 = (msg.channels[0]-1500.0)/500.0
 		pitch  	 = (msg.channels[1]-1500.0)/500.0
@@ -48,6 +54,7 @@ class mavrosSim:
 
 		self.pubRC(roll, pitch, thrust, yaw_rate)
 
+		## Publish RC data to the PX4 simulation
 	def pubRC(self, roll, pitch, thrust, yaw_rate):
 		pub = manual_control_setpoint()
 		pub.timestamp = 0

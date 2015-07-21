@@ -52,14 +52,11 @@ find_package(catkin REQUIRED COMPONENTS
    RCInput.msg
    PlotData.msg
    Permission.msg
-   QuadStateSimple.msg
-   QuadState.msg
  )
 
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
-   BodyDataDerived.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -132,9 +129,6 @@ catkin_package(
    scripts/PID_controller.py
    scripts/derivator.py
    scripts/lander.py
-   scripts/trajectory_generator.py
-   scripts/circle_gen.py
-   scripts/circle_gen_tilt.py
    scripts/quadstate_to_path.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )

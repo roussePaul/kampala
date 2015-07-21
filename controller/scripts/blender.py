@@ -34,7 +34,7 @@ class Blender():
     self.PID = PID()
     self.avoidance = AvoidanceController()
     rospy.init_node(NODE_NAME)
-    self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
+    self.obstacle_avoidance = utils.Get_Parameter("obstacle_avoidance","False")
     rospy.Service('blender/update_parameters', Empty, self.update_parameters)
     self.instr = Instruction()
     self.load_parameters()
@@ -59,7 +59,7 @@ class Blender():
 
   def wait_for_security_guard(self,obj):
     rate=rospy.Rate(30)
-    rospy.loginfo('['+NODE_NAME+']: Waiting for security guard ...')
+    rospy.loginfo('Waiting for security guard ...')
     while not obj.start:
       if rospy.is_shutdown():
         return 
@@ -69,8 +69,8 @@ class Blender():
     loop_rate=rospy.Rate(self.FREQUENCY)
     current_point=Point()
     target_point=Point()
-    my_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',1)
-    bodies = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
+    my_id = utils.Get_Parameter('body_id',1)
+    bodies = utils.Get_Parameter('body_array',[1,2])
     # Publish to RC Override
     rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
 
@@ -177,13 +177,13 @@ class Blender():
 
 
   def wait_for_first_point(self,target_obj,channel,data,rate):
-    rospy.loginfo('['+NODE_NAME+']: Waiting for first point ...')
+    rospy.loginfo('Waiting for first point ...')
     while not target_obj.first_point_received:
       #publish low value on the throttle channel, so the drone does not disarm while waiting
       channel.publish(data)
       rate.sleep()
 
-    rospy.loginfo('['+NODE_NAME+']: First point received')      
+    rospy.loginfo('First point received')      
 
   def angular_difference(self,current_angle,target_angle):
     ang_diff=current_angle-target_angle
@@ -203,18 +203,18 @@ class Blender():
   
   # Read parameters for Blender
   def load_parameters(self):		
-    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"N_yaw",500)
-    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"K_yaw",2)
-    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"w_inf",5)
-    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"Ktt",1000)/(20*math.pi/180)
-    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"Kphi",1000)/(20*math.pi/180)
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_CANCEL_GRAVITY",1400)	
+    self.N_yaw = utils.Get_Parameter("N_yaw",500)
+    self.K_yaw = utils.Get_Parameter("K_yaw",2)
+    self.w_inf = utils.Get_Parameter("w_inf",5)
+    self.Ktt = utils.Get_Parameter("Ktt",1000)/(20*math.pi/180)
+    self.Kphi = utils.Get_Parameter("Kphi",1000)/(20*math.pi/180)
+    self.CONTROL_MIN = utils.Get_Parameter("CONTROL_MIN",1000)
+    self.CONTROL_NEUTRAL = utils.Get_Parameter("CONTROL_NEUTRAL",1500)
+    self.CONTROL_MAX = utils.Get_Parameter("CONTROL_MAX",2000)
+    self.CONTROL_ARMING_MIN = utils.Get_Parameter("CONTROL_ARMING_MIN",1025)
+    self.CONTROL_CANCEL_GRAVITY = utils.Get_Parameter("CONTROL_CANCEL_GRAVITY",1400)	
 
-    self.FREQUENCY = sml_setup.Get_Parameter(NODE_NAME,"CONTROLLER_FREQUENCY",30)
+    self.FREQUENCY = utils.Get_Parameter("CONTROLLER_FREQUENCY",30)
 
 if __name__ == "__main__":
   bl = Blender()

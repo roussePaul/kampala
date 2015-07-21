@@ -133,14 +133,3 @@ if __name__ == '__main__':
 	    linegen = StraightLineGen() 
 	    linegen.generate()
     
-    
-
-    
-
-    
- 
-
-   
-    
-
-
