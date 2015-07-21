@@ -22,8 +22,7 @@ from scipy.interpolate import NearestNDInterpolator
 
 import gnosis.xml.pickle
 
-
-
+from controller.srv import PlotLAC 
 class Point:
   params_name = ["CONTROL_CANCEL_GRAVITY","N_yaw","K_yaw","w_inf","Ktt","Kphi","PID_w","PID_w_z","PID_I_lim_z","PID_K_i_z"]
 
@@ -65,6 +64,7 @@ class LinearAC:
     rospy.Service('LinearAC/update_controller', Empty, self.update_current_point)
     rospy.Service('LinearAC/save', Empty, self.cbSave)
     rospy.Service('LinearAC/load', Empty, self.cbLoad)
+    rospy.Service('LinearAC/plot', PlotLAC, self.cbPlot)
 
   def update_current_point(self,msg):
     current_inputs = self.get_inputs()
@@ -76,7 +76,6 @@ class LinearAC:
     self.params_load()
     self.params_load_PID()
     return []
-
 
   def inter_extrapolate(self,inputs_grid,values,inputs,l):
     if len(values)==1:
@@ -150,6 +149,20 @@ class LinearAC:
 
   def cbLoad(self,msg):
     self.load()
+    return []
+
+  def cbPlot(self,msg):
+    inputs = self.get_inputs()
+    x = np.linspace(msg.min,msg.max,100)
+    y = np.linspace(msg.min,msg.max,100)
+    
+    for i in range(0,100):
+      inputs[msg.input_variable] = x[i]
+      pts = self.interpolate_point(inputs)
+      y[i] = pts.params_value[msg.plot_variable]
+
+    utils.Plot(x,y)
+
     return []
 
   def save(self):

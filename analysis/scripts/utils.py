@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy
-
+import matplotlib.pyplot as plt
+from threading import Thread
 ## Script that contain usefull function used in several packages
   
 
@@ -24,3 +25,15 @@ def Get_Parameter(PARAMETER_NAME,DEFAULT_VALUE):
 		logwarn(''+PARAMETER_NAME+' not found. Default: '+str(DEFAULT_VALUE))
 
 	return param
+
+
+class Plot(Thread):
+    def __init__(self,x,y):
+    	Thread.__init__(self)
+    	self.x = x
+    	self.y = y
+    	self.start()
+
+    def run(self):
+	    plt.plot(self.x,self.y)
+	    plt.show()
