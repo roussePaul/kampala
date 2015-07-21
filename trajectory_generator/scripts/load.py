@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-# This script generates the points, velocities, accelerations, jerk
-# and snap to be used as a reference for the load, for the load
-# transport controller.
+
 
 import rospy
 from numpy import array, sin,  cos
@@ -15,6 +13,9 @@ from straight_line_class import StraightLineGen
 
 
 class LoadTrajectory(Trajectory):
+  """This script generates the points, velocities, accelerations, jerk
+  and snap to be used as a reference for the load, for the load
+  transport controller."""
   
   done = False
   a_max = 0.6**2.0/0.8

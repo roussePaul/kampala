@@ -8,10 +8,12 @@ from controller.msg import Permission
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
 from Trajectory_node import TrajectoryNode
-#generates a straight line between startpoint and endpoint with velocity zero at the start and endpoint
-#respects constraints on acceleration
 
 class StraightLineGen(Trajectory):
+
+  """Generates a straight line between the current position of the drone
+  and a point specified by a user. This is used with the gui. It uses the StraightLineGen."""
+
   
   done = False
   a_max = 9.81/3.

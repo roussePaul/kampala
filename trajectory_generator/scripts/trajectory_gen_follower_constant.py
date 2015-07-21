@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-# This script generates points for a follower following a leader,
-# given the id of the leader and a constant offset vector between the
-# two.
+
 
 import rospy
 from trajectory_gen_follower import Follower
 from Trajectory_node import TrajectoryNode
 
 class ConstantFollower(Follower):  
+  """This class generates points for a follower following a leader,
+  given the id of the leader and a constant offset vector between the
+  two."""
 
   def __init__(self, trajectory_node, offset, my_id, leader_id):
     self.offset = offset
@@ -31,11 +32,4 @@ class ConstantFollower(Follower):
     #self.calculated_state.yaw_acc = self.leader_state.yaw_acc
 
 
-if __name__ == '__main__':
-  try:
-    #my_id = rospy.get_param("/trajectory_generator/follower_id")
-    #leader_id = rospy.get_param("/trajectory_generator/leader_id")
-    follower = ConstantFollower(TrajectoryNode(),[0.,2.,0.],8,20)
-    follower.loop()
-  except rospy.ROSInterruptException:
-    pass
+

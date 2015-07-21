@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from abc import ABCMeta,abstractmethod
-#Class that defines the interface of a trajectory
+
 
 class Trajectory():
-
+  """Class that defines the interface of a trajectory."""
   __metaclass__ = ABCMeta  
 
   done = False

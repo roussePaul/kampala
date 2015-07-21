@@ -10,13 +10,15 @@ from trajectory import Trajectory
 from Trajectory_node import TrajectoryNode
 from straight_line_class import StraightLineGen
 
-#This script generates the points, velocities and accelerations to be used as a reference for the 
-#controller to to get the quad to accelerate into a circle.
-#Given a midpoint, starting point and target speed, the quad will accelerate up to this speed #tracking an arc.
-#The angle as a function of time is given by theta = v*t^2/(2*t_f*R), where v is the target speed, #R the radius of the circle and t_f the time the acceleration will take, calculated from #constraints on the acceleration. 
-#It is rather similar to arc.py.
 
 class AccGen(Trajectory):
+  """This script generates the points, velocities and accelerations to be used as a reference for the 
+  controller to to get the quad to accelerate into a circle.
+  Given a midpoint, starting point and target speed, the quad will accelerate up to this speed tracking an arc.
+  The angle as a function of time is given by theta = v*t^2/(2*t_f*R), where v is the target speed, 
+  R the radius of the circle and t_f the time the acceleration will take, calculated from 
+  constraints on the acceleration. 
+  It is rather similar to arc.py."""
   
   done = False
   a_max = 0.6**2.0/0.8
@@ -46,6 +48,7 @@ class AccGen(Trajectory):
     
 
   def loop(self, start_time):
+    """This method is called to perform the acceleration."""
     self.__set_t_f(self.velo/math.sqrt(self.a_max**2.0 - self.velo**4.0/self.radius**2.0))
     time = start_time
     r = 10.0

@@ -8,12 +8,14 @@ from controller.msg import Permission
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
 from Trajectory_node import TrajectoryNode
-#Generates a straight line between startpoint and endpoint with velocity zero at the start and #endpoint.
-#The time law is of the form s(t) = t^2*constant*(t-3/2*t_f). Here t_f is calculated so that the 
-#speed at the end_point is zero.
-#Respects constraints on acceleration.
+
+
 
 class StraightLineGen(Trajectory):
+  """Generates a straight line between startpoint and endpoint with velocity zero at the start and endpoint.
+  The time law is of the form s(t) = t^2*constant*(t-3/2*t_f). Here t_f is calculated so that the 
+  speed at the end_point is zero.
+  Respects constraints on acceleration."""
   
   done = False
   a_max = 9.81/3.
@@ -38,6 +40,8 @@ class StraightLineGen(Trajectory):
     self.__set_done(False)
 
   def loop(self,start_time):
+    """This method is called to perform the whole trajectory.
+    The start_time should always be zero."""
     self.dist = self.tg.get_distance(self.start_point, self.end_point)
     if self.dist == 0:
       self.t_f = 0
@@ -123,9 +127,7 @@ if __name__ == '__main__':
     rospy.sleep(3.)
     traj = TrajectoryNode()
     traj.send_permission(True)
-    StraightLineGen(traj,[0.,0.,0.2],[0.,0.,1.]).loop(0.)
-    rospy.sleep(10.)
-    StraightLineGen(traj,[0.,0.,1.],[0.,0.8,1.]).loop(0.)
+    StraightLineGen(traj,[0.,0.,0.2],[0.,0.,0.6]).loop(0.)
   except rospy.ROSInterruptException:
     pass
 

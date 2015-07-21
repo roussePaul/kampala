@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Abstract follower base class
+
 
 import rospy
 from abc import ABCMeta, abstractmethod
@@ -11,7 +11,7 @@ from Trajectory_node import TrajectoryNode
 
 
 class Follower(Trajectory):
-
+  """This is an abstract follower base class."""
   __metaclass__ = ABCMeta
 
   leader_state = QuadPositionDerived() 
@@ -65,9 +65,10 @@ class Follower(Trajectory):
       temp[i] = my_pos[i] - leader_pos[i]
     return lg.norm(temp)
 
-  # Calculates the state of the follower from the leader state
+ 
   @abstractmethod
   def calculateState(self):
+    """This function should calculate the state of the follower from the leader state."""
     pass
 
   def __set_done(self,boolean):
