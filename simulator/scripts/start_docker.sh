@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## Used to start the container of the iris px4 firmware
 
 echo "[DOCKER] START: $1"
 

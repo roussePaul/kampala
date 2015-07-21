@@ -13,9 +13,6 @@ from controller.msg import Permission
 import analysis
 import utils
 
-#*************Constants*******************
-NODE_NAME='SG'
-#*****************************************
 
 class Trajectory():
 	def __init__(self):
@@ -72,13 +69,13 @@ def Interrupt_Flight(lander_channel,controller_channel):
 
 def Prepare_For_Flight():
 	#Set the flight mode to alt-hold (default)
-	mode_success=sml_setup.Set_Flight_Mode(NODE_NAME,'STABILIZE')
+	mode_success=sml_setup.Set_Flight_Mode('STABILIZE')
 
 	#Set system ID to 1 to allow RC override
-	ID_success=sml_setup.Set_System_ID(NODE_NAME,1)
+	ID_success=sml_setup.Set_System_ID(1)
 
 	#arm the quad
-	arming_success=sml_setup.Arming_Quad(NODE_NAME)
+	arming_success=sml_setup.Arming_Quad()
 
 	if mode_success and ID_success and arming_success:
 		return True
@@ -200,7 +197,7 @@ if __name__=='__main__':
 	trajectory_done=Trajectory()
 
 	#Get the body ID as a parameter
-	body_id=sml_setup.Get_Parameter(NODE_NAME,'body_id',8)
+	body_id=utils.Get_Parameter('body_id',8)
 	mocap_topic='/body_data/id_'+str(body_id)
 
 	#Publish topics
@@ -213,7 +210,7 @@ if __name__=='__main__':
 	rospy.Subscriber('trajectory_gen/done',Permission,Trajectory_Done,trajectory_done)
 
 	#Connect to Qualysis Motion Capture System
-	body_info=sml_setup.Connect_To_Mocap_Message(NODE_NAME)
+	body_info=sml_setup.Connect_To_Mocap_Message()
 
 
 	#Prepare the Iris for flight (set system ID and arm)

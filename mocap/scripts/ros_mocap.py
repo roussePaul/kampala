@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+"""Motion Capture script
+
+Get the data coming from the Qualisys computer using the "mocap_source.py" script.
+Perform the derivation of each signals (x, y, z, roll, pitch, yaw).
+Send information in a QuadPositionDerived message.
+
+Set the found_body attribute after 5 missing packets from Qualisys in order to support weird networking behaviours from some computers.
+No filter is implemented.
+"""
+
+#!/usr/bin/env python
 
 import rospy
 import mocap_source
@@ -11,17 +22,21 @@ from mocap.msg import QuadPositionDerived
 
 import analysis
 import utils
-#************Constants********************
-NODE_NAME='MOCAP'
-#*****************************************
 
+import controller
+import sml_setup
 
+## Class for storing the time information.
+## Used in the computation of the derivative.
 class Time():
+	## Constructor: init the time with the current one
 	def __init__(self):
 		self.current_time=rospy.Time.now()
 		self.past_time=self.current_time
 		self.time_diff=0
 
+	## Compute the time difference and store the current time.	
+	## @return difference of time since the last call.
 	def get_time_diff(self):
 		self.past_time=self.current_time
 		self.current_time=rospy.Time.now()
@@ -30,20 +45,27 @@ class Time():
 
 		return self.time_diff
 
-
-
+## Get the body data from mocap_source.py.
+## @param body_id: Qualisys id of the body (number of the body that appear in the list in the Qualisys software).
+## @return QuadPosition message with the x, y, z, roll, pitch and yaw position of the body. 
 def Get_Body_Data(body_id):
+
+	
+	# Get the bodies from mocap_source.py
 	bodies=Qs.get_updated_bodies()
 	body_length=len(bodies)
 	body_indice=-1
 
+	# Get the corresponding id of the body
 	if isinstance(bodies,list):
 		for i in range(0,body_length):
 			if(bodies[i]['id']==body_id):
 				body_indice=i
 
+	# Store data in a QuadPosition object
 	data=QuadPosition()
 
+	# If the body does not appear in the list, label it as "not found"
 	if(body_indice==-1):
 		#utils.logerr('Body %i not found'%(body_id))
 		data.found_body=False
@@ -60,7 +82,9 @@ def Get_Body_Data(body_id):
 
 	return(data)
 
-
+## Get the topics names of the body we want to track. The topic will be "/body_data/id_'Qid'" where 'Qid' is the Qualisys identifier.
+## @param bodies: list of body Qualisys id.
+## @return list of topics where information will be send on.
 def Get_Topic_Names(bodies):
 	a=len(bodies)
 	result=[]
@@ -69,7 +93,9 @@ def Get_Topic_Names(bodies):
 
 	return(result)
 
-
+## Create every publisher from a list of topic names and store them in a list.
+## @param topic_array: list of topic names.
+## @return list of publisher objects.
 def Get_Publishers(topic_array):
 	a=len(topic_array)
 	result=[]
@@ -79,7 +105,11 @@ def Get_Publishers(topic_array):
 	return(result)
 
 
+## Create the message of the body position initialised with data.
+## @param current_data: initialising data.
+## @return message with the current position of the quad (but not yet with the velocity and the acceleration).
 def Insert_Current_Data(current_data):
+
 	result=QuadPositionDerived()
 	result.found_body=current_data.found_body
 	result.x=current_data.x
@@ -90,7 +120,11 @@ def Insert_Current_Data(current_data):
 	result.yaw=current_data.yaw
 	return(result)
 
-
+## Compute the derivative of a signal.
+## @param current: current value of the signal.
+## @param past: past value of the signal.
+## @param time: time difference between the two values.
+## @return time derivative, return 0 if the derivative is infinite.
 def Compute_Derivative(current,past,time):
 	if time:
 		result=(current-past)/time
@@ -100,6 +134,12 @@ def Compute_Derivative(current,past,time):
 		return 0
 
 
+
+## Compute all velocity and acceleration of the quad.
+## @param current_data: current position of the quad.
+## @param past_data: past position of the quad.
+## @param time: time difference between the two values.
+## @return QuadPositionDerived message with the position, velocity and acceleration of the quad.
 def Get_Derived_Data(current_data,past_data,time):
 	result=Insert_Current_Data(current_data)
 	result.x_vel=Compute_Derivative(current_data.x,past_data.x,time)
@@ -117,23 +157,30 @@ def Get_Derived_Data(current_data,past_data,time):
 	return(result)
 
 
+## Main loop of the mocap script that get data from the nocap_source script (Qualisys) and send them to each topics.
+# @ros_param frequency: Sending frequency of the quads data.
+# @ros_param body_array: Array with each id that we want to track.
 def start_publishing():
-        frequency = rospy.get_param("frequency",30)
-        print(frequency)
+	# Set the frequency
+	frequency = rospy.get_param("frequency",30)
+	utils.loginfo("Mocap will work at " + str(frequency) + "Hz ")
 	rate=rospy.Rate(frequency)
+
+	# Init the Time object used for the derivative computation
 	timer=Time()
-	#Get parameters (all the body ID's that are requested)
-	body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[8,16,17,20])
+
+	# Get parameters (all the body ID's that are requested)
+	body_array=utils.Get_Parameter('body_array',[8,16,17,20])
 	if type(body_array) is str:
 		body_array=ast.literal_eval(body_array)
 
-	#Get topic names for each requested body
+	# Get topic names for each requested body
 	body_topic_array=Get_Topic_Names(body_array)
 
-	#Establish one publisher topic for each requested body
+	# Establish one publisher topic for each requested body
 	topics_publisher=Get_Publishers(body_topic_array)
 
-	#Initialize empty past data list
+	# Initialize empty past data list
 	mocap_past_data=[]
 	empty_data=QuadPositionDerived()
 	for i in range(0,len(body_array)):
@@ -144,21 +191,25 @@ def start_publishing():
 
 	while not rospy.is_shutdown():
 
+		# Update the Time object and get the difference of time since the last call
 		delta_time=timer.get_time_diff()
 
 		for i in range(0,len(body_array)):
+			# Get the data for the body with the id body_array[i]
 			mocap_data=Get_Body_Data(body_array[i])
 
 			if mocap_data.found_body:
 				mocap_data_derived=Get_Derived_Data(mocap_data,mocap_past_data[i],delta_time)
 
-				#update past mocap data
+				# Update past mocap data
 				mocap_past_data[i]=mocap_data_derived
 
-				#Publish data on topic
+				# Publish data on topic
 				topics_publisher[i].publish(mocap_data_derived)
 				error[i]=0
 			else:
+				# Support for bad computers that have trouble with the network
+				#  (for my computer, some of the packets are lost, and as the security guard land the quad as soon as the tracking of the quad is lost, we notice the tracking lost after several missing packets)
 				error[i]+=1
 
 				if error[i]<30:

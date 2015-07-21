@@ -13,6 +13,8 @@ import sys
 import math
 import sml_setup
 
+import analysis
+import utils
 
 #Constants
 #*************************************
@@ -152,8 +154,8 @@ if __name__=='__main__':
 	rospy.init_node('hovering_controller')
 
 	#Get parameters body_id and hovering target height
-	body_id=sml_setup.Get_Parameter(NODE_NAME,'hover_controller/qualysis_id',DEFAULT_BODY_ID)
-	hovering_alt=sml_setup.Get_Parameter(NODE_NAME,'hover_controller/height',DEFAULT_HOVERING_HEIGHT)
+	body_id=utils.Get_Parameter(NODE_NAME,'hover_controller/qualysis_id',DEFAULT_BODY_ID)
+	hovering_alt=utils.Get_Parameter(NODE_NAME,'hover_controller/height',DEFAULT_HOVERING_HEIGHT)
 
 	loop_rate=rospy.Rate(30)
 

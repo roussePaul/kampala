@@ -36,13 +36,13 @@ NODE_NAME='Blender'
 class Blender():
 
   def __init__(self):
-    self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,'obstacle_avoidance',"False")
+    self.obstacle_avoidance = utils.Get_Parameter("obstacle_avoidance","False")
     self.avoidance = AvoidanceController()
-    body_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',8)
-    self.load_id = sml_setup.Get_Parameter(NODE_NAME,'load_id',body_id)
+    body_id = utils.Get_Parameter('body_id',8)
+    self.load_id = utils.Get_Parameter('load_id',body_id)
 
     # Check what controller should be used
-    self.controller_type = sml_setup.Get_Parameter(NODE_NAME,"controller_type","PID")
+    self.controller_type = utils.Get_Parameter("controller_type","PID")
     if self.controller_type == "load_transport":
       self.controller = LoadTransportController()
     else:
@@ -90,7 +90,7 @@ class Blender():
 
   def wait_for_security_guard(self,obj):
     rate=rospy.Rate(30)
-    rospy.loginfo('['+NODE_NAME+']: Waiting for security guard ...')
+    rospy.loginfo('Waiting for security guard ...')
     while not obj.start:
       if rospy.is_shutdown():
         return data_initdata_initdata_init
@@ -202,6 +202,10 @@ class Blender():
     u_obst = self.avoidance.get_potential_output()
     if self.obstacle_avoidance:
       alpha = self.avoidance.get_blending_constant()
+<<<<<<< HEAD
+=======
+      utils.loginfo(alpha)
+>>>>>>> cfbd46fb2883c9ccd5fec4764a888c83a1b082b0
     else:
       alpha = 0
     for i in range(0,2):
@@ -222,13 +226,13 @@ class Blender():
 
 
   def wait_for_first_point(self,target_obj,channel,data,rate):
-    rospy.loginfo('['+NODE_NAME+']: Waiting for first point ...')
+    rospy.loginfo('Waiting for first point ...')
     while not target_obj.first_point_received:
       #publish low value on the throttle channel, so the drone does not disarm while waiting
       channel.publish(data)
       rate.sleep()
 
-    rospy.loginfo('['+NODE_NAME+']: First point received')      
+    rospy.loginfo('First point received')      
 
   def angular_difference(self,current_angle,target_angle):
     ang_diff=current_angle-target_angle
@@ -255,21 +259,20 @@ class Blender():
   
   # Read parameters for Blender
   def load_parameters(self):		
-    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"N_yaw",500)
-    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"K_yaw",2)
-    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"w_inf",5)
-    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"Ktt",1000)/(20*math.pi/180)
-    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"Kphi",1000)/(20*math.pi/180)
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_CANCEL_GRAVITY",1400)
-    	
+    self.N_yaw = utils.Get_Parameter("N_yaw",500)
+    self.K_yaw = utils.Get_Parameter("K_yaw",2)
+    self.w_inf = utils.Get_Parameter("w_inf",5)
+    self.Ktt = utils.Get_Parameter("Ktt",1000)/(20*math.pi/180)
+    self.Kphi = utils.Get_Parameter("Kphi",1000)/(20*math.pi/180)
+    self.CONTROL_MIN = utils.Get_Parameter("CONTROL_MIN",1000)
+    self.CONTROL_NEUTRAL = utils.Get_Parameter("CONTROL_NEUTRAL",1500)
+    self.CONTROL_MAX = utils.Get_Parameter("CONTROL_MAX",2000)
+    self.CONTROL_ARMING_MIN = utils.Get_Parameter("CONTROL_ARMING_MIN",1025)
+    self.CONTROL_CANCEL_GRAVITY = utils.Get_Parameter("CONTROL_CANCEL_GRAVITY",1400)	
 
-    self.FREQUENCY = sml_setup.Get_Parameter(NODE_NAME,"CONTROLLER_FREQUENCY",30)
+    self.FREQUENCY = utils.Get_Parameter("CONTROLLER_FREQUENCY",30)
 
-    self.controller_type = sml_setup.Get_Parameter(NODE_NAME,"controller_type","PID")
+    self.controller_type = utils.Get_Parameter("controller_type","PID")
 
 if __name__ == "__main__":
   bl = Blender()

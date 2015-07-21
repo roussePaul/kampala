@@ -4,7 +4,7 @@
 
 import rospy
 from trajectory_gen_follower import Follower
-from Trajectory_node import TrajectoryNode
+from trajectory_node import TrajectoryNode
 
 class ConstantFollower(Follower):  
   """This class generates points for a follower following a leader,
@@ -17,7 +17,7 @@ class ConstantFollower(Follower):
     super(ConstantFollower, self).__init__(trajectory_node, my_id, leader_id)
 
   # Calculates the state of the follower from the leader state
-  def calculateState(self):
+  def calculate_state(self):
     self.calculated_state.x = self.leader_state.x + self.offset[0]
     self.calculated_state.y = self.leader_state.y + self.offset[1]
     self.calculated_state.z = self.leader_state.z + self.offset[2]

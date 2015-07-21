@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from Trajectory_node import TrajectoryNode
+from trajectory_node import TrajectoryNode
 from mocap.msg import QuadPositionDerivedExt
 from controller.msg import Permission
 

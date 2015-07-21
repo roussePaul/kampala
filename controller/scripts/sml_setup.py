@@ -11,17 +11,8 @@ import sys
 import analysis
 import utils
 
-def Get_Parameter(NODE_NAME,PARAMETER_NAME,DEFAULT_VALUE):
-	param=rospy.get_param(PARAMETER_NAME,DEFAULT_VALUE)
-	if rospy.has_param(PARAMETER_NAME):
-		utils.loginfo(''+PARAMETER_NAME+' found: '+str(param))
-	else:
-		utils.logwarn(''+PARAMETER_NAME+' not found. Default: '+str(DEFAULT_VALUE))
 
-	return param
-
-
-def Set_Flight_Mode(NODE_NAME,MODE):
+def Set_Flight_Mode(MODE):
 	return_value=True
 
 	#Change the flight mode on the Pixhawk flight controller
@@ -55,7 +46,7 @@ def Set_Flight_Mode(NODE_NAME,MODE):
 	return return_value
 
 
-def Set_System_ID(NODE_NAME,id_int):
+def Set_System_ID(id_int):
 	return_value=True
 
 	#Necesary to allow RCOverride
@@ -160,12 +151,12 @@ def Wait_For_Arming():
 
 	return return_value
 
-def Connect_To_Mocap_Message(NODE_NAME):
+def Connect_To_Mocap_Message():
 	utils.loginfo('Connecting to Mocap system')
 	return
 
 
-def Connect_To_Mocap(NODE_NAME):
+def Connect_To_Mocap():
 	#Connect to the Motion Capture System, flag an error if it is unavailable
 
 	try:
@@ -180,7 +171,7 @@ def Connect_To_Mocap(NODE_NAME):
 
 
 
-def Arming_Quad(NODE_NAME,base_name=""):
+def Arming_Quad(base_name=""):
 	return_value=True
 
 	#Arming the Quad

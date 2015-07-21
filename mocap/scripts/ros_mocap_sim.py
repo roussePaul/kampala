@@ -8,10 +8,6 @@ import sml_setup
 from mocap.msg import QuadPosition
 from mocap.msg import QuadPositionDerived
 
-#************Constants********************
-NODE_NAME='MOCAP'
-#*****************************************
-
 from mocap.msg import QuadPosition
 from mocap.srv import Bodies
 from mocap.srv import BodyData
@@ -24,8 +20,10 @@ from math import radians, degrees
 import analysis
 import utils
 
+## Convert quaternion to DCM
+# @param q1, q2, q3, q4: quaternion
+# @return dcm matrix
 def quat_to_dcm(q1, q2, q3, q4):
-	'''convert quaternion to DCM'''
 	q3q3 = q3 * q3
 	q3q4 = q3 * q4
 	q2q2 = q2 * q2
@@ -178,8 +176,8 @@ class Mocap:
 		rate=rospy.Rate(30)
 		timer=Time()
 		#Get parameters (all the body ID's that are requested)
-		self.body_names=sml_setup.Get_Parameter(NODE_NAME,'body_names',['iris1::base_link','iris2::base_link'])
-		self.body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
+		self.body_names=utils.Get_Parameter('body_names',['iris1::base_link','iris2::base_link'])
+		self.body_array=utils.Get_Parameter('body_array',[1,2])
 		if type(self.body_array) is str:
 			self.body_array=ast.literal_eval(self.body_array)
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+
+
 import rospy
 import sys
 import ast
@@ -7,7 +10,7 @@ import numpy
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
 from trajectory import Trajectory
-from Trajectory_node import TrajectoryNode
+from trajectory_node import TrajectoryNode
 from straight_line_class import StraightLineGen
 
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>460</width>
-    <height>327</height>
+    <height>342</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -80,13 +80,6 @@
    <item row="6" column="0">
     <widget class="QDoubleSpinBox" name="WaitBox"/>
    </item>
-   <item row="9" column="0">
-    <widget class="QPushButton" name="AddWaitButton">
-     <property name="text">
-      <string>Add wait</string>
-     </property>
-    </widget>
-   </item>
    <item row="5" column="0">
     <widget class="QLabel" name="label_8">
      <property name="text">
@@ -140,19 +133,6 @@
    <item row="6" column="2">
     <widget class="QDoubleSpinBox" name="YBox"/>
    </item>
-   <item row="9" column="1">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>z-position:</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="2">
-    <widget class="QDoubleSpinBox" name="ZBox"/>
-   </item>
    <item row="10" column="2">
     <widget class="QPushButton" name="AddPointButton">
      <property name="text">
@@ -199,6 +179,26 @@
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QPushButton" name="AddWaitButton">
+     <property name="text">
+      <string>Add waiting time</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>z-position:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="2">
+    <widget class="QDoubleSpinBox" name="ZBox"/>
    </item>
   </layout>
  </widget>

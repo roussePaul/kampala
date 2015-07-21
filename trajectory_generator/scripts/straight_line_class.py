@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+
 import rospy
 import sys
 import ast
@@ -7,9 +9,7 @@ from trajectory import Trajectory
 from controller.msg import Permission
 from mocap.msg import QuadPositionDerived
 from trajectory_generato import TrajectoryGenerator
-from Trajectory_node import TrajectoryNode
-
-
+from trajectory_node import TrajectoryNode
 
 class StraightLineGen(Trajectory):
   """Generates a straight line between startpoint and endpoint with velocity zero at the start and endpoint.
@@ -26,9 +26,6 @@ class StraightLineGen(Trajectory):
     self.start_point = start
     self.end_point = end
     self.tg = TrajectoryGenerator()
-    
-    
-    
 
   def set_start(self, point):
     self.start_point = point
