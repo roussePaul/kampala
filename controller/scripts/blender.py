@@ -202,10 +202,7 @@ class Blender():
     u_obst = self.avoidance.get_potential_output()
     if self.obstacle_avoidance:
       alpha = self.avoidance.get_blending_constant()
-<<<<<<< HEAD
-=======
       utils.loginfo(alpha)
->>>>>>> cfbd46fb2883c9ccd5fec4764a888c83a1b082b0
     else:
       alpha = 0
     for i in range(0,2):
