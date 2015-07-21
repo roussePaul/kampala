@@ -34,6 +34,28 @@ class Relay:
 
 		return (self.U,switch)
 
+class Buffer:
+	def __init__(self,N):
+		self.N = N
+		self.data = []
+
+	def append(self,d):
+		self.data.append(d)
+		while len(self.data)>self.N:
+			self.data.pop(0)
+class TimeSequence:
+	def __init__(self,T):
+		self.T = T
+		self.data = []
+		self.time = []
+
+	def append(self,s,t):
+		self.data.append(d)
+		self.data.append(t)
+		while t-self.time[0]>self.T:
+			self.data.pop(0)
+			self.time.pop(0)
+
 class Identification:
 	method_list = {"relay":["Ziegler & Nichols (CL)"],
 	"areas":["Internal Model Control","Ziegler & Nichols (OL)","Kappa-Tau"],
@@ -60,6 +82,36 @@ class Identification:
 
 	def start(self):
 		self.state = "initialize"
+		
+		if self.online_identification == True:
+			self.U_seq = TimeSequence(30)
+			self.Y_seq = TimeSequence(30)
+			self.state = "online"
+
+
+
+	def online(self, u, ym, t):
+		self.U_seq.append(u,t)
+		self.Y_seq.append(ym,t)
+
+		s = control.tf([1.0,0.0],[1.0])
+		int_U = System( 1.0/s**2 )
+
+		i2u = [0.0]
+		i2u_0 = [0.0]
+		
+		for i in range(1,len(self.U_seq.time)):
+			i2u.append( int_U.output(self.U_seq.data[i],self.U_seq.time[i]) )
+			int_U.next_state()
+			i2u_0.append( (self.U_seq.time[i]-self.U_seq.time[0])**2/2.0 )
+
+		A = np.vstack([i2u,i2u_0]).T
+		a, b = np.linalg.lstsq(A, y)[0]
+		K = a
+		u_0 = -b/K
+
+		self.identification = {"K":K,"u0":u_0}
+
 
 	def get_command(self, input, time):
 		#print self.method

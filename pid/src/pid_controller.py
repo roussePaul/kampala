@@ -15,7 +15,7 @@ import control
 from system import System
 
 class PID:
-    parameters = {"K":0.05,"Ti":10000.0,"Td":0.0,"b":1.0,"c":1.0,"N":100.0,"u0":0.0,"I_lim":10000.0}
+    parameters = {"K":0.3,"Ti":10000.0,"Td":0.0,"b":1.0,"c":1.0,"N":100.0,"u0":0.3,"I_lim":10000.0}
     current_pid_id = 0
     def __init__(self, name=""):
         # init name
@@ -33,7 +33,7 @@ class PID:
         self.init_services()
 
         # mode of the controller: "controller", "identification"
-        self.mode = "controller"
+        self.mode = ["controller"]
 
     def init_services(self):
         rospy.Service(self.path+'autotune', Autotune, self.autotune)
@@ -41,21 +41,25 @@ class PID:
         rospy.Service(self.path+'get_gains', GetPIDParameters, self.c_get_params)
 
 
-    def controller(self,ym,y0,time):        
-        if self.mode == "controller":
-            return self.get_command(y0-ym,time)
-
+    def controller(self,ym,y0,time):
         if self.mode == "identification":
             if self.identifier.state !="done":
-                return self.identifier.get_command(y0-ym,time)
+                u = self.identifier.get_command(y0-ym,time)
             else:
                 params = self.identifier.identification
                 print params
                 gains = self.synthesiser.synthetise(params)
                 self.set_params(gains)
                 self.mode = "controller"
-                return self.get_command(y0-ym,time)
+                u = self.get_command(y0-ym,time)
 
+        if "controller" in self.mode:
+            u = self.get_command(y0-ym,time)
+
+        if self.mode == "online identification":
+            self.identifier.online(u,ym,time)
+
+        return u
 
     def autotune(self,msg):
 

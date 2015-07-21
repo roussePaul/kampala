@@ -160,7 +160,7 @@ class Blender():
     else:
       alpha = 0
     for i in range(0,2):
-      u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
+      u[i] = alpha * u_obst[i] + (1.0-alpha) * u_cont[i]
     u[2] = u_cont[2] 
     return u_cont
  

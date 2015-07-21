@@ -5,7 +5,7 @@ import copy
 import math
 import numpy as np
 class System:
-    def __init__(self,sys,X_0=[]):
+    def __init__(self,sys,X_0=[],dt=0.0):
         s = control.tf([1.0,0.0],[1.0])
 
         self.sys = control.tf2ss(s/s* copy.deepcopy(sys) )
@@ -28,6 +28,19 @@ class System:
         self.nextX = self.X
         self.nextT = self.T
         self.nextI = self.I
+        self.dt = dt
+
+        if self.dt != 0.0:
+            A = self.sys.A
+            B = self.sys.B
+
+            M = A.shape[0]
+
+            I = np.identity(M)
+            Ai = np.linalg.inv(I-dt/2.0*A)
+            self.phi = Ai*(I+dt/2.0*A)
+            self.gamma = Ai*dt*B
+
 
     def output2(self, U, time):
         U = copy.deepcopy(U)
@@ -75,27 +88,39 @@ class System:
             self.nextT = time
             return 0.0
 
-        A = self.sys.A
-        B = self.sys.B
-        C = self.sys.C
-        D = self.sys.D
-
-        M = A.shape[0]
 
         # Get time difference
         dt = time-self.T
         self.nextT = time
 
-        I = np.identity(M)
-        Ai = np.linalg.inv(I-dt/2.0*A)
-        phi = Ai*(I+dt/2.0*A)
-        gamma = Ai*dt*B
+        C = self.sys.C
+        D = self.sys.D
 
-        # Apply the filter
+        if self.dt !=0:
+            self.nextX = self.phi*self.X + self.gamma*1/2.0*(U+self.I)
+        else:
+            A = self.sys.A
+            B = self.sys.B
 
-        self.nextX = phi*self.X + gamma*1/2.0*(U+self.I)
+            M = A.shape[0]
+
+            # Bilinear
+            I = np.identity(M)
+            Ai = np.linalg.inv(I-dt/2.0*A)
+            phi = Ai*(I+dt/2.0*A)
+            gamma = Ai*dt*B
+
+            self.nextX = phi*self.X + gamma*1/2.0*(U+self.I)
+
+            # Euler
+            # phi = (I+dt*A)
+            # gamma = B*dt
+            # self.nextX = phi*self.X + gamma*(self.I)
+            # self.nextI = U
+
+            # Apply the filter
+
         self.nextI = U
-
         out = C*self.nextX + D*U
 
         return out.item((0,0))
