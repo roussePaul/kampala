@@ -4,7 +4,7 @@
   <group if="$(arg simulation)">
 	  <rosparam param="/body_array">[1,2,3,4,11,12,13,14]</rosparam>
 	  <rosparam param="/body_names">["iris1::base_link","iris2::base_link","iris3::base_link","iris4::base_link","iris1::iris1/load_pose/odometry_sensorgt_link","iris2::iris2/load_pose/odometry_sensorgt_link","iris3::iris3/load_pose/odometry_sensorgt_link","iris4::iris4/load_pose/odometry_sensorgt_link"]</rosparam>
-	<node name="ros_mocap" pkg="mocap" type="ros_mocap_sim.py" respawn="true" output="screen">
+	<node name="ros_mocap" pkg="mocap" type="ros_mocap_sim.py" respawn="true" output="screen" launch-prefix="python -m cProfile -o /tmp/profile.log">
 	</node>
   </group>
   <group unless="$(arg simulation)">

@@ -12,11 +12,18 @@ import os
 from trajectory import Trajectory
 import math
 
+
+
 class TrajectoryNode():
+  """This class provides the trajectorynode to be used by every object
+  that inherits from trajectory."""  
   
   pub = None
   
   def __init__(self,group=''):
+    """The node is initialized and a publisher created.
+    The messages are published on the correct topic for the 
+    controller."""
     rospy.init_node('TG')
     abspath = ""
     if group:
@@ -27,12 +34,16 @@ class TrajectoryNode():
   # Publishes messenges on the topic trajectory_gen/target. The type of the
   # message should be QuadPositionDerived. 
   def send_msg(self, msg):
+    """This method is used to publish the message msg."""
     self.pub.publish(msg)
 
 
   # Publishes a boolean on the topic trajectory_gen/done. This should be used
   # inform subscribers that the trajectory is done.
   def send_permission(self, boolean):
+    """This method is used to publish True or False on
+    on the topic that let's the security guard know
+    that the trajectory is done."""
     self.security_pub.publish(Permission(boolean))
     
     

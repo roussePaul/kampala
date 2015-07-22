@@ -1,9 +1,16 @@
 #!/usr/bin/env python
-import rospy
-import matplotlib.pyplot as plt
-from threading import Thread
+
 ## Script that contain usefull function used in several packages
   
+import rospy
+import matplotlib
+matplotlib.use("qt4agg")
+import matplotlib.pyplot as plt 
+#import threading
+#let's try using multiprocessing instead of threading module:
+import multiprocessing
+import time
+
 
 def logerr(msg):
   rospy.logerr(get_header()+'\033[91m'+str(msg)+'\033[0m')
@@ -26,14 +33,10 @@ def Get_Parameter(PARAMETER_NAME,DEFAULT_VALUE):
 
 	return param
 
+def cbPlot(x,y):
+    line = plt.plot(x,y)
+    plt.show() #I think the code in the child will stop here until the graph is closed
 
-class Plot(Thread):
-    def __init__(self,x,y):
-    	Thread.__init__(self)
-    	self.x = x
-    	self.y = y
-    	self.start()
 
-    def run(self):
-	    plt.plot(self.x,self.y)
-	    plt.show()
+def plot(x,y):
+	multiprocessing.Process(target=cbPlot,args=(x,y)).start()

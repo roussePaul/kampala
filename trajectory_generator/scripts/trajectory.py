@@ -5,8 +5,9 @@
 
 from abc import ABCMeta,abstractmethod
 
-class Trajectory():
 
+class Trajectory():
+  """Class that defines the interface of a trajectory."""
   __metaclass__ = ABCMeta  
 
   done = False

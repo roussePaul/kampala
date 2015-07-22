@@ -19,12 +19,14 @@ import numpy as np
 from scipy.interpolate import Rbf
 from scipy.interpolate import griddata
 from scipy.interpolate import NearestNDInterpolator
-
+import copy
 import gnosis.xml.pickle
 
 from controller.srv import PlotLAC 
+
+
 class Point:
-  params_name = ["CONTROL_CANCEL_GRAVITY","N_yaw","K_yaw","w_inf","Ktt","Kphi","PID_w","PID_w_z","PID_I_lim_z","PID_K_i_z"]
+  params_name = ["CONTROL_CANCEL_GRAVITY"]
 
   def __init__(self):  
     self.params_value = dict()
@@ -161,7 +163,8 @@ class LinearAC:
       pts = self.interpolate_point(inputs)
       y[i] = pts.params_value[msg.plot_variable]
 
-    utils.Plot(x,y)
+    utils.plot(copy.deepcopy(x),copy.deepcopy(y))
+
 
     return []
 

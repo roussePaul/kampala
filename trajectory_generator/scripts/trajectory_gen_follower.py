@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-# Abstract base class for leader following. This scripts provides implementations of some
-# common methods and some abstract methods.
+
 
 import rospy
 from abc import ABCMeta, abstractmethod
@@ -13,7 +12,7 @@ from trajectory_node import TrajectoryNode
 
 
 class Follower(Trajectory):
-
+  """This is an abstract follower base class."""
   __metaclass__ = ABCMeta
 
   leader_state = QuadPositionDerived() 
@@ -72,9 +71,16 @@ class Follower(Trajectory):
       temp[i] = my_pos[i] - leader_pos[i]
     return lg.norm(temp)
 
+<<<<<<< HEAD
+ 
+  @abstractmethod
+  def calculateState(self):
+    """This function should calculate the state of the follower from the leader state."""
+=======
   # Calculates the state of the follower from the leader state.
   @abstractmethod
   def calculate_state(self):
+>>>>>>> cfbd46fb2883c9ccd5fec4764a888c83a1b082b0
     pass
 
   def __set_done(self,boolean):

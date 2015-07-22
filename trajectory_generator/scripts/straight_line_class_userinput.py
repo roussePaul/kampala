@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-# Generates a straight line between startpoint and endpoint with velocity zero
-# at the start and endpoint respects constraints on acceleration.
+
 
 import rospy
 import sys
@@ -14,6 +13,10 @@ from trajectory_generato import TrajectoryGenerator
 from trajectory_node import TrajectoryNode
 
 class StraightLineGen(Trajectory):
+
+  """Generates a straight line between the current position of the drone
+  and a point specified by a user. This is used with the gui. It uses the StraightLineGen."""
+
   
   done = False
   a_max = 9.81/3.

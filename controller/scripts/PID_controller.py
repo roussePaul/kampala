@@ -20,7 +20,7 @@ import analysis
 import utils
 from numpy import linalg as lg
 import numpy as np
-
+import copy
 
 
 class PID(Controller):
@@ -40,7 +40,7 @@ class PID(Controller):
 
 
   def set_d_updated(self, d):
-    self.d_updated = np.copy(d)
+    self.d_updated = copy.deepcopy(d)
 
 
   def get_errors(self,current,target):
@@ -52,7 +52,7 @@ class PID(Controller):
 
   # Returns the output of the controller
   def get_output(self,current,target):
-    d_updated = self.get_d_updated()
+    d_updated = copy.deepcopy(self.get_d_updated())
     x,x_vel,x_acc=get_pos_vel_acc(current)  # current state
     x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target) # target state
     time_diff=current.time_diff 
@@ -68,6 +68,7 @@ class PID(Controller):
 
   def calculate_PID_output(self,x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
     u=np.array([0.]*3)
+    acc_target = np.array(x_acc_target)
     new_d = np.array([0.]*3)
     #Compute errors
     e=np.array(self.get_errors(x,x_target))
@@ -75,7 +76,7 @@ class PID(Controller):
     for i in range(0,3):
       new_d[i]=current_d[i]+delta_t*(self.K_i[i]*((e[i]*self.Kv[i]/2)+e_dot[i]))
       new_d[i]=self.saturation(new_d[i],-self.I_lim[i],self.I_lim[i])
-      u[i] = x_acc_target[i]-self.Kv[i]*e_dot[i]-self.Kp[i]*e[i]
+      u[i] = acc_target[i]-self.Kv[i]*e_dot[i]-self.Kp[i]*e[i]
       u[i] = u[i] - new_d[i]
     self.set_d_updated(new_d)   
     return u
@@ -87,6 +88,7 @@ class PID(Controller):
 	
 
   # Read parameters for PID
+  # The parameters are specified in the launch file of each drone.
   def load_PID_parameters(self):		
     #Controller parameters	
     self.w = utils.Get_Parameter("PID_w",1.7)

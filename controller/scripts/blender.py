@@ -167,7 +167,7 @@ class Blender():
     AUX_rot=np.array([0.]*3)
     AUX[0] = u[0]
     AUX[1] = u[1]
-    AUX[2] = 9.8+u[2]
+    AUX[2] = u[2]
 
 
     #take into consideration the yaw angle
@@ -187,11 +187,6 @@ class Blender():
     pitch=self.CONTROL_NEUTRAL-self.Ktt*math.asin(AUX_rot[0]/norm_AUX)
     roll=self.CONTROL_NEUTRAL-self.Kphi*math.asin(AUX_rot[1]/norm_AUX)
 
-    #if pitch<1400 or pitch>1600:
-       #print(pitch)
-
-    #if roll<1400 or roll>1600:
-      #print(roll)
 
     # Implement some saturation
     throttle=self.saturation(throttle,1000,2000)
@@ -204,7 +199,6 @@ class Blender():
   # the outputs  
   def blend(self,u_cont,current_point,target_point):
     u = np.array([0.,0.,0.])
-    u_cont = self.controller.get_output(current_point,target_point)
     u_obst = self.avoidance.get_potential_output()
     if self.obstacle_avoidance:
       alpha = self.avoidance.get_blending_constant()
@@ -253,9 +247,9 @@ class Blender():
     self.load_parameters()
 
     # If controller type is changed
-    if self.controller_type == "load_transport" and self.controller is not LoadTransportController:
+    if self.controller_type == "load_transport" and type(self.controller) != LoadTransportController:
       self.controller = LoadTransportController()
-    elif self.controller_type == "PID" and self.controller is not PID:
+    elif self.controller_type == "PID" and type(self.controller) != PID:
       self.controller = PID()
 
     return []
