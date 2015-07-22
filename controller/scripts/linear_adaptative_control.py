@@ -67,6 +67,7 @@ class LinearAC:
     rospy.Service('LinearAC/save', Empty, self.cbSave)
     rospy.Service('LinearAC/load', Empty, self.cbLoad)
     rospy.Service('LinearAC/plot', PlotLAC, self.cbPlot)
+    rospy.Service('LinearAC/print', Empty, self.cbPrint)
 
   def update_current_point(self,msg):
     current_inputs = self.get_inputs()
@@ -155,8 +156,13 @@ class LinearAC:
 
   def cbPlot(self,msg):
     inputs = self.get_inputs()
-    x = np.linspace(msg.min,msg.max,100)
-    y = np.linspace(msg.min,msg.max,100)
+
+    values = [p.params_value[msg.plot_variable] for p in self.points]
+
+    vmin = min(values)-1
+    vmax = max(values)+1
+    x = np.linspace(vmin,vmax,100)
+    y = np.linspace(vmin,vmax,100)
     
     for i in range(0,100):
       inputs[msg.input_variable] = x[i]
@@ -164,9 +170,17 @@ class LinearAC:
       y[i] = pts.params_value[msg.plot_variable]
 
     utils.plot(copy.deepcopy(x),copy.deepcopy(y))
+    return []
 
+  def cbPrint(self,msg):
+    inputs_grid = [p.inputs for p in self.points]
+    utils.loginfo(inputs_grid)
+    for p_name in Point.params_name:
+      values = [p.params_value[p_name] for p in self.points]
+      utils.loginfo(p_name + " : " + str(values))
 
     return []
+
 
   def save(self):
     with open(self.filename, 'w') as output:
@@ -191,53 +205,8 @@ class LinearAC:
       utils.loginfo("File \"%s\" does not exist!"%(self.filename))
       self.points = []
 
-
 if __name__ == '__main__':
   LinearAC(sys.argv[1])
 
-
-# Test program for the inter_extrapolate function
-# import numpy as np
-# from scipy.interpolate import Rbf
-# from scipy.interpolate import griddata
-# from scipy.interpolate import NearestNDInterpolator
-
-# def inter_extrapolate(inputs_grid,values,inputs):
-#   val = griddata(inputs_grid,values,inputs, method="linear")
-#   if np.isnan(val):
-#     if len(inputs)>=2:
-#       nnd = NearestNDInterpolator(inputs_grid,values)
-#       val = nnd(inputs)
-#     else:
-#       imax = np.argmax(inputs_grid)
-#       imin = np.argmin(inputs_grid)
-#       if np.abs(inputs_grid[imax]-inputs) < np.abs(inputs_grid[imin]-inputs):
-#         val = values[imax]
-#       else:
-#         val = values[imin]
-#   return val
-
-# def func(x, y):
-#     return x*(1-x)*np.cos(4*np.pi*x) * np.sin(4*np.pi*y**2)**2
-
-# if __name__ == '__main__':
-
-#   import matplotlib.pyplot as plt
-#   grid_x, grid_y = np.mgrid[0:1:100j, 0:1:100j]
-#   points = np.random.rand(100, 2)
-#   values = func(points[:,0], points[:,1])
-  
-
-#   grid_z0 = griddata(points, values, (grid_x, grid_y), method='linear')
-
-#   print len(grid_x)
-#   print len(grid_x[0])
-#   for i in range(0,len(grid_x)):
-#     for j in range(0,len(grid_x[0])):
-#       grid_z0[i][j] = inter_extrapolate(points, values, (grid_x[i][j], grid_y[i][j]))
-
-#   plt.imshow(grid_z0.T, extent=(0,1,0,1), origin='lower')
-#   plt.plot(points[:,0], points[:,1], 'k.', ms=2)
-#   plt.show()
 
 #EOF
