@@ -60,7 +60,7 @@ def quat_to_dcm(q1, q2, q3, q4):
 	m.c.z = 1.0-2.0*(q2q2 + q3q3)
 	return m
 
-class Signal():
+class Signal2():
 	def __init__(self,fc_p,fc_v,fc_a,dt=1/30.0):
 		s = control.tf([1.0,0.0],[1.0])
 		self.pos = System( 1 ,dt=dt)
@@ -79,6 +79,7 @@ class Signal():
 	def get(self):
 		return [self.p, self.v, self.a]
 
+
 class State():
 	def __init__(self):
 		fc_p = 10
@@ -87,9 +88,9 @@ class State():
 		self.x = Signal(fc_p,fc_v,fc_a)
 		self.y = Signal(fc_p,fc_v,fc_a)
 		self.z = Signal(fc_p,fc_v,fc_a)
-		self.r = Signal(fc_p,fc_v,fc_a)
-		self.p = Signal(fc_p,fc_v,fc_a)
-		self.y = Signal(fc_p,fc_v,fc_a)
+		self.roll = Signal(fc_p,fc_v,fc_a)
+		self.pitch = Signal(fc_p,fc_v,fc_a)
+		self.yaw = Signal(fc_p,fc_v,fc_a)
 		self.data = False
 		self.time = 0.0
 
@@ -99,9 +100,9 @@ class State():
 		self.x.append(data.x,t)
 		self.y.append(data.y,t)
 		self.z.append(data.z,t)
-		self.r.append(data.roll,t)
-		self.p.append(data.pitch,t)
-		self.y.append(data.yaw,t)
+		self.roll.append(data.roll,t)
+		self.pitch.append(data.pitch,t)
+		self.yaw.append(data.yaw,t)
 
 	def get_message(self):
 		result = QuadPositionDerived()
@@ -111,23 +112,23 @@ class State():
 		result.x=self.x.p
 		result.y=self.y.p
 		result.z=self.z.p
-		result.pitch=self.p.p
-		result.roll=self.r.p
-		result.yaw=self.y.p
+		result.pitch=self.pitch.p
+		result.roll=self.roll.p
+		result.yaw=self.yaw.p
 
 		result.x_vel=self.x.v
 		result.y_vel=self.y.v
 		result.z_vel=self.z.v
-		result.pitch_vel=self.p.v
-		result.roll_vel=self.r.v
-		result.yaw_vel=self.y.v
+		result.pitch_vel=self.pitch.v
+		result.roll_vel=self.roll.v
+		result.yaw_vel=self.yaw.v
 
 		result.x_acc=self.x.a
 		result.y_acc=self.y.a
 		result.z_acc=self.z.a
-		result.pitch_acc=self.p.a
-		result.roll_acc=self.r.a
-		result.yaw_acc=self.y.a
+		result.pitch_acc=self.pitch.a
+		result.roll_acc=self.roll.a
+		result.yaw_acc=self.yaw.a
 
 		return copy.deepcopy(result)
 
@@ -162,7 +163,6 @@ class Mocap:
 		self.start_subscribes()
 
 		while not rospy.is_shutdown():
-
 			for i in range(0,len(self.body_array)):
 				if self.body_state[i].data:
 					data = self.all_bodies[self.body_names[i]]
