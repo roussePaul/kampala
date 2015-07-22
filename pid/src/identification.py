@@ -14,6 +14,8 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import numpy as np
 
+import copy
+
 class Relay:
 	def __init__(self,D,E=0.0):
 		self.D = D
@@ -43,6 +45,7 @@ class Buffer:
 		self.data.append(d)
 		while len(self.data)>self.N:
 			self.data.pop(0)
+
 class TimeSequence:
 	def __init__(self,T):
 		self.T = T
@@ -50,6 +53,8 @@ class TimeSequence:
 		self.time = []
 
 	def append(self,s,t):
+		s = copy.deepcopy(s)
+		t = copy.deepcopy(t)
 		self.data.append(s)
 		self.time.append(t)
 		while t-self.time[0]>self.T:
@@ -79,37 +84,59 @@ class Identification:
 		# state if the identification process
 		# states: "wait", "initialize" "in progress", "identify", "done"
 		self.state = "wait"
-		self.U_seq = TimeSequence(100)
-		self.Y_seq = TimeSequence(100)
+		self.seq = TimeSequence(100.0)
+		s = control.tf([1.0,0.0],[1.0])
+		self.vel_filter = System( s/(1+s/100.0) )
 		self.state = "online"
+		rospy.Timer(rospy.Duration(10.0), self.cbIdentification)
 
 
 	def start(self):
 		self.state = "initialize"
 
 	def online(self, u, ym, t):
-		self.U_seq.append(u,t)
-		self.Y_seq.append(ym,t)
+		v = self.vel_filter.output(ym,t)
+		self.seq.append([u,ym,v],t)
+
+	def cbIdentification(self,event):
+		if self.seq.data==[]:
+			return
 
 		s = control.tf([1.0,0.0],[1.0])
 		int_U = System( 1.0/s**2 )
 
 		i2u = [0.0]
 		i2u_0 = [0.0]
-		
-		for i in range(1,len(self.U_seq.time)):
-			i2u.append( int_U.output(self.U_seq.data[i],self.U_seq.time[i]) )
+		y = [0.0]
+		U = [d[0] for d in self.seq.data]
+		Y = [d[1] for d in self.seq.data]
+		vel = [d[2] for d in self.seq.data]
+		T = copy.deepcopy(self.seq.time)
+
+		for i in range(1,len(T)):
+			y.append(Y[i]-vel[0]*(T[i]-T[0])-Y[0])
+			i2u.append( int_U.output(U[i],T[i]) )
 			int_U.next_state()
-			i2u_0.append( (self.U_seq.time[i]-self.U_seq.time[0])**2/2.0 )
+			i2u_0.append( (T[i]-T[0])**2/2.0 )
 
 		A = np.vstack([i2u,i2u_0]).T
-		a, b = np.linalg.lstsq(A, self.Y_seq.data)[0]
-		K = a
-		u_0 = -b/K
 
-		self.identification = {"K":K,"u0":u_0}
-		print self.identification
+		
+		try:
+			a, b = np.linalg.lstsq(A, y)[0]
+			K = a
+			u_0 = -b/K
 
+			z = A*(np.array([[a,b]]).T)
+
+			print np.linalg.inv(np.dot(A.T,A))
+
+			self.identification = {"K":K,"u0":u_0}
+			print self.identification
+
+			utils.plot(Y)
+		except:
+			pass
 
 	def get_command(self, input, time):
 		#print self.method

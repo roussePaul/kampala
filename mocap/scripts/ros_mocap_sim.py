@@ -60,7 +60,7 @@ def quat_to_dcm(q1, q2, q3, q4):
 	m.c.z = 1.0-2.0*(q2q2 + q3q3)
 	return m
 
-class Signal2():
+class Signal():
 	def __init__(self,fc_p,fc_v,fc_a,dt=1/30.0):
 		s = control.tf([1.0,0.0],[1.0])
 		self.pos = System( 1 ,dt=dt)
