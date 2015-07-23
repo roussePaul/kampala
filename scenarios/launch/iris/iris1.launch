@@ -93,6 +93,7 @@
                         <param name="my_id" value="1"/>
                         <param name="PID_I_lim_z" value="0.5"/>
 			<param name="PID_K_i_z" value="0.2"/>
+                        <param name="my_name" value="iris1"/>
 
 	<!-- Unimportant values -->
 		<!-- <param name="CONTROL_MIN" value="1000"/>

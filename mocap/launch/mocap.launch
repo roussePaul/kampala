@@ -9,7 +9,7 @@
   </group>
   <group unless="$(arg simulation)">
           <rosparam param="/frequency">30.</rosparam>
-	  <rosparam param="/body_array">[8,16,17,21]</rosparam>
+	  <rosparam param="/body_array">[8,16,17,21,22]</rosparam>
 
 	  <rosparam param="/body_names">["iris1","iris2","iris3","iris4"]</rosparam>
 	  <node name="ros_mocap" pkg="mocap" type="ros_mocap.py" respawn="true" output="screen">

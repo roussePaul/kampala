@@ -30,52 +30,62 @@ class AccGen(Trajectory):
   def __init__(self,trajectory_node,mid,start,velo):
     Trajectory.__init__(self,trajectory_node)
     self.tg = TrajectoryGenerator()
-    self.midpoint = mid
-    self.start = start
-    n = [self.start[0]-self.midpoint[0],self.start[1]-self.midpoint[1],self.start[0]-self.midpoint[2]]
-    self.radius = self.tg.get_distance(self.start,self.midpoint)
-    self.initial_velo = velo
-    self.velo = self.tg.get_norm(self.initial_velo)
+    self.__midpoint = mid
+    self.__start = start
+    n = [self.__start[0]-self.__midpoint[0],self.__start[1]-self.__midpoint[1],self.__start[2]-self.__midpoint[2]]
+    self.__radius = self.tg.get_distance(self.__start,self.__midpoint)
+    self.__velo = self.tg.get_norm(velo)
     #define new coordinates
-    self.e_n = self.tg.get_direction(n)
-    self.yp = self.tg.get_direction(self.initial_velo)
-    self.zp = numpy.cross(self.e_n,self.yp)
-    self.w = self.radius*self.velo
-    self.theta_z = self.tg.get_projection([0,0,1],self.e_n)
+    xp = self.tg.get_direction(n)
+    yp = self.tg.get_direction(velo)
+    self.__tensor = [xp,yp]
   
   def begin(self):
-    v_max = (self.radius*self.a_max)**(0.5)
-    if self.velo > v_max:
-      self.velo = v_max
+    v_max = (self.__radius*self.a_max)**(0.5)
+    if self.__velo > v_max:
+      self.__velo = v_max
     self.__set_done(False)
     
 
   def loop(self, start_time):
     """This method is called to perform the acceleration."""
-    self.__set_t_f(self.velo/math.sqrt(self.a_max**2.0 - self.velo**4.0/self.radius**2.0))
+    self.__set_t_f(self.__velo/math.sqrt(self.a_max**2.0 - self.__velo**4.0/self.__radius**2.0))
     time = start_time
     r = 10.0
     rate = rospy.Rate(r)
-    while not rospy.is_shutdown() and not is_done():
-      theta = self.velo*time**2.0/(2*self.radius*t_f)
-      w = self.velo*time/(self.radius*t_f)
-      alpha = self.velo/(self.radius*t_f)
-      outpos = self.tg.get_circle_point(self.radius, theta)
-      outpos = self.tg.offset(outpos,self.midpoint)
+    while not rospy.is_shutdown() and not self.is_done():
+      theta = self.__velo*time**2.0/(2*self.__radius*self.t_f)
+      w = self.__velo*time/(self.__radius*self.t_f)
+      alpha = self.__velo/(self.__radius*self.t_f)
+      outpos = self.tg.get_circle_point(self.__radius, theta)
+      outpos = self.__transform(outpos)
+      outpos = self.tg.offset(outpos,self.__midpoint)
       outpos.append(self.tg.adjust_yaw([1,0,0]))
-      outvelo = self.tg.get_circle_velocity(self.radius,theta,omega)  
+      outvelo = self.tg.get_circle_velocity(self.__radius,theta,w)
+      outvelo = self.__transform(outvelo)  
       outvelo.append(0)
-      outacc = self.tg.get_circle_acc(self.radius,theta,omega,alpha)
+      outacc = self.tg.get_circle_acc(self.__radius,theta,w,alpha)
+      outacc = self.__transform(outacc)
       outacc.append(0)
       outmsg = self.tg.get_message(outpos,outvelo,outacc)
       self.trajectory_node.send_msg(outmsg)
       self.trajectory_node.send_permission(False)
       rate.sleep()
       time += 1/r
-      if time >= t_f:
+      if time >= self.t_f:
         self.__set_done(True)
       
 
+  def __transform(self,vec):
+    """This function transforms a vector that is given in the coordinate frame, which has an
+    x-axis defined by the vector from the midpoint to the startpoint and a y-axis defined by 
+    the initial velocity vector (local frame), to the sml-frame. It is assumed that the vector is of the form
+    [x,y,0] as all points on the circle are in the xy-plane in the local frame."""
+    ret_vec = [0.,0.,0.]
+    for i in range(0,3):
+      for j in range(0,2):
+        ret_vec[i] += vec[j] * self.__tensor[j][i]
+    return ret_vec 
     
   def is_done(self):
     return self.done
