@@ -19,17 +19,76 @@
 
 \begin{document}
 \maketitle
+\tableofcontents
+\newpage
 
 \section{Introduction}
+% Short about our project 
+This document describes the different parts of the program for
+quadcopters developed on the Access Summer Project, 2015, and before,
+in the Smart Mobility Lab, KTH.
 
-\begin{figure}[t]                                                               
+% The hardware that we used 
+The quadcopters used, and which this guide is aimed for, is the 3DR
+IRIS$^+$. As a motion capture system Qualisys was used.
+
+% About this guide
+This guide provide information about how the program is structured,
+Sec.~\ref{sec:architecture}, how ...
+
+
+\section{Architecture}
+\label{sec:architecture}
+
+\begin{figure}[h!]                                                               
   \centering                                                                      
   \includegraphics[width=\textwidth]{figures/architecture}                             
   \caption{The architecture used in ROS.}
   \label{fig:architecture}                                                              
 \end{figure}
 
-The architecture used is shown in Fig. \ref{fig:architecture}.
+The program is using ROS, \textit{The Robot
+  Operating System}, to connect different parts of the program. A
+basic knowledge of ROS is assumed. The architecture used in the program is shown in
+Fig.~\ref{fig:architecture}. Circles does not correspond to ROS nodes
+strictly, but describes the different parts of the
+program. Rectangles, however, correspond to ROS topics. ROS packages
+are also written in the figure. Arrows with black head corresponds to
+publication to a topic, if the arrow points from a circle to a topic,
+and subscription to a topic, if the arrow points from a topic to a
+circle. Names in the following paragraphs are referring to
+Fig.~\ref{fig:architecture}.
 
-\section{Architecture}
+The goal of the program is to process commands from the user,
+forwarded through the GUI, so that the quadcopter, either in the real
+world or in the simulator, acts as the user
+intends. The GUI can
+start different ROS launch files, in turn staring scripts that publishes points
+for the quadcopter to follow. These scripts are located in the
+trajectory\textunderscore generator package, and for example publishes
+points for a line or an arc. Also, the GUI can publish particular
+points itself, not using a predefined script. For more information of
+the GUI, see Sec.~\ref{sec:gui}. Apart from commands from the user, information about the quadcopter's
+location, speed, acceleration, pitch, roll and yaw is also
+needed. This is provided by Qualisys, taken into the ROS framework by
+the mocap package.
+
+A controller can be applied, since both the target point and the
+current point is known. This is done in the controller package. The
+current point is processed by the Security Guard. If not the
+quadcopter is within certain safety limits, etc., the Lander node is
+told to land the quadcopter by the Security Guard. If it is, the
+Blender is told to further process the data. The blender got it's name
+because it can ``blend'' outputs of different controllers and
+collision avoidance. The outputs of the controllers are then
+transformed to roll, pitch, throttle and yaw in the
+Blender. This is then sent to Mavros on the topic
+/irisX/mavros/rc/override/ (X $= 1, 2, 3, 4, \dots$) and finally to the
+quadcopter.
+
+
+\section{GUI}
+\label{sec:gui}
+
+
 \end{document}
