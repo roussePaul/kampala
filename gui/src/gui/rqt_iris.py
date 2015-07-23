@@ -119,6 +119,7 @@ class MyPlugin(Plugin):
         try: 
             params_load = rospy.ServiceProxy("/%s/blender/update_parameters"%(self.name), Empty)
             params_load_PID = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
+            obstacle_params_load = rospy.ServiceProxy("/%s/obstacle_avoidance/update_parameters"%(self.name), Empty)
             params_load()
             params_load_PID()
         except rospy.ServiceException as exc:

@@ -15,7 +15,8 @@ from trajectory_node import TrajectoryNode
 class StraightLineGen(Trajectory):
 
   """Generates a straight line between the current position of the drone
-  and a point specified by a user. This is used with the gui. It uses the StraightLineGen."""
+  and a point specified by a user. This is used with the gui. It uses the StraightLineGen.
+  For documentation see the documentation of StraightLineGen."""
 
   
   done = False

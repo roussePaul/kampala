@@ -17,7 +17,8 @@ import math
 class TrajectoryNode():
   """This class provides the trajectorynode to be used by every object
   that inherits from trajectory."""  
-  
+   
+  ##@param pub: the publisher used by all trajectory nodes alive during runtime
   pub = None
   
   def __init__(self,group=''):
@@ -40,6 +41,7 @@ class TrajectoryNode():
 
   # Publishes a boolean on the topic trajectory_gen/done. This should be used
   # inform subscribers that the trajectory is done.
+  ##@param boolean: the boolean to publish to the security guard
   def send_permission(self, boolean):
     """This method is used to publish True or False on
     on the topic that let's the security guard know

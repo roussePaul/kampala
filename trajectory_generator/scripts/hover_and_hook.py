@@ -17,6 +17,7 @@ class Hooker(Trajectory):
   """This class is used to hook an object while hovering at hovering_point.
   It is used in hook_demo.py."""
   
+  ##@param done: tells whether or not the trajectory is done
   done = False
  
   def __init__(self,trajectory_node):
@@ -24,6 +25,8 @@ class Hooker(Trajectory):
     self.__node = trajectory_node
     self.tg = TrajectoryGenerator()
 
+
+  ##@param hovering_point: the point at which the drone is hovering while using the hook
   def hover_and_hook(self, hovering_point):
     """This method is used to hook."""
     hovering_point.append(0.) #yaw
@@ -38,6 +41,7 @@ class Hooker(Trajectory):
     self.__node.send_msg(msg)
     rate.sleep()
 
+  ##@param hovering_point: the point at which the drone is hovering while using the hook
   def hover_and_unhook(self, hovering_point):
     """This method is used to release the load."""
     hovering_point.append(0.) #yaw
