@@ -15,8 +15,10 @@ from trajectory_node import TrajectoryNode
 class Follower(Trajectory):
   """This is an abstract follower base class."""
   __metaclass__ = ABCMeta
-
+  
+  ##@param leader_state: the state of the leader
   leader_state = QuadPositionDerived() 
+  #@param done: tells whether or not the trajectory is done
   done = False 
 
   def __init__(self, trajectory_node, my_id, leader_id):
@@ -56,14 +58,17 @@ class Follower(Trajectory):
     self.trajectory_node.send_permission(True)
 
   # Sets state of leader.
+  ##@param data: the mocap data to set the leader state to.
   def __set_leader_state(self, data):
     self.leader_state = data
     
   # Sets the state of follower - the quadcopter for which the trajectory is generated. 
+  ##@param data: the mocap data to set the follower state to.
   def __set_my_state(self, data):
     self.__real_state = data  
 
   # Calculates distance between leader and follower.
+  ##@return the distance between leader and follower
   def __getDistance(self):
     my_pos = [self.__real_state.x, self.__real_state.y, self.__real_state.z]
     leader_pos = [self.leader_state.x, self.leader_state.y, self.leader_state.z]

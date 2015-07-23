@@ -23,8 +23,11 @@ class AccGen(Trajectory):
   constraints on the acceleration. 
   It is rather similar to arc.py."""
   
+  ##@param done: tells whether or not the trajectory is done 
   done = False
+  ##@param a_max: the maximum possible acceleration
   a_max = 0.6**2.0/0.8
+  ##@param t_f: the time the acceleration phase will take, to be set later
   t_f = 0
   
   def __init__(self,trajectory_node,mid,start,velo):
@@ -46,7 +49,7 @@ class AccGen(Trajectory):
       self.__velo = v_max
     self.__set_done(False)
     
-
+  ##@param start_time: sets the initial time used for generating the circle
   def loop(self, start_time):
     """This method is called to perform the acceleration."""
     self.__set_t_f(self.__velo/math.sqrt(self.a_max**2.0 - self.__velo**4.0/self.__radius**2.0))
@@ -75,7 +78,8 @@ class AccGen(Trajectory):
       if time >= self.t_f:
         self.__set_done(True)
       
-
+  ##@param vec: the vector to be transformed
+  ##@return the transformed vector
   def __transform(self,vec):
     """This function transforms a vector that is given in the coordinate frame, which has an
     x-axis defined by the vector from the midpoint to the startpoint and a y-axis defined by 
@@ -96,6 +100,7 @@ class AccGen(Trajectory):
   def __set_t_f(self,t):
     self.t_f = t
 
+  ##@return the time the acceleration phase lasts
   def get_t_f(self):
     return self.t_f
    

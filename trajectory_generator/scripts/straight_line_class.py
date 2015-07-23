@@ -17,7 +17,9 @@ class StraightLineGen(Trajectory):
   speed at the end_point is zero.
   Respects constraints on acceleration."""
   
+  ##@param done: tells whether or not the trajectory is done
   done = False
+  ##@param a_max: the maximum possible acceleration
   a_max = 9.81/3.
  
 
@@ -27,15 +29,11 @@ class StraightLineGen(Trajectory):
     self.__end_point = end
     self.tg = TrajectoryGenerator()
 
-  def set_start(self, point):
-    self.__start_point = point
-
-  def set_end(self, point):
-    self.__end_point = point 
 
   def begin(self):
     self.__set_done(False)
 
+  ##@param start_time: sets the initial time used for generating the line, should always be 0
   def loop(self,start_time):
     """This method is called to perform the whole trajectory.
     The start_time should always be zero."""
@@ -82,7 +80,8 @@ class StraightLineGen(Trajectory):
     self.done = boolean
 
   
-  #calculates position at time t
+  ##@param t: the time at which the position is calculated
+  ##@param return the position at time t according to the time law
   def __get_position(self,t):
     outpos = [0.0,0.0,0.0]
     s = self.__get_s(t)
@@ -90,10 +89,13 @@ class StraightLineGen(Trajectory):
       outpos[i] = self.__start_point[i] + s * self.__e_t[i]
     return outpos
 
+  ##@param t: the time at which the position is calculated
+  ##@param return the parametrisation of the time law at time t
   def __get_s(self,t):
     return t**2.0 * self.__constant * (t-1.5*self.__t_f)
 
-  #calculates velocity at time t
+  ##@param t: the time at which the velocity is calculated
+  ##@param return the velocity at time t according to the time law
   def __get_velocity(self,t):
     outvelo = [0.0,0.0,0.0]
     s_d = self.__get_s_d(t)
@@ -101,10 +103,13 @@ class StraightLineGen(Trajectory):
       outvelo[i] = s_d * self.__e_t[i]
     return outvelo
 
+  ##@param t: the time at which the velocity is calculated
+  ##@param return the first derivative of the parametrisation of the time law at time t
   def __get_s_d (self,t):
     return self.__constant * (3 * t**2.0 - 3 * self.__t_f * t)
   
-  #calculates acceleration at time t
+  ##@param t: the time at which the acceleration is calculated
+  ##@param return the acceleration at time t according to the time law
   def __get_acceleration(self,t):
     outacc = [0.0,0.0,0.0]
     s_dd = self.__get_s_dd(t)
@@ -112,6 +117,8 @@ class StraightLineGen(Trajectory):
       outacc[i] = s_dd * self.__e_t[i]
     return outacc
 
+  ##@param t: the time at which the acceleration is calculated
+  ##@param return the second derivative of the parametrisation of the time law at time t
   def __get_s_dd (self,t):
     return self.__constant * (6 * t - 3 * self.__t_f )
 

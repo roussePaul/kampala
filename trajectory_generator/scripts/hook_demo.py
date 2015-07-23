@@ -17,7 +17,8 @@ from std_srvs.srv import Empty
 
 class HookDemo():
   """This script is for demonstrating the ability of Iris to "hook" an object."""
-   
+  
+  ##@param done: tells whether or not the trajectory is done 
   done = False
   
   def __init__(self,load_id, goal):
@@ -39,6 +40,7 @@ class HookDemo():
   def __set_load_pos(self,data):
     self.__load_pos = data
 
+  ##@param incr: the amount that is added to CONTROL_CANEL_GRAVITY
   def __adjust_gravity_cancel(self,incr):
         current = rospy.get_param('/' + self.__name + '/CONTROL_CANCEL_GRAVITY')
         new = current + incr
@@ -56,7 +58,7 @@ class HookDemo():
     start = [self.__state.x,self.__state.y,self.__state.z]
     end = [self.__state.x,self.__state.y,1.]
     StraightLineGen(self.__node,start,end).loop(0.)
-    rospy.sleep(2.)
+    rospy.sleep(5.)
     start = [self.__state.x,self.__state.y,self.__state.z]
     end = [self.__load_pos.x,self.__load_pos.y,1.]
     StraightLineGen(self.__node,start,end).loop(0.)
@@ -70,12 +72,11 @@ class HookDemo():
     StraightLineGen(self.__node,start,end).loop(0.)
     hooker = Hooker(self.__node)
     hooker.hover_and_hook(end)
-    self.__adjust_gravity_cancel(50)
+    self.__adjust_gravity_cancel(60)
     rospy.sleep(0.1)
     dist = self.__state.z - self.__load_pos.z
-    dist = 0.2
     if dist > 0.4:
-      self.__adjust_gravity_cancel(-50)
+      self.__adjust_gravity_cancel(-60)
       start = [self.__state.x,self.__state.y,self.__state.z]
       end = [self.__state.x,self.__state.y,1.]
       StraightLineGen(self.__node,start,end).loop(0.)
@@ -90,9 +91,8 @@ class HookDemo():
       StraightLineGen(self.__node,start,end).loop(0.)
       rospy.sleep(0.2)
       dist = self.__state.z - self.__load_pos.z
-      dist = 0.2
       if dist > 0.4:
-        self.__adjust_gravity_cancel(-50)
+        self.__adjust_gravity_cancel(-60)
         start = [self.__state.x,self.__state.y,self.__state.z]
         end = [self.__state.x,self.__state.y,1.]
         StraightLineGen(self.__node,start,end).loop(0.)
@@ -115,7 +115,7 @@ class HookDemo():
         StraightLineGen(self.__node,start,end).loop(0.)
         rospy.sleep(2.)
         hooker.hover_and_unhook(self.__goal)
-        self.__adjust_gravity_cancel(-50)
+        self.__adjust_gravity_cancel(-60)
         current_z = self.__state.z
         start = [self.__state.x,self.__state.y,self.__state.z]
         end = [self.__state.x,self.__state.y,self.__state.z+0.25]
@@ -124,7 +124,7 @@ class HookDemo():
         new_z = self.__state.z
         dist = new_z - current_z
         if dist < 0.1:
-          self.__adjust_gravity_cancel(50)
+          self.__adjust_gravity_cancel(60)
         start = [self.__state.x,self.__state.y,self.__state.z]
         end = [0.,-1.,1.]
         StraightLineGen(self.__node,start,end).loop(0.)
@@ -138,7 +138,7 @@ class HookDemo():
   
 if __name__ == '__main__':
   try:
-    hook_demo = HookDemo(2,[0.,0.,1.])
+    hook_demo = HookDemo(21,[0.,0.,0.85])
     hook_demo.demo()
   except rospy.ROSInterruptException:
     pass

@@ -26,8 +26,9 @@ class ArcGen(Trajectory):
   to the vector pointing from the starting point to the midpoint. 
   Constraints on maximum velocity and acceleration are used."""
 
-  
+  ##@param done: tells whether or not the trajectory is done  
   done = False
+  ##@param a_max: the maximum possible acceleration
   a_max = 0.6**2.0/0.8
   
 
@@ -54,7 +55,7 @@ class ArcGen(Trajectory):
       self.__velo = v_max
     self.__set_done(False)
     
-
+  ##@param start_time: sets the initial time used for generating the circle
   def loop(self, start_time):
     """This method is called to perform the whole trajectory."""
     time = start_time
@@ -102,9 +103,12 @@ class ArcGen(Trajectory):
   def is_done(self):
     return self.done
 
+  ##@param boolean: set done to boolean
   def __set_done(self,boolean):
     self.done = boolean
 
+  ##@param vec: the vector to be transformed
+  ##@return the transformed vector
   def __transform(self,vec):
     """This function transforms a vector that is given in the coordinate frame, which has an
     x-axis defined by the vector from the midpoint to the startpoint and a y-axis defined by 
