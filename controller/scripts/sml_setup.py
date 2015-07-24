@@ -1,5 +1,5 @@
 #Vinzenz Minnig, 2015
-#Contains the necessary function for the system setup while working with mavros and the qualysis motion capture system
+"""This script contains the necessary function for the system setup while working with mavros and the qualysis motion capture system."""
 
 import rospy
 from mavros.srv import ParamSet, ParamGet
@@ -11,8 +11,10 @@ import sys
 import analysis
 import utils
 
-
+##@param MODE: a string representing the flight mode to be used
+##@return true if the flight mode was set successfully, false otherwise
 def Set_Flight_Mode(MODE):
+        """This function sets the flight mode of the drone to MODE."""
 	return_value=True
 
 	#Change the flight mode on the Pixhawk flight controller
@@ -45,12 +47,12 @@ def Set_Flight_Mode(MODE):
 
 	return return_value
 
-
+##@param id_int: an integer to set the system ID to
+##@return true if the system ID was set successfully and a connection to Mavros was establishe, false otherwise
 def Set_System_ID(id_int):
 	return_value=True
-
-	#Necesary to allow RCOverride
-	#Also checks if there is a connection to Mavros, and shuts down if there isn't
+        """This function sets the system ID and checks if it is possible to connect to mavros. The system ID
+        should be 1 to be able to use the rc/override topic."""
 
 	utils.loginfo('Connecting to Mavros ...')
 	try:
@@ -80,6 +82,8 @@ def Set_System_ID(id_int):
 
 	return return_value
 
+##@param id_int: the system ID
+##return true if the system id was changed and the connection to Mavros established, false otherwise
 def Wait_For_ID(id_int):
 	return_value=False
 
@@ -111,6 +115,7 @@ def Wait_For_ID(id_int):
 	utils.loginfo('Iris initialised...')
 	return return_value
 
+##@return returns true if the quad was armed, false otherwise
 def Wait_For_Arming():
 	return_value=False
 
@@ -155,9 +160,9 @@ def Connect_To_Mocap_Message():
 	utils.loginfo('Connecting to Mocap system')
 	return
 
-
+##@return a service proxy to get the motion capture data
 def Connect_To_Mocap():
-	#Connect to the Motion Capture System, flag an error if it is unavailable
+	""" This function connects to the motion capture system and flags an error if it is unavailable."""
 
 	try:
 		utils.loginfo('Connecting to the mocap system...')
@@ -170,8 +175,9 @@ def Connect_To_Mocap():
 	return rospy.ServiceProxy('mocap_get_data',BodyData)
 
 
-
+##@return returns true if the quad was armed successfully and false otherwise
 def Arming_Quad(base_name=""):
+        """This function is used to arm the quad."""
 	return_value=True
 
 	#Arming the Quad

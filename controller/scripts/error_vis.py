@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#Publishes messages that will be used by rqt_plot nodes to show the errors between target and actual position/velocity
+"""This script publishes messages that will be used by rqt_plot nodes to show the errors between target and actual position/velocity."""
 
 import rospy
 from mocap.msg import QuadPositionDerived
@@ -7,6 +7,8 @@ from controller.msg import PlotData
 
 
 class Point():
+        """This class defines a point as an object containing information about position and orientation of a quad
+        and how these change."""
 	def __init__(self):
 		self.x=0
 		self.y=0
@@ -21,8 +23,10 @@ class Point():
 		self.z_acc=0
 		self.yaw_acc=0
 
-
+##@param data: a point
+##@param obj: a point
 def New_Point(data,obj):
+        """This function sets the point obj to the point data."""
 	obj.x=data.x
 	obj.y=data.y
 	obj.z=data.z

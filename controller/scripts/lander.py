@@ -6,9 +6,13 @@ from mavros.utils import *
 from controller.msg import Permission
 from mavros.msg import OverrideRCIn
 
-
+"""This script contains the functions necessary to land the drone given permission by the 
+security guard."""
 
 def callback(data):
+    """This is the callback function of the subscription to the topic security_guard/lander.
+    If permission is given the landing mode is set and neutral commands are published on the
+    mavros/rc/override topic."""
     if data.permission==True:
         landmode()
         rospy.sleep(0.5)
@@ -18,6 +22,8 @@ def callback(data):
         
 
 def landmode():
+    """This function uses the service mavros/set_mode to set the mode of the quad to the 
+    landing mode."""
     mode_set=False
     for i in range(0,10):
         if not mode_set:
@@ -28,6 +34,7 @@ def landmode():
                 rospy.logerr('[LD]: set_mode attempt not successful')
 
 def landpub():
+    """This function publishes neutral commands on mavros/rc/override."""
     pub = rospy.Publisher('mavros/rc/override', OverrideRCIn, queue_size=1000)
     r = rospy.Rate(30)
     all_sticks_centered = [1500,1500,1000,1500,0,0,0,0]
@@ -37,7 +44,7 @@ def landpub():
     
 
 def lander():
-
+    """This function initializes the lander node and subscribes to the topic security_guard/lander."""
     rospy.init_node('Lander')
 
     rospy.Subscriber("security_guard/lander", Permission, callback)

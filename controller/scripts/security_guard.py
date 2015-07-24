@@ -4,6 +4,11 @@
 #Checks the data coming from Qualysis, as well as the safety boundaries set for the drone
 #In case of violations, disables the controller, and enables the landing node
 
+"""This script provides the security guard that gives permission to either the controller or 
+the lander to publish commands to the drone. Which of the two is the case depends on whether or not
+the drone can be found by the motion capture system and whether or not it is within the virtual 
+safety zone."""
+
 import rospy
 import sml_setup
 import sys
@@ -15,11 +20,15 @@ import utils
 
 
 class Trajectory():
+        """This is a simple class to check if a trajectory is done."""
 	def __init__(self):
 		self.is_done=False
 
 
 class Point():
+        """The functionality of this class is similar to that of the other point classes.
+        Extra functionality is provided concerning timing. This is necessary to identify
+        whether or not there is a problem with the motion capture system."""
 	def __init__(self):
 		self.found_body=True
 		self.x=0
@@ -42,7 +51,7 @@ class Point():
 		self.roll_acc=0
 		self.time=rospy.Time.now()
 		self.time_secs=0
-
+ 
 	def update_time(self):
 		time_now=rospy.Time.now()
 		time_diff=time_now-self.time
@@ -56,9 +65,11 @@ class Point():
 		self.time_secs=time_diff.secs+(time_diff.nsecs/1E9)
 		return(self.time_secs)
 
-
+##@param lander_channel: the publisher publishing permission to the lander
+##@param controller_channer: the publisher publishing permission to the controller
 def Interrupt_Flight(lander_channel,controller_channel):
-	#Interrupt flight, disable controller and enable lander
+	"""This function is used to interrupt the flight by giving permission to the lander and
+        disabling the controller."""
 	rate=rospy.Rate(30)
 	utils.logerr('Flight interrupted, landing mode active')
 	while not rospy.is_shutdown():
@@ -66,17 +77,13 @@ def Interrupt_Flight(lander_channel,controller_channel):
 		controller_channel.publish(False)
 		rate.sleep()
 
-
+##@return true if the quad was successfully armed, false otherwise
 def Prepare_For_Flight():
-	#Set the flight mode to alt-hold (default)
+        """This function sets the flight mode of the quad, sets the system ID to allow RC override and
+        arms the quad."""
 	mode_success=sml_setup.Set_Flight_Mode('STABILIZE')
-
-	#Set system ID to 1 to allow RC override
 	ID_success=sml_setup.Set_System_ID(1)
-
-	#arm the quad
 	arming_success=sml_setup.Arming_Quad()
-
 	if mode_success and ID_success and arming_success:
 		return True
 	else:
@@ -84,9 +91,13 @@ def Prepare_For_Flight():
 
 
 
-
+##@param x: the x-component of the position of the quad
+##@param y: the y-component of the position of the quad
+##@param z: the z-component of the position of the quad
+##@return true if the quad is within the boundaries, false otherwise
 def Within_Boundaries(x,y,z):
-	#Check whether the quad is within the safety area
+	"""This function checks whether or not the quad is within the virtual safety area defined in 
+        the launch file."""
 	shape = rospy.get_param('security_guard/shape','cube')
 	centerx = float(rospy.get_param('security_guard/centerx',0.0))
 	centery = float(rospy.get_param('security_guard/centery',0.0))
@@ -106,8 +117,10 @@ def Within_Boundaries(x,y,z):
 
   
 
-
+##@param current_point: the current point object associated with the quad
+##@return true if the quad is still tracked by the motion capture system, false otherwise
 def Security_Check(current_point):
+        """This function checks whether or not the quad is found by the motion capture system."""
 	keep_controller=False
 
 	if current_point.get_time()<0.5:
@@ -129,15 +142,19 @@ def Security_Check(current_point):
 
 	return keep_controller
 
-
+##@param data: an instance of the class Permission defined by the corresponding ROS msg
+##@param end_trajectory: an instance of the class Trajectory defined in this script
 def Trajectory_Done(data,end_trajectory):
+        """This function checks if the trajectory is completed. If it is the drone lands."""
 	if data.permission:
 		if not end_trajectory.is_done:
 			utils.loginfo('Trajectory is completed')
 		end_trajectory.is_done=True
 
-
+##@param data: a point object
+##@param pont_obj: a point object
 def New_Point(data,point_obj):
+        """This function sets the point object point_obj to the point object data."""
 	point_obj.found_body=data.found_body
 	point_obj.x=data.x
 	point_obj.y=data.y
@@ -160,7 +177,8 @@ def New_Point(data,point_obj):
 	point_obj.update_time()
 	return
 
-
+##@param obj: a point object
+##@return the QuadPositionDerived object corresponding to the point object obj
 def Get_Quad_State(obj):
 	result=QuadPositionDerived()
 	result.found_body=obj.found_body

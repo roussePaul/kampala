@@ -5,6 +5,8 @@
 
 
 class Point():
+    """This class provides a way of defining the state of a quad while also carrying useful
+    information for derivation and start up. It is used by the blender and PID."""
     def __init__(self):
         self.found_body=True
         self.x=0
@@ -28,8 +30,9 @@ class Point():
         self.time_diff=0
         self.first_point_received=False
 
-
+    ##@param new_data: a point
     def update_point(self,new_data):
+        """This function is used to set the point object to the point new_data."""
         self.found_body=new_data.found_body
         self.x=new_data.x
         self.y=new_data.y
@@ -53,6 +56,8 @@ class Point():
 
 
 class PointExt(Point):
+    """This class is an extension of the class Point used in connection with the load lifting controller.
+    The functionality is the same as the functionality of the class Point."""
     def __init__(self):
         self.found_body=True
         self.x=0
@@ -113,11 +118,13 @@ class PointExt(Point):
 
 
 class Instruction():
+    """This is a simple class used to check the permissions given by the security guard."""
     def __init__(self):
         self.start=False
         self.permission=True
 
-
+##@param obj: an instance of the class Point or PointExt
+##@return the position, velocity and acceleration associated with the object obj
 def get_pos_vel_acc(obj):
     x=(obj.x,obj.y,obj.z,obj.yaw)
     x_vel=(obj.x_vel,obj.y_vel,obj.z_vel,obj.yaw_vel)

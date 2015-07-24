@@ -94,7 +94,7 @@ class HookDemo():
       if dist > 0.4:
         self.__adjust_gravity_cancel(-60)
         start = [self.__state.x,self.__state.y,self.__state.z]
-        end = [self.__state.x,self.__state.y,1.]
+        end = [self.__state.x,self.__state.y,1.1]
         StraightLineGen(self.__node,start,end).loop(0.)
         rospy.sleep(2.)
         start = [self.__state.x,self.__state.y,self.__state.z]
@@ -138,7 +138,7 @@ class HookDemo():
   
 if __name__ == '__main__':
   try:
-    hook_demo = HookDemo(21,[0.,0.,0.85])
+    hook_demo = HookDemo(21,[0.,0.,0.85]) 
     hook_demo.demo()
   except rospy.ROSInterruptException:
     pass

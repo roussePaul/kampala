@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# This scripts listens to planned trajectory paths and enables a
-# visualization of them by converting them to Path msgs. It also
-# listens the the actual path of the robot and therefore enables a
-# visualization of the error.
+"""This scripts listens to planned trajectory paths and enables a
+visualization of them by converting them to Path msgs. It also
+listens the the actual path of the robot and therefore enables a
+visualization of the error."""
 
 
 import rospy
@@ -17,13 +17,19 @@ import math
 
 
 def listener():
+    """This function initializes the visualizer node and subscribes to the topics trajectory_gen/target and security_guard/data_forward,
+    which are relevant for the visualization of the error."""
     rospy.init_node('visualizer')
     rospy.Subscriber('trajectory_gen/target',QuadPositionDerived, planned_path_converter)
-    rospy.Subscriber('security_guard/data_forward',QuadPositionDerived, actual_path_converter) # change?
+    rospy.Subscriber('security_guard/data_forward',QuadPositionDerived, actual_path_converter) 
     rospy.spin()
 
-# Publishes planned path
+##@param quadstate: the state of the quad published on the topic trajectory_gen/target
 def planned_path_converter(quadstate):
+    """This is the callback function of the subscriber to the topic trajectory_gen/target. The state of the quad is transformed into a quaternion
+    and added to a path. The path is published to rviz for visualization on the topic visualizer/planned_path. To prevent the visualization from
+    freezing the list containing the path cannot be longer than a certain length. If it is of the maximum length and a new quaternion is added
+    an old one is removed. This means that old parts of the path are starting to vanish after some time."""
     quat = tf.transformations.quaternion_from_euler(math.radians(quadstate.roll), math.radians(quadstate.pitch), math.radians(quadstate.yaw))
     pose = Pose(Point(quadstate.x, quadstate.y, quadstate.z), Quaternion(*quat))
     pose_stamped = PoseStamped(Header(0, rospy.Time.now(), "/map"), pose)
@@ -36,6 +42,8 @@ def planned_path_converter(quadstate):
 
 # Publishes actual path
 def actual_path_converter(quadstate):
+    """This is the equivalent of planned_path_converter for the actual path. It is the callback function for the subscription to security_guard/data_forward
+    and publishes on visualizer/actual_path."""
     quat = tf.transformations.quaternion_from_euler(math.radians(quadstate.roll), math.radians(quadstate.pitch), math.radians(quadstate.yaw))
     pose = Pose(Point(quadstate.x, quadstate.y, quadstate.z), Quaternion(*quat))
     pose_stamped = PoseStamped(Header(0, rospy.Time.now(), "/map"), pose)
