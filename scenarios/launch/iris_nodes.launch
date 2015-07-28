@@ -12,7 +12,7 @@
 
 
 <!-- Simulation -->
-  <arg name="siöulation"/> <!-- No more than one drone visualisable -->
+  <arg name="simulation"/> <!-- No more than one drone visualisable -->
   
 
 <!-- |||| LAUNCH |||| -->

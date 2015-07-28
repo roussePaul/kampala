@@ -27,7 +27,6 @@
 	<!-- CONTROLLER -->
 	<!-- Main values -->
 			<param name="CONTROLLER_FREQUENCY" value="30"/>
-<<<<<<< HEAD
 			<param name="CONTROL_CANCEL_GRAVITY" value="1356"/>
 			<param name="CONTROL_ARMING_MIN" value="1010"/>
 			<param name="Ktt" value="637."/>

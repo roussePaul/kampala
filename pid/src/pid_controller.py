@@ -18,9 +18,9 @@ import control
 from system import System
 
 class PID:
-    parameters = {"K":0.3,"Ti":10000.0,"Td":0.0,"b":1.0,"c":1.0,"N":100.0,"u0":0.3,"I_lim":10000.0}
+    parameters = {"K":0.03,"Ti":10000.0,"Td":0.0,"b":1.0,"c":1.0,"N":100.0,"u0":0.3,"I_lim":10000.0}
     current_pid_id = 0
-    mode_list = ["controller","online identification","identification"]
+    mode_list = ["controller","online identification","identification","synthetise"]
 
     def __init__(self, name=""):
         # init name
@@ -40,6 +40,8 @@ class PID:
 
         # mode of the controller: "controller", "identification"
         self.mode = ["controller"]
+        self.synthesiser = Synthesis(["throttle","throttle"])
+        self.identifier = Identification("throttle")
 
     def init_services(self):
         rospy.Service(self.path+'set_mode', Mode, self.set_mode)
@@ -65,7 +67,12 @@ class PID:
         if "online identification" in self.mode:
             self.identifier.online(u,ym,time)
 
-        return u
+        if "synthetise" in self.mode:
+            gains = self.synthesiser.synthetise(self.identifier.identification)
+            self.set_params(gains)
+            self.mode.remove("synthetise")
+
+        return u + self.u0
 
     def set_mode(self,msg):
         if not(msg.mode in PID.mode_list):
@@ -79,8 +86,10 @@ class PID:
                 self.mode.remove(msg.mode)
 
         if "online identification" in self.mode:
-            self.identifier = Identification()
+            pass 
 
+        if "synthetise" in self.mode:
+            utils.loginfo("Synthesis : throttle")
 
         utils.loginfo("Modes : " + str(self.mode))
         return {'success':True}
@@ -91,9 +100,10 @@ class PID:
             setattr(self, p, rospy.get_param(self.name+"/"+p,v))
 
     def write_params(self):
-        for (p,v) in PID.parameters.iteritems():
-            rospy.set_param(self.name+"/"+p,getattr(self, p))
-
+        for param_name in PID.parameters.keys():
+            if hasattr(self,param_name):
+                print param_name +  " " +str(getattr(self,param_name))+  " " +str(type(getattr(self,param_name)))
+                rospy.set_param(self.name+"/"+param_name,getattr(self, param_name))
 
     def c_set_params(self,msg):
         params = dict(zip(msg.keys,msg.values))
@@ -143,7 +153,7 @@ class PID:
 
         output = u_pd+u_i
 
-        return output + self.u0
+        return output
 
 if __name__=="__main__":
     rospy.init_node("pid_test")

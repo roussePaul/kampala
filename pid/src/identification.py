@@ -16,6 +16,9 @@ import numpy as np
 
 import copy
 
+import analysis
+import utils
+
 class Relay:
 	def __init__(self,D,E=0.0):
 		self.D = D
@@ -66,7 +69,8 @@ class Identification:
 	"areas":["Internal Model Control","Ziegler & Nichols (OL)","Kappa-Tau"],
 	"ramp":["Hovering"],
 	"ramp_relay":["Ziegler & Nichols (CL)"],
-	"stairs":["Stairs"]}
+	"stairs":["Stairs"],
+	"throttle":["online"]}
 
 	def __init__(self,method="areas"):
 		self.method = method
@@ -89,7 +93,8 @@ class Identification:
 		self.vel_filter = System( s/(1+s/100.0) )
 		self.state = "online"
 		rospy.Timer(rospy.Duration(10.0), self.cbIdentification)
-
+		
+		self.identification = dict()
 
 	def start(self):
 		self.state = "initialize"
@@ -122,21 +127,19 @@ class Identification:
 		A = np.vstack([i2u,i2u_0]).T
 
 		
-		try:
-			a, b = np.linalg.lstsq(A, y)[0]
-			K = a
-			u_0 = -b/K
+		a, b = np.linalg.lstsq(A, y)[0]
+		K = a
+		u_0 = -b/K
 
-			z = A*(np.array([[a,b]]).T)
+		z = np.dot(A,np.array([[a,b]]).T)
 
-			print np.linalg.inv(np.dot(A.T,A))
+		self.identification.update({"K":K.item(0),"u0":u_0.item(0)})
 
-			self.identification = {"K":K,"u0":u_0}
-			print self.identification
+		print np.linalg.inv(np.dot(A.T,A))
+		print self.identification
 
-			utils.plot(Y)
-		except:
-			pass
+		utils.pngplot("true.png",T,Y)
+		utils.pngplot("sim.png",T,z)
 
 	def get_command(self, input, time):
 		#print self.method

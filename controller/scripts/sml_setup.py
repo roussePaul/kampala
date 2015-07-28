@@ -113,7 +113,7 @@ def Wait_For_ID(id_int):
 				utils.logerr('Cannot change system ID')
 				return_value=False
 		except:
-			utils.logerr('Cannot change system ID')
+			utils.logerr('Cannot connect to the service "mavros/param/set" to change system ID')
 			return_value=False
 		rospy.sleep(5)
 
