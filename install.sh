@@ -51,3 +51,8 @@ export ROS_PARALLEL_JOBS=
 cd $WORKSPACE
 source devel/setup.bash
 catkin_make
+
+echo "ip=`/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+export ROS_IP=$ip
+export ROS_HOSTNAME=$ip
+export ROS_MASTER_URI=http://$ip:11311" >> ~/.bashrc

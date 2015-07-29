@@ -1,0 +1,105 @@
+### INSTALLATION GUIDE OF THE RASPBERRY PI ###
+
+## HARDWARE
+
+# How does it work:
+
+	*Power supply:
+	The raspberry pi get the power from a BEC converter (provide a stable voltage of about 5V).
+	The BEC does not really provide 5V, it is more around 5.3V which is higher than what the Raspberry Pi is designed for (a usb port provide 5V +/- 25%). However it seems to work like this, and according to some forums, the critical voltage is more about 5.6V of 6V. The BEC take the power from the battery through the Gimbal connector.
+	We have mounted some connetors on the BEC and on the USB cable. The one on the USB cable is unuseful, you can dismiss it for the next time.
+
+	*How to choose a BEC converter:
+	You have to find one that will provide a clean 5V signal and as close as possible from 5V.
+	Current needed by the RPi does not exceed 2A, so a 3A BEC is enough.
+	This one has been successfully used for the pi during some hours: http://www.hobbyking.com/hobbyking/store/__22494__Turnigy_3A_UBEC_with_Low_Voltage_Buzzer.html
+	It is also possible to use the BEC of an ESC. 
+
+	*Wifi:
+	The RPi is connected to the network thanks to a wifi sticks.
+	It is always possible to connect it to the network with an ethernet cable.
+
+	*Mavlink:
+	Direct connection to the quad with a USB cable. It is possible to use one of the internal connection of the quad (TELEM1 and TELEM2). See Mission Planner to change the baudrate.
+
+	*Router:
+	We will use our own router in order to connect to the quadcopter so that the link between our quads and the computers is more direct. The router needs to have wifi, some ethernet ports, a name resolving algorithm (I don't really know the name of this feature, the idea is that we need to be able to do a ping A between machine with hostname A and hostname B).
+
+
+## SOFTWARE
+
+# Raspberry Pi
+You have 2 options, either duplicate a working system and adapting some files to get the raspberry pi working on another quad.
+Or to reinstall everything. The second option wil take you 10 hours more or less (the RPi is pretty slow for compiling ROS), the first one 1 hour.
+
+	* Reinstall everything:
+	Download Rasbian OS: https://www.raspberrypi.org/downloads/
+	Install it with this tutorial: https://www.raspberrypi.org/documentation/installation/installing-images/linux.md
+	Connect the RPi to the router by ethernet, try a ssh pi@raspberrypi, if it does not work, try to locate the RPi: nmap -sn THE_NETWORK_OF_THE_ROUTER
+	Setup the wifi connection/internet connection.
+	Install ROS: http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Indigo%20on%20Raspberry%20Pi
+	Install Mavros: (see the 3. of the previous link with "mavros" package)
+	Install every files of this directory to the home directory.
+	Do the common setup
+
+	* Copy an existing RPi 
+	dd if=/dev/FIND_THE_SD_CARD_OF_THE_RPI of=sd.img bs=4M
+	dd if=sd.img of=/dev/FIND_THE_SD_CARD_OF_THE_RPI bs=4M
+
+	* Restore from a backup
+	dd if=sd.img of=/dev/FIND_THE_SD_CARD_OF_THE_RPI bs=4M
+
+	* Common setup
+	change the /etc/hostname of the RPi with the iris1, iris2 or ...
+	copy the connect.launch in the mavros/launch directory (roscd mavros/launch)
+
+	* Wifi setup
+	To setup the connection, you have to deal with these files
+		/etc/network/interface
+		/etc/wpa_supplicant/wpa_supplicant.conf
+	In order to make the RPi connect automatically to the network, a little script is executed every 5 min to see if the connection is up. It is using the cron table, to change the configuration, look at:
+		~/wifi_respawn.sh
+		/etc/crontab
+
+	* SSH setup
+	We are using automatic connection to the RPi. You need to configure your computer so that it works.
+	Before you do anything, try to understand what SSH is: https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2
+	(don't do the tutorial).
+	ROS does not support the ECDSA login, if you just connect to the RPi with the ssh command, it will initialize the connection with this algorithm. To avoid that, connect to the RPi with the 
+		ssh -oHostKeyAlgorithms='ssh-rsa' pi@IRIS_HOSTNAME_HERE echo ""
+	command. If you have already been connected to the RPi, delete the correponding line in the ~/.ssh/known_hosts file.
+	The easiest way is maybe to have the same private key (~/.ssh/id_rsa) on every computer (however we can have as many keys as we want on the RPi, the only thing is to have one private key on the computer). So copy this private key from a working station to your computer.
+	If you don't have any key, you can generate one with
+		ssh-keygen -t rsa
+	and copy it to the RPi like this
+		ssh pi@IRIS_HOSTNAME_HERE mkdir -p .ssh
+		cat .ssh/id_rsa.pub | ssh pi@IRIS_HOSTNAME_HERE 'cat >> .ssh/authorized_keys'
+	Then if you can connect to the RPi without your password, that is really good 
+		ssh pi@IRIS_HOSTNAME_HERE
+	If not try to figure out why (I used these websites http://www.linuxproblem.org/art_9.html https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2)
+
+# ROS
+To understand how ROS is setup with severals machines, look at:
+http://wiki.ros.org/ROS/Tutorials/MultipleMachines
+http://wiki.ros.org/ROS/NetworkSetup
+
+	* ROS-Network configuration of the computer:
+	3 environment variables are dealing with this:
+		ROS_IP
+		ROS_HOSTNAME
+		ROS_MASTER_URI
+	you can see them with:
+		export | grep ROS
+	These are setup in the ~/.bashrc file with the IP of the computer (so that it does work even if the hostname is unknown).
+	The install.sh take care about adding this to the ~/.bashrc file.
+
+	* ROS-Network configuration of the RPi:
+	the mavros_launch.sh script is setting up these variable at the beggining according to the argument it received.
+
+
+!! Troubleshoot !!
+
+* Sometimes it is not possible to connect the RPi to the Quad with Mavlink. Try with the "mavproxy.py" command. If it does not work, switch off the quad and the Pi for a while and restart it.
+Maybe this come from perturbations of the BEC (I don't really know how much a BEC can disturb Pixhawks).
+
+* Mavros is able to connect to the quad even if you don't give him any parameters (with the ros param fcu_url=""). However, the baudrate chosen by mavros does not correspond to the one that is configured in Mission Planner. This is weird, but it is working like this, so we will leave it as it is. 
