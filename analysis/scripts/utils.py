@@ -10,8 +10,11 @@ import matplotlib.pyplot as plt
 #let's try using multiprocessing instead of threading module:
 import multiprocessing
 import time
+<<<<<<< HEAD
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
+=======
+>>>>>>> stabilize-mode
 
 
 def logerr(msg):

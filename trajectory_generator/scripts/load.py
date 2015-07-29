@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
-# This script generates the points, velocities, accelerations, jerk
-# and snap to be used as a reference for the load, for the load
-# transport controller.
+
 
 import rospy
 from numpy import array, sin,  cos
-from mocap.msg import QuadPositionDerived, QuadPositionDerivedExt
+from mocap.msg import QuadPositionDerivedExt
 from trajectory_generato import TrajectoryGenerator
 from trajectory import Trajectory
 from Trajectory_node import TrajectoryNode
@@ -15,6 +13,9 @@ from straight_line_class import StraightLineGen
 
 
 class LoadTrajectory(Trajectory):
+  """This script generates the points, velocities, accelerations, jerk
+  and snap to be used as a reference for the load, for the load
+  transport controller."""
   
   done = False
   a_max = 0.6**2.0/0.8
@@ -31,11 +32,17 @@ class LoadTrajectory(Trajectory):
     r = 1.0
     w = 0.5
     
-    p = r*w**0*array([ cos(w*t), sin(w*t),0.0]);
+    p = r*w**0*array([ cos(w*t), sin(w*t),0.0]) + array([0,0,1.0]);
     v = r*w**1*array([-sin(w*t), cos(w*t),0.0]);
     a = r*w**2*array([-cos(w*t),-sin(w*t),0.0]);
     j = r*w**3*array([ sin(w*t),-cos(w*t),0.0]);
     s = r*w**4*array([ cos(w*t), sin(w*t),0.0]);
+
+    #p = array([0,2.5,-4.8]);
+    #v = array([0,0,0]);
+    #a = array([0,0,0]);
+    #j = array([0,0,0]);
+    #s = array([0,0,0]);
 
     msg = QuadPositionDerivedExt()
     msg.x = p[0]; msg.y = p[1]; msg.z = p[2]
@@ -70,10 +77,10 @@ if __name__ == '__main__':
     rospy.sleep(4.)
     
     # Start and hover
-    trajectory_node_line = TrajectoryNode()
-    sl_gen = StraightLineGen(trajectory_node_line, [0.,0.,0.2], [0.,0.,0.6])
-    sl_gen.loop(0.)
-    rospy.sleep(2.)
+    #trajectory_node_line = TrajectoryNode()
+    #sl_gen = StraightLineGen(trajectory_node_line, [0.,0.,0.2], [0.,0.,0.6])
+    #sl_gen.loop(0.)
+    #rospy.sleep(2.)
 
     # Go to and pickup load
     

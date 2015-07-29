@@ -6,11 +6,10 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
 from std_srvs.srv import Empty
+from PyQt4.QtCore import QObject, pyqtSignal
 
 import analysis
 import utils
-
-import os
 import subprocess
 
 import trajectory_generator
@@ -19,15 +18,21 @@ from trajectory_generato import TrajectoryGenerator
 from Trajectory_node import TrajectoryNode
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
+from straight_line_class import StraightLineGen
 
-import threading
 
-class StepPlugin(Plugin):
+
+
+
+
+class utilityPlugin(Plugin):
+
+    launch = pyqtSignal()
     
     def __init__(self, context):
-        super(StepPlugin, self).__init__(context)
+        super(utilityPlugin, self).__init__(context)
         # Give QObjects reasonable names
-        self.setObjectName('StepPlugin')
+        self.setObjectName('utilityPlugin')
 
         # Process standalone plugin command-line arguments
         from argparse import ArgumentParser
@@ -47,11 +52,11 @@ class StepPlugin(Plugin):
         self._widget = QWidget()
         # Get path to UI file which is a sibling of this file
         # in this example the .ui and .py file are in the same folder
-        ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Step.ui')
+        ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'utility.ui')
         # Extend the widget with all attributes and children from UI file
         loadUi(ui_file, self._widget)
         # Give QObjects reasonable names
-        self._widget.setObjectName('StepPluginUi')
+        self._widget.setObjectName('utilityUi')
         # Show _widget.windowTitle on left-top of each plugin (when 
         # it's set in _widget). This is useful when you open multiple 
         # plugins at once. Also if you open multiple instances of your 
@@ -63,54 +68,69 @@ class StepPlugin(Plugin):
         context.add_widget(self._widget)
 
 
-        self.tg = TrajectoryGenerator()        
+        
+        self.ID = 0
+        
+        self.State = QuadPositionDerived()
+        self.Target = QuadPositionDerived()
+        self.sub = ''
+        self.name = ''
+        self.pwd = os.environ['PWD']
+        
+        
 
-        self._widget.bUp.clicked.connect(self.Up)
-        self._widget.bDown.clicked.connect(self.Down)
-        self._widget.bLeft.clicked.connect(self.Left)
-        self._widget.bRight.clicked.connect(self.Right)
-        self._widget.bFront.clicked.connect(self.Front)
-        self._widget.bBack.clicked.connect(self.Back)
-        self._widget.bStart.clicked.connect(self.Start)
+               
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
+        self._widget.bStart.clicked.connect(self.Start)
+        self._widget.GravityCancelButton.clicked.connect(self.adjust_gravity_cancel)
+        
+        
+        self._widget.XBox.setMinimum(-10.0)
+        self._widget.XBox.setMaximum(10.0)
+        self._widget.XBox.setSingleStep(0.1)
+        self._widget.YBox.setMinimum(-10.0)
+        self._widget.YBox.setMaximum(10.0)
+        self._widget.YBox.setSingleStep(0.1)
+        self._widget.ZBox.setMinimum(-10.0)
+        self._widget.ZBox.setMaximum(10.0)
+        self._widget.ZBox.setSingleStep(0.1)
+        self._widget.GravitySpinBox.setMaximum(1800)
+        self._widget.GravitySpinBox.setMinimum(1200)
+        self._widget.GravitySpinBox.setSingleStep(10)
+        self._widget.GravitySpinBox.setValue(1500)
+    
+   
+
+
+    def execute(self,cmd):
+        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile" + self.name]) 
+
+    def publish_trajectory_segment(self):
+        inputstring = "roslaunch scenarios line_userinput.launch ns:=%s xstart:=%f ystart:=%f zstart:=%f xdest:=%f ydest:=%f zdest:=%f" % (self.name,self.State.x,self.State.y,self.State.z,self._widget.XBox.value(),self._widget.YBox.value(),self._widget.ZBox.value())
+        self.execute(inputstring)
+
+    def adjust_gravity_cancel(self):
+        self.name = self._widget.IrisInputBox.currentText()
+        rospy.set_param('/' + self.name + '/CONTROL_CANCEL_GRAVITY',int(self._widget.GravitySpinBox.value()))
+        try: 
+            params_load = rospy.ServiceProxy("/%s/blender/update_parameters"%(self.name), Empty)
+            params_load_PID = rospy.ServiceProxy("/%s/PID_controller/update_parameters"%(self.name), Empty)
+            params_load()
+            params_load_PID()
+        except rospy.ServiceException as exc:
+            utils.loginfo("PID not reachable " + str(exc))
 
     def Start(self):
-        abspath = "/"+self._widget.IrisInputBox.currentText()+"/"
-        self.pub = rospy.Publisher(abspath+'trajectory_gen/target',QuadPositionDerived, queue_size=10)
-        self.security_pub = rospy.Publisher(abspath+'trajectory_gen/done', Permission, queue_size=10)
+        self.name = self._widget.IrisInputBox.currentText()
+        self.ID = rospy.get_param(self.name + '/body_id')
+        if self.sub != '':
+            self.sub.unregister()
+        self.sub = rospy.Subscriber('/body_data/id_' + str(self.ID),QuadPositionDerived,self.UpdateState)
+        self.publish_trajectory_segment()
 
-
-    def Up(self):
-        self.Goto([0.0,0.0,1.0])
-
-    def Down(self):
-        self.Goto([0.0,0.0,0.5])
-
-    def Left(self):
-        self.Goto([-1.0,0.0,0.5])
-
-    def Right(self):
-        self.Goto([1.0,0.0,0.5])
-
-    def Back(self):
-        self.Goto([0.0,-1.0,0.5])
-
-    def Front(self):
-        self.Goto([0.0,1.0,0.5])
-
-    def Goto(self, dest):
-        utils.logwarn(str(dest))
-        outpos = dest
-        outpos.append(0.0)
-        outvelo = [0.0]*3
-        outvelo.append(0.0)
-        outacc = [0.0]*3
-        outacc.append(0.0)
-        outmsg = self.tg.get_message(outpos, outvelo, outacc)
-        self.pub.publish(outmsg)
-        self.security_pub.publish(False)
-
+    def UpdateState(self,data):
+        self.State = data
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here

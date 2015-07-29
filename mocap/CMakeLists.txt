@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
  gazebo_msgs
  analysis
  pid
+ controller
 )
 
 
@@ -95,6 +96,7 @@ catkin_package(
   geometry_msgs
   analysis
   pid
+  controller
 #  LIBRARIES mocap
 #  DEPENDS system_lib
 )

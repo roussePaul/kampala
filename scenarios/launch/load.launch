@@ -1,0 +1,18 @@
+<launch>
+  <arg name="enable_logging" default="false"/>
+  <arg name="enable_ground_truth" default="true"/>
+  <arg name="log_file" default="iris"/>
+  <arg name="headless" default="false"/>
+  <arg name="gui" default="true"/>
+
+<!-- Set the ROS environment variables -->
+  <env name="ROS_IP" value="172.17.42.1"/>
+  <env name="ROS_HOSTNAME" value="172.17.42.1"/>
+
+
+  <arg name="ns"/>
+
+  <group ns="$(arg ns)">
+    <node name="load" pkg="trajectory_generator" type="load.py" output="screen"/>
+  </group>
+</launch>

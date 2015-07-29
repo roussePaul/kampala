@@ -26,9 +26,10 @@
 
 	<!-- CONTROLLER -->
 	<!-- Main values -->
+			<param name="controller_type" value="PID"/>
 			<param name="CONTROLLER_FREQUENCY" value="30"/>
 
-			<param name="CONTROL_CANCEL_GRAVITY" value="1400"/>
+			<param name="CONTROL_CANCEL_GRAVITY" value="1380"/>
 			<param name="CONTROL_ARMING_MIN" value="1030"/>
 			<param name="Ktt" value="637."/>
 			<param name="Kphi" value="637."/>
@@ -36,10 +37,12 @@
 			<param name="N_yaw" value="500"/>
 			<param name="K_yaw" value="2"/>
 			<param name="w_inf" value="2"/>
-			<param name="PID_w" value="1."/>
-			<param name="PID_w_z" value="1.0"/>
-			<param name="PID_I_lim" value="2."/>
-			<param name="PID_K_i" value="1."/>
+			<param name="PID_w" value="1.5"/>
+			<param name="PID_I_lim" value="0.6"/>
+			<param name="PID_K_i" value="0.1"/>
+			<param name="PID_w_z" value="1."/>
+			<param name="PID_I_lim_z" value="1.5"/>
+			<param name="PID_K_i_z" value="1."/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
                         <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
 			<param name="my_id" value="16"/>
@@ -51,8 +54,8 @@
 		<param name="PID_x_i" value="math.sqrt(2)/2"/>
 		<param name="PID_Kp" value="w*w"/>
 		<param name="PID_Kv" value="2*x_i*w"/>
-		<param name="PID_Kv_z" value=" w_z*w_z"/>
-		<param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
+		<param name="PID_Kv_z" value=" 2*x_i*w_z"/>
+		<param name="PID_Kp_z" value="w_z*w_z"/> -->
 		</group>
 	</group>
 
@@ -77,30 +80,48 @@
 
 	<!-- CONTROLLER -->
 	<!-- Main values -->
-			<param name="PID_CONTROL_CANCEL_GRAVITY" value="1370"/>
-			<param name="PID_CONTROL_ARMING_MIN" value="1030"/>
-			<param name="PID_Ktt" value="100"/>
-			<param name="PID_Kphi" value="100"/>
+			<param name="controller_type" value="PID"/>
+			<param name="CONTROL_CANCEL_GRAVITY" value="1370"/>
+			<param name="CONTROL_ARMING_MIN" value="1030"/>
+			<param name="Ktt" value="100"/>
+			<param name="Kphi" value="100"/>
 			<param name="PID_w" value="0.2"/>
 			<param name="PID_w_z" value="0.5"/>
-			<param name="PID_N_yaw" value="500"/>
-			<param name="PID_K_yaw" value="2"/>
-			<param name="PID_w_inf" value="2"/>
-			<param name="PID_I_lim" value="0.5"/>
-			<param name="PID_K_i" value="1"/>
+			<param name="N_yaw" value="500"/>
+			<param name="K_yaw" value="2"/>
+			<param name="w_inf" value="2"/>
+			<param name="PID_I_lim_z" value="0.5"/>
+			<param name="PID_K_i_z" value="1."/>
+			<param name="PID_I_lim" value="0."/>
+			<param name="PID_K_i" value="0."/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
                         <param name="OBSTACLES_TO_AVOID" value="[2,1,4]"/>
                         <param name="my_id" value="3"/>
 	<!-- Unimportant values -->
-		<!-- <param name="PID_CONTROL_MIN" value="1000"/>
-		<param name="PID_CONTROL_NEUTRAL" value="1500"/>
-		<param name="PID_CONTROL_MAX" value="2000"/>
-		<param name="PID_CONTROL_ARMING_MIN" value="1025"/>
+		<!-- <param name="CONTROL_MIN" value="1000"/>
+		<param name="CONTROL_NEUTRAL" value="1500"/>
+		<param name="CONTROL_MAX" value="2000"/>
+		<param name="CONTROL_ARMING_MIN" value="1025"/>
 		<param name="PID_x_i" value="math.sqrt(2)/2"/>
 		<param name="PID_Kp" value="w*w"/>
-		<param name="PID_Kv" value="2*x_i*w"/>
-		<param name="PID_Kv_z" value=" w_z*w_z"/>
-		<param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
+		<param name="PID_Kv" value="2*x_i*w"/> -->
+		</group>
+		<group if="$(arg launch)">
+			<include file="$(find simulator)/launch/iris.launch">
+
+				<arg name="ns" value="$(arg ns)"/>
+				
+				<arg name="body_id" value="3"/>
+				<arg name="docker" value="docker-iris-1"/>
+				
+
+				<arg name="x" default="0.0"/>
+				<arg name="y" default="2.5"/>
+
+				<arg name="suspended_load" default="false"/>
+				<arg name="load_link_height" default="5.0"/> <!-- [m] -->
+				<arg name="load_mass" default="0.01"/> <!-- [kg] -->
+			</include>
 		</group>
 	</group>
 </launch>

@@ -11,7 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   visualization_msgs
   analysis
-  pid
 )
 
 ## System dependencies are found with CMake's conventions
@@ -53,14 +52,13 @@ find_package(catkin REQUIRED COMPONENTS
    RCInput.msg
    PlotData.msg
    Permission.msg
-   QuadStateSimple.msg
-   QuadState.msg
  )
 
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
-   BodyDataDerived.srv
+   SetChannel6.srv
+   PlotLAC.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -131,12 +129,8 @@ catkin_package(
    scripts/hover_controller.py
    scripts/security_guard.py
    scripts/PID_controller.py
-   scripts/PID_controller_2.py
    scripts/derivator.py
    scripts/lander.py
-   scripts/trajectory_generator.py
-   scripts/circle_gen.py
-   scripts/circle_gen_tilt.py
    scripts/quadstate_to_path.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )

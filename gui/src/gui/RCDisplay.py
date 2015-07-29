@@ -1,3 +1,7 @@
+# Erik Berglund 2015
+# A GUI plugin to monitor the channel outputs and the battery voltage, displaying the values
+# with text and with bars.
+
 import os
 import rospy
 import QtGui
@@ -57,6 +61,7 @@ class RCDisplayPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
+        # Setting maximum and minimum on the bars:
         self._widget.channel1bar.setMinimum(0)
         self._widget.channel1bar.setMaximum(2000)
         self._widget.channel2bar.setMinimum(0)
@@ -74,8 +79,12 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel8bar.setMinimum(0)
         self._widget.channel8bar.setMaximum(2000)
         self._widget.Batterybar.setMinimum(0)
+
+        # The batterybar can only handle integer values, so its maximum is set to 10000 to get a good resolution.
         self._widget.Batterybar.setMaximum(10000)
 
+        # Connecting slots to signals. Each time channelXdisplay emits the signal textChanged, 
+        # the function self.change_barX will be called.
         self._widget.channel1display.textChanged.connect(self.change_bar1)
         self._widget.channel2display.textChanged.connect(self.change_bar2)
         self._widget.channel3display.textChanged.connect(self.change_bar3)
@@ -85,14 +94,19 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel7display.textChanged.connect(self.change_bar7)
         self._widget.channel8display.textChanged.connect(self.change_bar8)
         self._widget.Batterydisplay.textChanged.connect(self.change_Batterybar)
+        self._widget.ListenButton.clicked.connect(self.Listen)
+
+        # Setting other variables
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
-        self._widget.ListenButton.clicked.connect(self.Listen)
         self.batterysub = ''
         self.sub = ''
         
 
     def Listen(self):
+
+        # Unsubscribes from any previous channels and subscribes to the monitored channels of the selected drone.
+
         if self.sub != '':
             self.sub.unregister()
         self.sub = rospy.Subscriber('/' + self._widget.IrisInputBox.currentText() + '/mavros/rc/override', OverrideRCIn, self.callback)    
@@ -101,6 +115,11 @@ class RCDisplayPlugin(Plugin):
         self.batterysub = rospy.Subscriber('/' + self._widget.IrisInputBox.currentText() + '/mavros/battery', BatteryStatus, self.batterycallback)
 #
     def callback(self,data):
+
+        # Called each time data from /irisX/mavros/rc/override is recieved, 
+        # updates the displayed outputs on the channels according to that data. 
+        # self.batterycallback does the corresponding thing for the battery.
+
         self._widget.channel1display.setText(str(data.channels[0]))
         self._widget.channel2display.setText(str(data.channels[1]))
         self._widget.channel3display.setText(str(data.channels[2]))
@@ -111,8 +130,10 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel8display.setText(str(data.channels[7]))
 
     def batterycallback(self,data):
+
         self._widget.Batterydisplay.setText(str(data.voltage))
     
+    # The following functions update the bars when the text on the corresponding display is changed.
     def change_bar1(self,text):
         self._widget.channel1bar.setValue(int(text))
     def change_bar2(self,text):
@@ -129,7 +150,12 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel7bar.setValue(int(text))
     def change_bar8(self,text):
         self._widget.channel8bar.setValue(int(text))
+
     def change_Batterybar(self,text):
+
+        # The Batterybar's function setValue first rounds its argument to an integer,
+        # therefore scaling of the input is needed to get a good resolution. 
+
         self._widget.Batterybar.setValue(float(text)*10000/12.5)
         self._widget.Batterybar.setFormat(text+'/12.5')
 
@@ -142,12 +168,13 @@ class RCDisplayPlugin(Plugin):
     def save_settings(self, plugin_settings, instance_settings):
         # TODO save intrinsic configuration, usually using:
         # instance_settings.set_value(k, v)
-        pass
+        instance_settings.set_value("irisindex", self._widget.IrisInputBox.currentIndex())
 
     def restore_settings(self, plugin_settings, instance_settings):
         # TODO restore intrinsic configuration, usually using:
         # v = instance_settings.value(k)
-        pass
+        index = instance_settings.value("irisindex",0)
+        self._widget.IrisInputBox.setCurrentIndex(int(index))
 
     #def trigger_configuration(self):
         # Comment in to signal that the plugin has a way to configure

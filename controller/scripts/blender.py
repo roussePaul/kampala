@@ -1,25 +1,30 @@
 #!/usr/bin/env python
 
-#PID controller for the IRIS+ in the SML Lab 
-#Gets inputs from the Security Guard and the Trajectory Generator
-#Publishes commands via Mavros' rc/override topic
-
+# Blender script for the IRIS+ in the SML Lab 
+# Gets inputs from the Security Guard and the Trajectory Generator
+# Publishes commands via Mavros' rc/override topic
+ 
 
 import rospy
 import sml_setup
 import sys
 import math
+from copy import deepcopy
+import numpy
 from controller_base import Controller
-from PID_controller_2 import PID2
+from PID_controller import PID
+from load_transport_controller import LoadTransportController
 from point import *
 from controller.msg import PlotData
+from controller.srv import SetChannel6
 from mavros.msg import OverrideRCIn
-from mocap.msg import QuadPositionDerived
+from mocap.msg import QuadPositionDerived, QuadPositionDerivedExt
 from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
 from std_srvs.srv import Empty
 import utils
-
+from std_msgs.msg import Float64
+import numpy as np
 from numpy import linalg
 
 
@@ -31,22 +36,48 @@ NODE_NAME='Blender'
 class Blender():
 
   def __init__(self):
-    rospy.init_node(NODE_NAME)
-    self.PID = PID2()
+    self.obstacle_avoidance = utils.Get_Parameter("obstacle_avoidance","False")
     self.avoidance = AvoidanceController()
-    self.obstacle_avoidance = sml_setup.Get_Parameter(NODE_NAME,"obstacle_avoidance","False")
+    body_id = utils.Get_Parameter('body_id',8)
+    self.load_id = utils.Get_Parameter('load_id',body_id)
+
+    # Check what controller should be used
+    self.controller_type = utils.Get_Parameter("controller_type","PID")
+    if self.controller_type == "load_transport":
+      self.controller = LoadTransportController()
+    else:
+      self.controller = PID()
+    rospy.init_node(NODE_NAME)
     rospy.Service('blender/update_parameters', Empty, self.update_parameters)
+    self.channel6 = 0
     self.instr = Instruction()
     self.load_parameters()
+    rospy.Service('blender/set_channel6', SetChannel6, self.set_channel6)
+
+  #Sets channel 6 to value
+  def set_channel6(self,channel6):
+    self.channel6 = channel6.value
+    return True
+    
     
   # Gets target points and current points  
   def init_subscriptions(self, target_point,current_point):
-    #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
-    rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.new_point,target_point)
     #Subscribe to /derivator/pos_data to get position, velocity and acceleration
     rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.new_point,current_point)
     #Subscribe to /security_guard/controller to get permission to publish to rc/override
     rospy.Subscriber('security_guard/controller',Permission,self.get_permission)
+
+    
+    if self.controller_type == "load_transport":
+      #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
+      rospy.Subscriber('trajectory_gen/target_ext',QuadPositionDerivedExt,self.new_point,target_point)
+    else:
+      #Subcribe to /trajectroy_gen/target to get target position, velocity and acceleration
+      rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.new_point,target_point)
+
+  # For load, if any
+  def init_load_subscription(self, current_load_point):
+    rospy.Subscriber("/body_data/id_"+str(self.load_id),QuadPositionDerived,self.new_point,current_load_point)
 
   def get_permission(self,data):
     if self.instr.permission:
@@ -59,22 +90,29 @@ class Blender():
 
   def wait_for_security_guard(self,obj):
     rate=rospy.Rate(30)
-    rospy.loginfo('['+NODE_NAME+']: Waiting for security guard ...')
+    rospy.loginfo('Waiting for security guard ...')
     while not obj.start:
       if rospy.is_shutdown():
-        return 
+        return data_initdata_initdata_init
       rate.sleep()
 
   def run_blender(self):
     loop_rate=rospy.Rate(self.FREQUENCY)
     current_point=Point()
-    target_point=Point()
-    my_id = sml_setup.Get_Parameter(NODE_NAME,'body_id',1)
-    bodies = sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
+    current_load_point=Point()
+    if self.controller_type == "load_transport":
+      target_point=PointExt()
+    else:
+      target_point=Point()
     # Publish to RC Override
     rc_override=rospy.Publisher('mavros/rc/override',OverrideRCIn,queue_size=10)
+    if type(self.controller) is PID:
+      d_pub = rospy.Publisher('theD',Float64,queue_size=10)
 
     self.init_subscriptions(target_point, current_point)
+
+    # For load
+    self.init_load_subscription(current_load_point)
 
     data_init=OverrideRCIn()
     command=[self.CONTROL_NEUTRAL,self.CONTROL_NEUTRAL,self.CONTROL_ARMING_MIN,self.CONTROL_NEUTRAL,0,0,0,0]
@@ -84,17 +122,29 @@ class Blender():
     self.wait_for_security_guard(self.instr)
 
     # Controller reset. For PID this means integral term initialized to 0.
-    self.PID.reset
+    self.controller.reset()
 
     # Main loop
     while not rospy.is_shutdown():
       if not target_point.first_point_received:
         self.wait_for_first_point(target_point,rc_override,data_init,loop_rate)
         # Controller is reset. For the PID this means reinitialization of integral term.
-        self.PID.reset
+        self.controller.reset()
+
       x,x_vel,x_acc=get_pos_vel_acc(current_point)  
       x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target_point) 
-      u = self.read_and_blend(current_point, target_point)
+
+
+      #current_load_point = deepcopy(current_point)
+      #current_load_point.z = current_point.z - 5.0
+
+      if type(self.controller) is PID:
+        u_cont = self.controller.get_output(current_point,target_point)
+        u_cont[2] = u_cont[2] + 9.8
+      elif type(self.controller) is LoadTransportController:
+        u_cont = self.controller.get_output(current_load_point,current_point,target_point)
+
+      u = self.blend(u_cont, current_point, target_point)
       command_controlled = self.get_controloutput(u,x,x_target)
   
       #If OK from security guard, publish the messages via Mavros to the drone
@@ -102,6 +152,8 @@ class Blender():
         data=OverrideRCIn()
         data.channels=command_controlled
         rc_override.publish(data)
+        if type(self.controller) is PID:
+          d_pub.publish(self.controller.get_d_updated()[1])
       else:
         break
 
@@ -111,20 +163,19 @@ class Blender():
   # From the required acceleration u, he control outputs are calculated: roll, pitch,
   # throttle and yaw_rate
   def get_controloutput(self,u,x,x_target):
-    AUX=[]
-    AUX_rot=[]
-    AUX.append(u[0])
-    AUX.append(u[1])
-    AUX.append(9.8+u[2])
+    AUX=np.array([0.]*3)
+    AUX_rot=np.array([0.]*3)
+    AUX[0] = u[0]
+    AUX[1] = u[1]
+    AUX[2] = u[2]
+
 
     #take into consideration the yaw angle
-    AUX_rot.append(math.cos(math.radians(-x[3]))*AUX[0]-math.sin(math.radians(-x[3]))*AUX[1])
-    AUX_rot.append(math.sin(math.radians(-x[3]))*AUX[0]+math.cos(math.radians(-x[3]))*AUX[1])
-    AUX_rot.append(AUX[2])
+    AUX_rot[0] = math.cos(math.radians(-x[3]))*AUX[0]-math.sin(math.radians(-x[3]))*AUX[1]
+    AUX_rot[1] = math.sin(math.radians(-x[3]))*AUX[0]+math.cos(math.radians(-x[3]))*AUX[1]
+    AUX_rot[2] = AUX[2]
 
     norm_AUX=linalg.norm(AUX_rot)
-
-    norm_AUX=math.sqrt(math.pow(AUX_rot[0],2)+math.pow(AUX_rot[1],2)+math.pow(AUX_rot[2],2))
 
     #yaw control:
     diff=self.angular_difference(x[3],x_target[3])
@@ -136,33 +187,28 @@ class Blender():
     pitch=self.CONTROL_NEUTRAL-self.Ktt*math.asin(AUX_rot[0]/norm_AUX)
     roll=self.CONTROL_NEUTRAL-self.Kphi*math.asin(AUX_rot[1]/norm_AUX)
 
-    #if pitch<1400 or pitch>1600:
-       #print(pitch)
-
-    #if roll<1400 or roll>1600:
-      #print(roll)
 
     # Implement some saturation
     throttle=self.saturation(throttle,1000,2000)
-    pitch=self.saturation(pitch,1350,1650)
-    roll=self.saturation(roll,1350,1650)
+    pitch=self.saturation(pitch,1350,1700)
+    roll=self.saturation(roll,1350,1700)
+    return [roll,pitch,throttle,yaw_rate,0,self.channel6,0,0]
 
-    return [roll,pitch,throttle,yaw_rate,0,0,0,0]
 
   # Read the outputs of the controller and collision avoidance, then "blends"
   # the outputs  
-  def read_and_blend(self,current_point,target_point):
-    u = [0.,0.,0.]
-    u_cont = self.PID.get_output(current_point,target_point)
+  def blend(self,u_cont,current_point,target_point):
+    u = np.array([0.,0.,0.])
     u_obst = self.avoidance.get_potential_output()
     if self.obstacle_avoidance:
       alpha = self.avoidance.get_blending_constant()
+      utils.loginfo(alpha)
     else:
       alpha = 0
     for i in range(0,2):
-      u[i] = alpha * u_obst[i] + (1.0-alpha) * u_cont[i]
+      u[i] = alpha * u_obst[i] + (1-alpha) * u_cont[i]
     u[2] = u_cont[2] 
-    return u_cont
+    return u
  
 
   def new_point(self,data,point_obj):
@@ -177,13 +223,13 @@ class Blender():
 
 
   def wait_for_first_point(self,target_obj,channel,data,rate):
-    rospy.loginfo('['+NODE_NAME+']: Waiting for first point ...')
+    rospy.loginfo('Waiting for first point ...')
     while not target_obj.first_point_received:
       #publish low value on the throttle channel, so the drone does not disarm while waiting
       channel.publish(data)
       rate.sleep()
 
-    rospy.loginfo('['+NODE_NAME+']: First point received')      
+    rospy.loginfo('First point received')      
 
   def angular_difference(self,current_angle,target_angle):
     ang_diff=current_angle-target_angle
@@ -197,24 +243,33 @@ class Blender():
     return ang_diff
      
   def update_parameters(self,msg):
-    utils.loginfo('PID parameters loaded')
+    utils.loginfo('Blender parameters loaded')
     self.load_parameters()
+
+    # If controller type is changed
+    if self.controller_type == "load_transport" and type(self.controller) != LoadTransportController:
+      self.controller = LoadTransportController()
+    elif self.controller_type == "PID" and type(self.controller) != PID:
+      self.controller = PID()
+
     return []
   
   # Read parameters for Blender
   def load_parameters(self):		
-    self.N_yaw = sml_setup.Get_Parameter(NODE_NAME,"N_yaw",500)
-    self.K_yaw = sml_setup.Get_Parameter(NODE_NAME,"K_yaw",2)
-    self.w_inf = sml_setup.Get_Parameter(NODE_NAME,"w_inf",5)
-    self.Ktt = sml_setup.Get_Parameter(NODE_NAME,"Ktt",1000)/(20*math.pi/180)
-    self.Kphi = sml_setup.Get_Parameter(NODE_NAME,"Kphi",1000)/(20*math.pi/180)
-    self.CONTROL_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MIN",1000)
-    self.CONTROL_NEUTRAL = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_NEUTRAL",1500)
-    self.CONTROL_MAX = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_MAX",2000)
-    self.CONTROL_ARMING_MIN = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_ARMING_MIN",1025)
-    self.CONTROL_CANCEL_GRAVITY = sml_setup.Get_Parameter(NODE_NAME,"CONTROL_CANCEL_GRAVITY",1400)	
+    self.N_yaw = utils.Get_Parameter("N_yaw",500)
+    self.K_yaw = utils.Get_Parameter("K_yaw",2)
+    self.w_inf = utils.Get_Parameter("w_inf",5)
+    self.Ktt = utils.Get_Parameter("Ktt",1000)/(20*math.pi/180)
+    self.Kphi = utils.Get_Parameter("Kphi",1000)/(20*math.pi/180)
+    self.CONTROL_MIN = utils.Get_Parameter("CONTROL_MIN",1000)
+    self.CONTROL_NEUTRAL = utils.Get_Parameter("CONTROL_NEUTRAL",1500)
+    self.CONTROL_MAX = utils.Get_Parameter("CONTROL_MAX",2000)
+    self.CONTROL_ARMING_MIN = utils.Get_Parameter("CONTROL_ARMING_MIN",1025)
+    self.CONTROL_CANCEL_GRAVITY = utils.Get_Parameter("CONTROL_CANCEL_GRAVITY",1400)	
 
-    self.FREQUENCY = sml_setup.Get_Parameter(NODE_NAME,"CONTROLLER_FREQUENCY",30)
+    self.FREQUENCY = utils.Get_Parameter("CONTROLLER_FREQUENCY",30)
+
+    self.controller_type = utils.Get_Parameter("controller_type","PID")
 
 if __name__ == "__main__":
   bl = Blender()

@@ -8,10 +8,6 @@ import sml_setup
 from mocap.msg import QuadPosition
 from mocap.msg import QuadPositionDerived
 
-#************Constants********************
-NODE_NAME='MOCAP'
-#*****************************************
-
 from mocap.msg import QuadPosition
 from mocap.srv import Bodies
 from mocap.srv import BodyData
@@ -36,8 +32,10 @@ import message_filters
 
 import timeit
 
+## Convert quaternion to DCM
+# @param q1, q2, q3, q4: quaternion
+# @return dcm matrix
 def quat_to_dcm(q1, q2, q3, q4):
-	'''convert quaternion to DCM'''
 	q3q3 = q3 * q3
 	q3q4 = q3 * q4
 	q2q2 = q2 * q2
@@ -256,7 +254,6 @@ class Mocap:
 				self.body_state[i].update(data,time)
 				self.body_state[i].data = True
 		print rospy.Time.now()-t
-
 
 	def get_msg(self,msg):
 		#utils.loginfo('receive data from Gazebo')

@@ -18,24 +18,21 @@ from controller.msg import Permission
 from std_srvs.srv import Empty
 import analysis
 import utils
-
-
-#Constants
-#*************************************
-NODE_NAME='PID'
-#*************************************
+from numpy import linalg as lg
+import numpy as np
+import copy
 
 
 class PID(Controller):
   def __init__(self):
     self.load_PID_parameters()
-    self.d_updated = 0 # Integral term
+    self.d_updated = np.array([0.,0.,0.]) # Integral term
     rospy.Service('PID_controller/update_parameters', Empty, self.update_parameters)
   
 
   # Resets PID
   def reset(self):
-    self.d_updated = 0
+    self.d_updated = np.array([0.,0.,0.])
 
 
   def get_d_updated(self):
@@ -43,7 +40,7 @@ class PID(Controller):
 
 
   def set_d_updated(self, d):
-    self.d_updated = d
+    self.d_updated = copy.deepcopy(d)
 
 
   def get_errors(self,current,target):
@@ -55,7 +52,7 @@ class PID(Controller):
 
   # Returns the output of the controller
   def get_output(self,current,target):
-    d_updated = self.get_d_updated()
+    d_updated = copy.deepcopy(self.get_d_updated())
     x,x_vel,x_acc=get_pos_vel_acc(current)  # current state
     x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target) # target state
     time_diff=current.time_diff 
@@ -70,21 +67,18 @@ class PID(Controller):
 
 
   def calculate_PID_output(self,x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
-    u=[]
+    u=np.array([0.]*3)
+    acc_target = np.array(x_acc_target)
+    new_d = np.array([0.]*3)
     #Compute errors
-    e=self.get_errors(x,x_target)
-    e_dot=self.get_errors(x_vel,x_vel_target)
-
-    new_d=current_d+delta_t*(self.K_i*((e[2]*self.Kv/2)+e_dot[2]))
-    new_d=self.saturation(new_d,-self.I_lim,self.I_lim)
-
-    for i in range(0,2):
-      u.append(x_acc_target[i]-self.Kv*e_dot[i]-self.Kp*e[i])
-    u.append(x_acc_target[2]-self.Kv_z*e_dot[2]-self.Kp_z*e[2])
-
-    u[2]=u[2]-new_d
-    self.set_d_updated(new_d)    
-
+    e=np.array(self.get_errors(x,x_target))
+    e_dot=np.array(self.get_errors(x_vel,x_vel_target))
+    for i in range(0,3):
+      new_d[i]=current_d[i]+delta_t*(self.K_i[i]*((e[i]*self.Kv[i]/2)+e_dot[i]))
+      new_d[i]=self.saturation(new_d[i],-self.I_lim[i],self.I_lim[i])
+      u[i] = acc_target[i]-self.Kv[i]*e_dot[i]-self.Kp[i]*e[i]
+      u[i] = u[i] - new_d[i]
+    self.set_d_updated(new_d)   
     return u
 
 
@@ -94,18 +88,25 @@ class PID(Controller):
 	
 
   # Read parameters for PID
+  # The parameters are specified in the launch file of each drone.
   def load_PID_parameters(self):		
     #Controller parameters	
-    self.w = sml_setup.Get_Parameter(NODE_NAME,"PID_w",1.7)
-    self.w_z  = sml_setup.Get_Parameter(NODE_NAME,"PID_w_z", 1.3)
-    self.x_i = sml_setup.Get_Parameter(NODE_NAME,"PID_x_i",math.sqrt(2)/2)
-    self.Kp = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp",self.w*self.w)
-    self.Kv = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv",2*self.x_i*self.w)
+    self.w = utils.Get_Parameter("PID_w",1.7)
+    self.w_z  = utils.Get_Parameter("PID_w_z", 1.3)
+    self.x_i = utils.Get_Parameter("PID_x_i",0.7)
+    Kp = utils.Get_Parameter("PID_Kp",self.w*self.w)
+    Kv = utils.Get_Parameter("PID_Kv",2*self.x_i*self.w)
 
-    self.Kp_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kp_z", self.w_z*self.w_z)
-    self.Kv_z = sml_setup.Get_Parameter(NODE_NAME,"PID_Kv_z", 2*self.x_i*self.w_z)
+    Kv_z = utils.Get_Parameter("PID_Kv_z", 2*self.x_i*self.w_z)
+    Kp_z = utils.Get_Parameter("PID_Kp_z", self.w_z*self.w_z)
 
-    self.I_lim = sml_setup.Get_Parameter(NODE_NAME,"PID_I_lim",0.5)
-    self.K_i = sml_setup.Get_Parameter(NODE_NAME,"PID_K_i",7)
+    I_lim = utils.Get_Parameter("PID_I_lim",0.5)
+    K_i = utils.Get_Parameter("PID_K_i",7)
+    I_lim_z = utils.Get_Parameter("PID_I_lim_z",0.5)
+    K_i_z = utils.Get_Parameter("PID_K_i_z",7)
+    self.Kp = np.array([Kp,Kp,Kp_z])
+    self.Kv = np.array([Kv,Kv,Kv_z])
+    self.K_i = np.array([K_i,K_i,K_i_z])
+    self.I_lim = np.array([I_lim,I_lim,I_lim_z])
 
 #EOF
