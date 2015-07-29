@@ -15,16 +15,22 @@
 		<group ns="$(arg ns)">
 
 
+<!-- COMMUNICATION SETUP -->
+	<!-- RPi communication? -->
+			<param name="rpi" value="True" />
+
+	<!-- 3DR Radio communication setup -->
 			<group ns="mavros">
 				<param name="fcu_url" value="/dev/ttyIRIS2:57600" />
 				<param name="gcs_url" value="udp://127.0.0.1:14556@127.0.0.1:14551" />
 				<param name="target_system_id" value="1" />
 				<param name="target_component_id" value="1" />
 			</group>
-			
+		
+<!-- MOCAP CONFIGURATION -->
 			<param name="body_id" value="8"/>
 
-	<!-- CONTROLLER -->
+<!-- CONTROLLER -->
 	<!-- Main values -->
 			<param name="controller_type" value="PID"/>
 			<param name="CONTROLLER_FREQUENCY" value="30"/>
@@ -38,11 +44,12 @@
 			<param name="K_yaw" value="2"/>
 			<param name="w_inf" value="2"/>
 			<param name="PID_I_lim" value="0.1"/>
-			<param name="PID_K_i" value="1.0"/><param name="PID_CONTROL_MIN" value="1000"/>
+			<param name="PID_K_i" value="1.0"/>
+			<param name="PID_CONTROL_MIN" value="1000"/>
 			<param name="PID_I_lim_z" value="1.0"/>
 			<param name="PID_K_i_z" value="0.5"/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
-                        <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
+            <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
 			<param name="my_id" value="8"/>
 	<!-- Unimportant values -->
 		<!-- <param name="CONTROL_MIN" value="1000"/>

@@ -99,7 +99,24 @@ http://wiki.ros.org/ROS/NetworkSetup
 
 !! Troubleshoot !!
 
-* Sometimes it is not possible to connect the RPi to the Quad with Mavlink. Try with the "mavproxy.py" command. If it does not work, switch off the quad and the Pi for a while and restart it.
+* Sometimes it is not possible to connect the RPi to the Quad with Mavlink. Try with the "mavproxy.py" command. If it does not work, switch off the quad and the Pi and restart it.
 Maybe this come from perturbations of the BEC (I don't really know how much a BEC can disturb Pixhawks).
 
 * Mavros is able to connect to the quad even if you don't give him any parameters (with the ros param fcu_url=""). However, the baudrate chosen by mavros does not correspond to the one that is configured in Mission Planner. This is weird, but it is working like this, so we will leave it as it is. 
+
+* Mocap connection does not find the quad anymore! The force the security gard to land the quad. Is there any collision between the RPi connection and the Mocap one?
+
+* Sometimes the RPi stop the connection during the flight. I didn't managed to understand why, it is a random behaviour. It might be a good idea to monitor the log files while running the quad:
+	tail -f /var/log
+Apparently, it is coming from a boost version error, ROS seems to works better with the 1.46.1 version of boost (http://answers.ros.org/question/64191/arm-boost-exception-what-boostlock_error/)
+
+Typical error:
+
+terminate called after throwing an instance of 'boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::lock_error> >'
+  what():  boost::lock_error
+================================================================================REQUIRED process [iris2/mavros-1] has died!
+process has died [pid 3521, exit code -6, cmd /opt/ros/indigo/lib/mavros/mavros_node /mavlink/to:=mavlink/to /mavlink/from:=mavlink/from __name:=mavros __log:=/home/pi/.ros/log/9af0a020-35ce-11e5-b397-b8ca3a8a3325/iris2-mavros-1.log].
+log file: /home/pi/.ros/log/9af0a020-35ce-11e5-b397-b8ca3a8a3325/iris2-mavros-1*.log
+Initiating shutdown!
+================================================================================
+[iris2/mavros-1] killing on exit

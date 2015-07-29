@@ -21,6 +21,7 @@ do
         fi
         
         echo                # a line break should be used because of the prompt 
+        echo "$(tput bold; tput setaf 0; tput setab 7)$line$(tput sgr 0)"
         eval $line  &        # run the line: as this script should be started
         line=""
     fi                          # in the target terminal, 
