@@ -1,25 +1,30 @@
 <launch>
 
-	<arg name="ns" value="iris2"/>
+<!-- NAME OF THE QUAD -->
+	<arg name="ns" value="iris2"/> <!-- Choose irisX where X is a positive number -->
 
 	<arg name="simulation"/>
 
+<!-- This file is called 2 times buy the GUI when we are running a simulation: 
+the first time load the parameters
+the second time we launch the file and the parameter launch is set to true 
+This is made in this way mainly for compatibility reasons -->
 	<arg name="launch" default="false"/>
 
+<!-- COMMON PARAMETERS
+Apply for both the simulated and the real quad --> 
 	<group ns="$(arg ns)">
         	<param name="obstacle_avoidance" type="bool" value="False"/>
 	</group>
+
+<!-- REAL QUAD PARAMETERS -->
 	<group unless="$(arg simulation)">
-
-
 		<group ns="$(arg ns)">
-
-
-<!-- COMMUNICATION SETUP -->
-	<!-- RPi communication? -->
+		<!-- COMMUNICATION SETUP -->
+			<!-- RPi communication? -->
 			<param name="rpi" value="True" />
 
-	<!-- 3DR Radio communication setup -->
+			<!-- 3DR Radio communication setup -->
 			<group ns="mavros">
 				<param name="fcu_url" value="/dev/ttyIRIS2:57600" />
 				<param name="gcs_url" value="udp://127.0.0.1:14556@127.0.0.1:14551" />
@@ -27,11 +32,11 @@
 				<param name="target_component_id" value="1" />
 			</group>
 		
-<!-- MOCAP CONFIGURATION -->
+		<!-- MOCAP CONFIGURATION -->
 			<param name="body_id" value="8"/>
 
-<!-- CONTROLLER -->
-	<!-- Main values -->
+		<!-- CONTROLLER -->
+			<!-- Main values -->
 			<param name="controller_type" value="PID"/>
 			<param name="CONTROLLER_FREQUENCY" value="30"/>
 			<param name="CONTROL_CANCEL_GRAVITY" value="1390"/>
@@ -51,24 +56,24 @@
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
             <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
 			<param name="my_id" value="8"/>
-	<!-- Unimportant values -->
-		<!-- <param name="CONTROL_MIN" value="1000"/>
-		<param name="CONTROL_NEUTRAL" value="1500"/>
-		<param name="CONTROL_MAX" value="2000"/>
-		<param name="CONTROL_ARMING_MIN" value="1025"/>
-		<param name="PID_x_i" value="math.sqrt(2)/2"/>
-		<param name="PID_Kp" value="w*w"/>
-		<param name="PID_Kv" value="2*x_i*w"/>
-		<param name="PID_Kv_z" value=" w_z*w_z"/>
-		<param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
+		<!-- Unimportant values -->
+			<!-- These values are automatically computed by the PID controller as it is writen here, you can override by uncommenting them -->
+			<!-- <param name="CONTROL_MIN" value="1000"/> -->
+			<!-- <param name="CONTROL_NEUTRAL" value="1500"/> -->
+			<!-- <param name="CONTROL_MAX" value="2000"/> -->
+			<!-- <param name="CONTROL_ARMING_MIN" value="1025"/> -->
+			<!-- <param name="PID_x_i" value="math.sqrt(2)/2"/> -->
+			<!-- <param name="PID_Kp" value="w*w"/> -->
+			<!-- <param name="PID_Kv" value="2*x_i*w"/> -->
+			<!-- <param name="PID_Kv_z" value=" w_z*w_z"/> -->
+			<!-- <param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
 		</group>
 	</group>
 
+<!-- SIMULATED QUAD PARAMETERS -->
 	<group if="$(arg simulation)">
-
 		<group ns="$(arg ns)">
-
-
+			<!-- Unused communication parameters as mavros is not launched for the simulated quad -->
 			<group ns="mavros">
 				<param name="fcu_url" value="/dev/ttyUSB0:57600" />
 				<param name="gcs_url" value="udp://127.0.0.1:14556@127.0.0.1:14551" />
@@ -76,7 +81,8 @@
 				<param name="target_component_id" value="1" />
 			</group>
 			
-			<param name="body_id" value="8"/>
+
+			<param name="body_id" value="2"/>
 
 	<!-- CONTROLLER -->
 	<!-- Main values -->
@@ -95,33 +101,41 @@
 			<param name="PID_w_inf" value="0.2"/>
 			<param name="PID_I_lim" value="0."/>
 			<param name="PID_K_i" value="0."/>
-                        <param name="PID_I_lim_z" value="5."/>
+			<param name="PID_I_lim_z" value="5."/>
 			<param name="PID_K_i_z" value="0.1"/>
 			<param name="my_id" value="2"/>
-	<!-- Unimportant values -->
-		<!-- <param name="CONTROL_MIN" value="1000"/>
-		<param name="CONTROL_NEUTRAL" value="1500"/>
-		<param name="CONTROL_MAX" value="2000"/>
-		<param name="CONTROL_ARMING_MIN" value="1025"/>
-		<param name="PID_x_i" value="math.sqrt(2)/2"/>
-		<param name="PID_Kp" value="w*w"/>
-		<param name="PID_Kv" value="2*x_i*w"/> -->
+		<!-- Unimportant values -->
+			<!-- These values are automatically computed by the PID controller as it is writen here, you can override by uncommenting them -->
+			<!-- <param name="CONTROL_MIN" value="1000"/> -->
+			<!-- <param name="CONTROL_NEUTRAL" value="1500"/> -->
+			<!-- <param name="CONTROL_MAX" value="2000"/> -->
+			<!-- <param name="CONTROL_ARMING_MIN" value="1025"/> -->
+			<!-- <param name="PID_x_i" value="math.sqrt(2)/2"/> -->
+			<!-- <param name="PID_Kp" value="w*w"/> -->
+			<!-- <param name="PID_Kv" value="2*x_i*w"/> -->
+			<!-- <param name="PID_Kv_z" value=" w_z*w_z"/> -->
+			<!-- <param name="PID_Kp_z" value=" 2*x_i*w_z"/> -->
 		</group>
+
+		<!-- See the launch argument definition for more information about this group -->
 		<group if="$(arg launch)">
 			<include file="$(find simulator)/launch/iris.launch">
 
 				<arg name="ns" value="$(arg ns)"/>
 				
+				<!-- Body id of the quad that will be used by the mocap simulation script -->
 				<arg name="body_id" value="2"/>
+				<!-- Docker name of the sitl simulation -->
 				<arg name="docker" value="docker-iris-2"/>
 				
-
+				<!-- Initial position of the quad on Gazebo -->
 				<arg name="x" default="0.0"/>
 				<arg name="y" default="2.5"/>
 
-				<arg name="suspended_load" default="false"/>
-				<arg name="load_link_height" default="1"/> <!-- [m] -->
-				<arg name="load_mass" default="1"/> <!-- [kg] -->
+				<!-- Create a payload for the quad -->
+				<arg name="suspended_load" default="false"/> 		<!-- Activate it -->
+				<arg name="load_link_height" default="1"/>  		<!-- string height [m] -->
+				<arg name="load_mass" default="1"/>  				<!-- mass [kg] -->
 			</include>
 		</group>
 	</group>
