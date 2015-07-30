@@ -1,25 +1,7 @@
-to install the static serial, copy the "99-usb-serial.rules" in the "/etc/udev/rules.d/" folder
+to install the static serial association (this will give always the same name to the serial interface of Iris in linux), copy the "99-usb-serial.rules" in the "/etc/udev/rules.d/" folder
 
 to add a new USB symbolic link, see 
 http://hintshop.ludvig.co.nz/show/persistent-names-usb-serial-devices/
 or run 
 udevadm info -a -n /dev/ttyUSB0 | grep '{serial}' | head -n1
 and add a line with the result of the previous command
-
-NETWORK install Rpi
-http://answers.ros.org/question/41446/a-is-not-in-your-ssh-known_hosts-file/
-
-rm -r .ssh
-ssh -oHostKeyAlgorithms='ssh-rsa' pi@192.168.0.11 echo ""
-ssh-keygen -t rsa
-ssh pi@192.168.0.11 mkdir -p .ssh
-cat .ssh/id_rsa.pub | ssh pi@192.168.0.11 'cat >> .ssh/authorized_keys'
-ssh pi@192.168.0.11
-
-
-ssh-keygen -t rsa
-ssh pi@piris1 mkdir -p .ssh
-cat .ssh/id_rsa.pub | ssh pi@piris1 'cat >> .ssh/authorized_keys'
-rm .ssh/known_hosts 
-ssh -oHostKeyAlgorithms='ssh-rsa' pi@piris1
-ssh pi@piris1
