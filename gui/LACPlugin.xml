@@ -4,16 +4,12 @@
       Linear Adaptative Control plugin.
     </description>
     <qtgui>
-      <!-- optional grouping...
       <group>
-        <label>Group</label>
+        <label>Iris</label>
+        <icon type="theme">folder</icon>
       </group>
-      <group>
-        <label>Subgroup</label>
-      </group>
-      -->
       <label>Linear Adaptative Control plugin</label>
-      <icon type="theme">system-help</icon>
+      <icon type="theme">applications-science</icon>
       <statustip>Linear Adaptative Control plugin.</statustip>
     </qtgui>
   </class>
