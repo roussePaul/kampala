@@ -75,11 +75,19 @@ class StepPlugin(Plugin):
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
 
+        self.point = []
+
     def Start(self):
         abspath = "/"+self._widget.IrisInputBox.currentText()+"/"
         self.pub = rospy.Publisher(abspath+'trajectory_gen/target',QuadPositionDerived, queue_size=10)
         self.security_pub = rospy.Publisher(abspath+'trajectory_gen/done', Permission, queue_size=10)
+        rospy.Subscriber(abspath+'security_guard/data_forward',QuadPositionDerived,self.get_position)
 
+
+    def get_position(self,data):
+        if self.point == []:
+            self.point = [data.x,data.y,data.z]
+            utils.logwarn("Initial position: %s"%(str(self.point)))
 
     def Up(self):
         self.Goto([0.0,0.0,1.0])
@@ -101,7 +109,8 @@ class StepPlugin(Plugin):
 
     def Goto(self, dest):
         utils.logwarn(str(dest))
-        outpos = dest
+        outpos = [sum(x) for x in zip(self.point, dest)]
+        utils.logwarn(str(outpos))
         outpos.append(0.0)
         outvelo = [0.0]*3
         outvelo.append(0.0)

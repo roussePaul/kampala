@@ -5,14 +5,10 @@
 
 
 # If the script is already running, don't run it again
-var=`ps -A | grep wifi_respawn | wc -l`
-if [ $var -ge 2 ]; then
-   exit
-fi
+echo "Launching wifi respawn program"
 
 # while the network is not up, try to reconnect to it
-while !(ifconfig wlan0 | grep -q "inet addr:") ; do
-   echo "Network connection down! Attempting reconnection."
+while true; do
    ifup  wlan0
    sleep 10
 done
