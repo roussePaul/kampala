@@ -209,9 +209,6 @@ if __name__=='__main__':
 	rospy.Subscriber(mocap_topic,QuadPositionDerived,New_Point,current_point)
 	rospy.Subscriber('trajectory_gen/done',Permission,Trajectory_Done,trajectory_done)
 
-	#Connect to Qualysis Motion Capture System
-	body_info=sml_setup.Connect_To_Mocap_Message()
-
 
 	#Prepare the Iris for flight (set system ID and arm)
 	ready_to_fly=Prepare_For_Flight()

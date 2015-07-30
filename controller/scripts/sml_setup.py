@@ -11,7 +11,8 @@ import sys
 import analysis
 import utils
 
-
+## Set the flight mode of the quad
+## @param MODE: select the flight mode (MANUAL CIRCLE STABILIZE FLY_BY_WIRE_A FLY_BY_WIRE_B AUTO RTL LOITER GUIDED INITIALISING)
 def Set_Flight_Mode(MODE):
 	return_value=True
 
@@ -45,7 +46,9 @@ def Set_Flight_Mode(MODE):
 
 	return return_value
 
-
+## Set the system ID
+## This is necessary to set the SYSID_MYGCS parameter before flying
+## @param id_int: value of the SYSID_MYGCS parameter
 def Set_System_ID(id_int):
 	return_value=True
 
@@ -80,6 +83,9 @@ def Set_System_ID(id_int):
 
 	return return_value
 
+## Force the SYSID_MYGCS parameter set
+## This function loop as long as the parameter SYSID_MYGCS is not successfully set
+## @param id_int: value of the SYSID_MYGCS parameter
 def Wait_For_ID(id_int):
 	return_value=False
 
@@ -111,6 +117,8 @@ def Wait_For_ID(id_int):
 	utils.loginfo('Iris initialised...')
 	return return_value
 
+## Force the arming
+## This function ask for the quad arm as long as this is not successful
 def Wait_For_Arming():
 	return_value=False
 
@@ -151,11 +159,8 @@ def Wait_For_Arming():
 
 	return return_value
 
-def Connect_To_Mocap_Message():
-	utils.loginfo('Connecting to Mocap system')
-	return
 
-
+## Wait until the mocap node is up and that the services are available
 def Connect_To_Mocap():
 	#Connect to the Motion Capture System, flag an error if it is unavailable
 
@@ -169,8 +174,9 @@ def Connect_To_Mocap():
 
 	return rospy.ServiceProxy('mocap_get_data',BodyData)
 
-
-
+## Arm the quad
+## This function ask for the quad arming
+## @param basename: name of the iris group (iris1, iris2, ...)
 def Arming_Quad(base_name=""):
 	return_value=True
 
