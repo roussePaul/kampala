@@ -7,16 +7,14 @@ from controller.msg import Permission
 from mavros.msg import OverrideRCIn
 
 
-
+## Callback that listen to the land node permission topic
 def callback(data):
     if data.permission==True:
         landmode()
         rospy.sleep(0.5)
         landpub()
-        
-        
-        
 
+## Switch the quad to the landing mode
 def landmode():
     mode_set=False
     for i in range(0,10):
@@ -27,6 +25,8 @@ def landmode():
             except rospy.ServiceException as ex:
                 rospy.logerr('[LD]: set_mode attempt not successful')
 
+## Start to publish the null command on the RC topic (all the stick in the neutral position).
+## This function publish until ROS is shutdown.
 def landpub():
     pub = rospy.Publisher('mavros/rc/override', OverrideRCIn, queue_size=1000)
     r = rospy.Rate(30)
@@ -35,14 +35,12 @@ def landpub():
         pub.publish(all_sticks_centered)
         r.sleep()
     
-
+## Init the lander node.
 def lander():
 
     rospy.init_node('Lander')
 
     rospy.Subscriber("security_guard/lander", Permission, callback)
-    
-    
 
     rospy.spin()
 

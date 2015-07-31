@@ -10,16 +10,16 @@ from mocap.msg import QuadPositionDerived
 from std_srvs.srv import Empty
 import utils
 
-#This script provides methods that calculate a potential-based controloutput for obstacle 
-#avoidance. The potential used is K/||x-x_o||, where x is the position of the quad and x_o is the 
-#position of the obstacle. Multiple obstacles can be avoided. Which obstacles are to be avoided 
-#specified in the launch file of the drone in consideration.
+## This script provides methods that calculate a potential-based controloutput for obstacle 
+## avoidance. The potential used is \f$\frac{K}{\left \| x-x_0 \right \|}\f$, where \f$x\f$ is the position of the quad and \f$x_0\f$ is the 
+## position of the obstacle. Multiple obstacles can be avoided. Which obstacles are to be avoided 
+## specified in the launch file of the drone in consideration.
 
 class AvoidanceController():
   
-#In the constructor important variables are initialized and parameters are loaded. The gain can 
-#be given as a parameter in the launch file. So can the array bodies. It is checked if there is 
-#anything to be avoided.  
+## In the constructor important variables are initialized and parameters are loaded. The gain can 
+## be given as a parameter in the launch file. So can the array bodies. It is checked if there is 
+## anything to be avoided.  
  
   def __init__(self):
     self.gain = 0.		      
@@ -38,10 +38,10 @@ class AvoidanceController():
       self.obstacles_exist = False
       self.gain = 0.
 
-#Calculates the total potential output due to all obstacles specified in the array bodies.
-#Observe that bodies that are not detected are ignored as they are assumed to be out of the 
-#tracking area of the motion capture system. As soon as the obstacle is tracked by the motion 
-#capture it adds a contribution to the potential.
+## Calculates the total potential output due to all obstacles specified in the array bodies.
+## Observe that bodies that are not detected are ignored as they are assumed to be out of the 
+## tracking area of the motion capture system. As soon as the obstacle is tracked by the motion 
+## capture it adds a contribution to the potential.
   def get_potential_output(self):
     if self.obstacles_exist and self.obstacles_detected():
       distances = self.__get_distances()
@@ -59,10 +59,10 @@ class AvoidanceController():
       return np.array([0.,0.,0.])   
     
 
-#Returns the constant with which the potential should be blended with other controloutputs to get
-#the final controloutput. This constant varies continuously from alpha_min to alpha_max. Also,
-#for certain distances the value is constant at alpha_min or alpha_max respectively. If none of 
-#the obstacles is detected, the constant is set to zero.
+## Returns the constant with which the potential should be blended with other controloutputs to get
+## the final controloutput. This constant varies continuously from alpha_min to alpha_max. Also,
+## for certain distances the value is constant at alpha_min or alpha_max respectively. If none of 
+## the obstacles is detected, the constant is set to zero.
   def get_blending_constant(self):
     alpha_max = 0.6  			# <= 1.
     alpha_min = 0.			# >=0.
@@ -83,7 +83,7 @@ class AvoidanceController():
     else:
       return 0.
     
-#Updates the states when something is published on one of the mocap channels.    
+## Updates the states when something is published on one of the mocap channels.    
   def __set_states(self,data):
     topic_name = data._connection_header["topic"]
     for i in range(0,len(self.bodies)):
@@ -91,7 +91,7 @@ class AvoidanceController():
       if topic_name == name:
         self.states[i] = data 
 
-#Returns the state of the drone using this controller. 
+## Returns the state of the drone using this controller. 
   def __get_my_state(self):
     for i in range(0,len(self.bodies)):
       if self.bodies[i] == self.my_id:
@@ -105,8 +105,8 @@ class AvoidanceController():
         break
     return detected   
 
-#Returns all distances between the drone and each object in an array. By distance, the projection of the
-#distance on the xy-plane is meant. These are needed to calculate the potential.    
+## Returns all distances between the drone and each object in an array. By distance, the projection of the
+## distance on the xy-plane is meant. These are needed to calculate the potential.    
   def __get_distances(self):
     distances = []
     for i in range(0,len(self.states)):
@@ -120,9 +120,9 @@ class AvoidanceController():
         distances.append(distance)
     return distances
 
-#Returns an array of all the directions from each obstacle to the drone. Observe that these directions are 
-#radially outward in a coordinate system, which has its z-axis through the obstacle. No potential is
-#generated along the z-axis and the potential is independent of the z-direction.
+## Returns an array of all the directions from each obstacle to the drone. Observe that these directions are 
+## radially outward in a coordinate system, which has its z-axis through the obstacle. No potential is
+## generated along the z-axis and the potential is independent of the z-direction.
   def __get_directions(self):
     directions = []
     for i in range(0,len(self.states)):
@@ -134,14 +134,14 @@ class AvoidanceController():
         directions.append(direction) 
     return directions
 
-#Returns the position given a certain state.
+## Returns the position given a certain state.
   def __get_pos_from_state(self, state):
     return [state.x,state.y,state.z]
 
-#Loads some parameters specified in the launch file.
-#This makes in possible to adjust the gain and
-#the obstacles to track while flying.
-#The parameters are specified in the launch file of the drone.
+## Loads some parameters specified in the launch file.
+## This makes in possible to adjust the gain and
+## the obstacles to track while flying.
+## The parameters are specified in the launch file of the drone.
   def load_params(self):
     self.gain = rospy.get_param("OBSTACLE_AVOIDANCE_K",1.)
     self.bodies = rospy.get_param("OBSTACLES_TO_AVOID","[2]")
