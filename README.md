@@ -40,7 +40,7 @@ sudo apt-get -y install drcsim
 ## install mavros but from shadow repo to get latest version earlier
 sudo sh -c 'echo "deb http://packages.ros.org/ros-shadow-fixed/ubuntu/ trusty main" > /etc/apt/sources.list.d/ros-shadow.list'
 sudo apt-get update
-sudo apt-get -y install ros-indigo-mavros ros-indigo-mavros-extras
+sudo apt-get install ros-indigo-mavros ros-indigo-mavros-extras
 ```
 
 ## Workspace setup
@@ -108,8 +108,6 @@ dxfwrite `sudo pip install dxfwrite`
 
 dxfgrabber `sudo pip install dxfgrabber`
 
-mpl_toolkits.mplot3d
-
 scipy `http://www.scipy.org/install.html`
 
 control `sudo pip install control`
@@ -129,7 +127,7 @@ You have 2 ways of communicate with the quadcopter:
 Follow the guide in [scenarios/launch/iris/INSTALL](scenarios/launch/iris/INSTALL).
 
 ## Raspberry pi
-Follow the guide in the [raspberrypi/README.md](raspberrypi/README.md).
+Follow the guide in the [raspberrypi](raspberrypi).
 
 # Simulator Setup
-Follow the guide in the [simulator/README.md](simulator/README.md).
+Follow the guide in the [simulator](simulator).
