@@ -4,6 +4,8 @@
 
 ## ROS installation
 
+Execute the following script:
+
 ```Bash
 set -e
 export DEBIAN_FRONTEND=noninteractive
@@ -103,27 +105,31 @@ export ROS_MASTER_URI=http://\$ip:11311" >> ~/.bashrc
 Install the following packages:
 
 dxfwrite `sudo pip install dxfwrite`
+
 dxfgrabber `sudo pip install dxfgrabber`
+
 mpl_toolkits.mplot3d
+
 scipy `http://www.scipy.org/install.html`
+
 control `sudo pip install control`
+
 controller `sudo pip install controller`
-pickle
+
 gnosis `sudo pip install gnosis`
-matplotlib
-numpy
-yaml
+
+matplotlib `sudo apt-get install python-matplotlib`
+
+yaml `pip install pyyaml`
 
 # Connection Setup
-# ================
+You have 2 ways of communicate with the quadcopter:
 
 ## 3DR Radio
-# follow the guide in scenarios/launch/iris/INSTALL
+Follow the guide in [scenarios/launch/iris/INSTALL](scenarios/launch/iris/INSTALL).
 
-## Raspberry pip
-# follow the guide in the raspberrypi/README.md
+## Raspberry pi
+Follow the guide in the [raspberrypi/README.md](raspberrypi/README.md).
 
 # Simulator Setup
-# ===============
-
-# follow the guide in the simulator/README.md
+Follow the guide in the [simulator/README.md](simulator/README.md).
