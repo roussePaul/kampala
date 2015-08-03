@@ -141,8 +141,8 @@ class Mocap:
 		self.all_bodies = dict()
 
 		#Get parameters (all the body ID's that are requested)
-		self.body_names=sml_setup.Get_Parameter(NODE_NAME,'body_names',['iris1','iris2'])
-		self.body_array=sml_setup.Get_Parameter(NODE_NAME,'body_array',[1,2])
+		self.body_names=utils.Get_Parameter('body_names',['iris1','iris2'])
+		self.body_array=utils.Get_Parameter('body_array',[1,2])
 		if type(self.body_array) is str:
 			self.body_array=ast.literal_eval(self.body_array)
 

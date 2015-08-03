@@ -48,8 +48,10 @@ class Blender():
     # Check what controller should be used
     self.controller_type = utils.Get_Parameter("controller_type","PID")
     if self.controller_type == "load_transport":
+      print("LOAD")
       self.controller = LoadTransportController()
     else:
+      print("PID")
       self.controller = PID()
     rospy.init_node(NODE_NAME)
     rospy.Service('blender/update_parameters', Empty, self.update_parameters)
@@ -219,8 +221,13 @@ class Blender():
 
     # Implement some saturation
     throttle=self.saturation(throttle,1000,2000)
+<<<<<<< HEAD
     pitch=self.saturation(pitch,1200,1800)
     roll=self.saturation(roll,1200,1800)
+=======
+    pitch=self.saturation(pitch,1350,1700)  
+    roll=self.saturation(roll,1350,1700)   
+>>>>>>> b5accabbd3f8838249ee7e8553013294b777d7b5
     return [roll,pitch,throttle,yaw_rate,0,self.channel6,0,0]
 
 
