@@ -87,11 +87,11 @@
 			<param name="K_yaw" value="0.1"/>
 			<param name="w_inf" value="0.2"/>
 			<param name="PID_I_lim" value="0."/>
-			<param name="PID_K_i" value="1."/>
+			<param name="PID_K_i" value="0."/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1.5"/>
                         <param name="OBSTACLES_TO_AVOID" value="[2]"/>
                         <param name="my_id" value="1"/>
-                        <param name="PID_I_lim_z" value="0.5"/>
+                        <param name="PID_I_lim_z" value="0."/>
 			<param name="PID_K_i_z" value="0.2"/>
                         <param name="my_name" value="iris1"/>
 
