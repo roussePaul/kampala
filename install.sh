@@ -56,3 +56,18 @@ echo "ip=`/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $
 export ROS_IP=$ip
 export ROS_HOSTNAME=$ip
 export ROS_MASTER_URI=http://$ip:11311" >> ~/.bashrc
+
+## Python install
+## install the following packages
+
+# dxfwrite: 			sudo pip install dxfwrite
+# dxfgrabber: 			sudo pip install dxfgrabber
+# mpl_toolkits.mplot3d
+# scipy: 				http://www.scipy.org/install.html
+# control: 				sudo pip install control
+# controller: 			sudo pip install controller
+# pickle
+# gnosis: 				sudo pip install gnosis
+# matplotlib
+# numpy
+# yaml
