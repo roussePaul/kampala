@@ -34,6 +34,10 @@ NODE_NAME='Blender'
 #*************************************
 
 class Blender():
+  """The blender is used for blending accelerations calculated by different controllers and the
+  obstacle avoidance controller. It also converts these accelerations to control outputs and publishes these on the topic irisX/mavros/rc/override.
+  The blender also obtains data from the motion capture system, which it forwards to the controller in use."""
+  
 
   def __init__(self):
     self.obstacle_avoidance = utils.Get_Parameter("obstacle_avoidance","False")
@@ -55,12 +59,16 @@ class Blender():
     rospy.Service('blender/set_channel6', SetChannel6, self.set_channel6)
 
   #Sets channel 6 to value
+  ##@param channel6: the message sent by calling the service
+  ##@return returns true if it was successfull 
   def set_channel6(self,channel6):
     self.channel6 = channel6.value
     return True
     
     
-  # Gets target points and current points  
+  # Gets target points and current points 
+  ##@param target_point: the target point of the quad
+  ##@param current_point: the current position of the quad 
   def init_subscriptions(self, target_point,current_point):
     #Subscribe to /derivator/pos_data to get position, velocity and acceleration
     rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.new_point,current_point)
@@ -76,6 +84,7 @@ class Blender():
       rospy.Subscriber('trajectory_gen/target',QuadPositionDerived,self.new_point,target_point)
 
   # For load, if any
+  ##@param current_load_point: the current position of the load
   def init_load_subscription(self, current_load_point):
     rospy.Subscriber("/body_data/id_"+str(self.load_id),QuadPositionDerived,self.new_point,current_load_point)
 
@@ -89,6 +98,9 @@ class Blender():
         self.instr.start=True
 
   def wait_for_security_guard(self,obj):
+    """This function is called when starting to wait for the security guard to give permission
+    to the blender to publish on the mavros/rc/override topic. This assures that everything is fine
+    when starting an experiment."""
     rate=rospy.Rate(30)
     rospy.loginfo('Waiting for security guard ...')
     while not obj.start:
@@ -97,6 +109,8 @@ class Blender():
       rate.sleep()
 
   def run_blender(self):
+    """The function to be called to start the blender. It takes care of the calculations of control outputs
+    and publishes these on the mavros/rc/override topic."""
     loop_rate=rospy.Rate(self.FREQUENCY)
     current_point=Point()
     current_load_point=Point()
@@ -161,8 +175,12 @@ class Blender():
       loop_rate.sleep()
                 
 
-  # From the required acceleration u, he control outputs are calculated: roll, pitch,
+  # From the required acceleration u, the control outputs are calculated: roll, pitch,
   # throttle and yaw_rate
+  ##@param u: the accelerations calculated from blending the accelerations calculated by the controllers
+  ##@param x: the current position
+  ##@param x_target: the target position
+  ##@return the control output that is send to the drone
   def get_controloutput(self,u,x,x_target):
     AUX=np.array([0.]*3)
     AUX_rot=np.array([0.]*3)
@@ -175,6 +193,16 @@ class Blender():
     AUX_rot[0] = math.cos(math.radians(-x[3]))*AUX[0]-math.sin(math.radians(-x[3]))*AUX[1]
     AUX_rot[1] = math.sin(math.radians(-x[3]))*AUX[0]+math.cos(math.radians(-x[3]))*AUX[1]
     AUX_rot[2] = AUX[2]
+
+    # This is a complement to the saturation limit below, and eliminates the
+    # risk that norm_AUX becomes too large when the angle between AUX_rot and
+    # the z axis is too large for the quad to set out. (This would make the
+    # quad fly off in the z direction.)
+    angle_limit = 5*math.pi/180
+    if abs(math.atan(AUX_rot[0]/AUX_rot[2])) > angle_limit:
+      AUX_rot[0] = np.sign(AUX_rot[0])*math.tan(angle_limit)*abs(AUX_rot[2])
+    if abs(math.atan(AUX_rot[1]/AUX_rot[2])) > angle_limit:
+      AUX_rot[1] = np.sign(AUX_rot[1])*math.tan(angle_limit)*abs(AUX_rot[2])
 
     norm_AUX=linalg.norm(AUX_rot)
 
@@ -198,6 +226,10 @@ class Blender():
 
   # Read the outputs of the controller and collision avoidance, then "blends"
   # the outputs  
+  ##@param u_cont: the acceleration calculated by the controller
+  ##@param current_point: the current position of the quad
+  ##@param target_point: the target position of the quad
+  ##@return the acceleration after blending obstacle avoidance and the acceleration from the controller
   def blend(self,u_cont,current_point,target_point):
     u = np.array([0.,0.,0.])
     u_obst = self.avoidance.get_potential_output()
@@ -211,18 +243,31 @@ class Blender():
     u[2] = u_cont[2] 
     return u
  
-
+  ##@param data: data from the motion capture system
+  ##@param point_obj: a point to be updated 
   def new_point(self,data,point_obj):
+    """Checks if the first point from the trajectory generation has been
+    received. If not it notifies that the first point now has been received.
+    The udpdate function of the point is called to update the point to be tracked.
+    This is the callback function of the subscriptions to all topics that publish
+    points (QuadPositionDerived) to the blender."""
     if not point_obj.first_point_received:
       point_obj.first_point_received=True
 
     point_obj.update_point(data)
 
+  ##@param value: a real number
+  ##@param minimum: the minimum allowed value of value
+  ##@param maximum: the maximum allowed value of value
+  ##@return: value if minimum <= value <= maximum, minimum if value < minimum < maximum, maximum if minimum < maximum < value
   def saturation(self,value,minimum,maximum):
     value=max(minimum,min(maximum,value))
     return value
 
-
+  ##@param target_obj: the target point
+  ##@param channel: the publisher that publishes to the desired topic
+  ##@param data: the message to be published on channel
+  ##@param rate: the publishing rate
   def wait_for_first_point(self,target_obj,channel,data,rate):
     rospy.loginfo('Waiting for first point ...')
     while not target_obj.first_point_received:
@@ -232,6 +277,9 @@ class Blender():
 
     rospy.loginfo('First point received')      
 
+  ##@param current_angle: an angle given in degrees
+  ##@param target_angle: an angle given in degrees
+  ##@return: the difference between current_angle and target_angle in the interval [-180,180]
   def angular_difference(self,current_angle,target_angle):
     ang_diff=current_angle-target_angle
 
@@ -242,8 +290,12 @@ class Blender():
         ang_diff=ang_diff+360
 
     return ang_diff
-     
+  
+  ##@param msg: the message produced when calling the service blender/update_parameters   
   def update_parameters(self,msg):
+    """This function is the function called when the service blender/update_parameters is called.
+    A notification of the update is given and the function that loads the parameters from the parameter
+    server is given."""
     utils.loginfo('Blender parameters loaded')
     self.load_parameters()
 
@@ -256,7 +308,8 @@ class Blender():
     return []
   
   # Read parameters for Blender
-  def load_parameters(self):		
+  def load_parameters(self):
+    """This function loads the parameters necessary for the blender from the parameter server."""		
     self.N_yaw = utils.Get_Parameter("N_yaw",500)
     self.K_yaw = utils.Get_Parameter("K_yaw",2)
     self.w_inf = utils.Get_Parameter("w_inf",5)

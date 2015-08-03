@@ -7,16 +7,19 @@
 from abc import ABCMeta, abstractmethod
 
 class Controller():
-
+    """This is an abstract base class for a controller."""
+    
     __metaclass__ = ABCMeta  
 
-    # Provides ability to reset a controller, for example the integral part in
-    # the PID
+    
     def reset(self):
+        """This function provides the ability to reset a controller, for example 
+        the integral part in the PID."""
         pass
 
-    # Returns the control output of controller, for example in the form
-    # of an acceleration vector
+    ##@param current_point: the point at which the quad is now
+    ##@param target_point: the target of the quad
     @abstractmethod
     def get_output(self, current_point, target_point):
+        """This function returns the control output of a controller."""
         pass

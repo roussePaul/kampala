@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-# PID controller for the IRIS+ in the SML Lab 
-# Gets inputs from the Security Guard and the Trajectory Generator
-# Publishes commands via Mavros' rc/override topic
-
 
 import rospy
 import sml_setup
@@ -22,27 +18,35 @@ from numpy import linalg as lg
 import numpy as np
 import copy
 
+
 class PID(Controller):
+  """This class provides the PID controller used for trajectory tracking with the Iris+."""
+  
   def __init__(self):
+    """In the constructor the parameters for the drone in consideration are loaded.
+    The integral action is initialized to zero and a service for updating the parameters 
+    during flight is provided (PID_controller/update_parameters)."""
     self.load_PID_parameters()
     self.d_updated = np.array([0.,0.,0.]) # Integral term
     rospy.Service('PID_controller/update_parameters', Empty, self.update_parameters)
   
 
-  # Resets PID
   def reset(self):
     utils.logwarn("PID reset")
+    """This function resets the integral action."""
     self.d_updated = np.array([0.,0.,0.])
 
-
+  ##@return the current value of the integral action
   def get_d_updated(self):
     return self.d_updated
 
-
+  ##@param d: a numpy.array to set the integral action to
   def set_d_updated(self, d):
     self.d_updated = copy.deepcopy(d)
 
-
+  ##@param current: a list of 3 elements representing the current position, velocity etc.
+  ##@param target: a list of 3 elements representing the target position, velocity etc.
+  ##@return the elementwise difference current - target
   def get_errors(self,current,target):
     e=[]
     for i in range (0,3):
@@ -50,24 +54,34 @@ class PID(Controller):
 
     return e
 
-  # Returns the output of the controller
+  ##@param current: a point object specifying the current state of the drone
+  ##@param target: a point object specifying the target of the drone
+  ##@return the acceleration calculated from the PID
   def get_output(self,current,target):
     d_updated = copy.deepcopy(self.get_d_updated())
     x,x_vel,x_acc=get_pos_vel_acc(current)  # current state
     x_target,x_vel_target,x_acc_target=get_pos_vel_acc(target) # target state
     time_diff=current.time_diff 
-    command_controlled=self.calculate_PID_output(x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,time_diff,d_updated)
+    command_controlled=self.calculate_PID_output(x,x_vel,x_target,x_vel_target,x_acc_target,time_diff,d_updated)
     return command_controlled
 
-
+  ##@param msg: the message created by the service PID_controller/update_parameters
   def update_parameters(self,msg):
+    """This function is invoked when the service PID_controller/update_parameters is called.
+    It notifies that the parameters have been loaded and calls the function that loads the parameters."""
     utils.loginfo('PID parameters loaded')
     self.load_PID_parameters()
     return []
 
-
-
-  def calculate_PID_output(self,x,x_vel,x_acc,x_target,x_vel_target,x_acc_target,delta_t,current_d):
+  ##@param x: a list containing the current position of the drone
+  ##@param x_vel: a list containing the current velocity of the drone
+  ##@param x_target: a list containing the target position of the drone
+  ##@param x_vel_target: a list containing the target velocity of the drone
+  ##@param x_acc_target: a list containing the target acceleration of the drone
+  ##@param delta_t: the time difference between the last update of the current state and the most recent one
+  ##@param current_d: the current value of the integral action
+  ##@return the accelerations calculated from the errors using the PID
+  def calculate_PID_output(self,x,x_vel,x_target,x_vel_target,x_acc_target,delta_t,current_d):
     u=np.array([0.]*3)
     acc_target = np.array(x_acc_target)
     new_d = np.array([0.]*3)
@@ -86,15 +100,18 @@ class PID(Controller):
     self.set_d_updated(new_d)   
     return u
 
-
+  ##@param value: a real number
+  ##@param minimum: the minimum allowed value of value
+  ##@param maximum: the maximum allowed value of value
+  ##@return: value if minimum <= value <= maximum, minimum if value < minimum < maximum, maximum if minimum < maximum < value 
   def saturation(self,value,minimum,maximum):
     value=max(minimum,min(maximum,value))
     return value
 	
 
-  # Read parameters for PID
-  # The parameters are specified in the launch file of each drone.
-  def load_PID_parameters(self):		
+  def load_PID_parameters(self):
+    """This function is used to load the parameters of the PID specified in the launch file
+    of the drone."""		
     #Controller parameters	
     self.w = utils.Get_Parameter("PID_w",1.7)
     self.w_z  = utils.Get_Parameter("PID_w_z", 1.3)

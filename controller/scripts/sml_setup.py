@@ -1,5 +1,5 @@
 #Vinzenz Minnig, 2015
-#Contains the necessary function for the system setup while working with mavros and the qualysis motion capture system
+"""This script contains the necessary function for the system setup while working with mavros and the qualysis motion capture system."""
 
 import rospy
 from mavros.srv import ParamSet, ParamGet
@@ -14,7 +14,9 @@ import utils
 ## Set the flight mode of the quad.
 ##
 ## @param MODE: select the flight mode (MANUAL CIRCLE STABILIZE FLY_BY_WIRE_A FLY_BY_WIRE_B AUTO RTL LOITER GUIDED INITIALISING)
+##@return true if the flight mode was set successfully, false otherwise
 def Set_Flight_Mode(MODE):
+        """This function sets the flight mode of the drone to MODE."""
 	return_value=True
 
 	#Change the flight mode on the Pixhawk flight controller
@@ -47,16 +49,17 @@ def Set_Flight_Mode(MODE):
 
 	return return_value
 
+
 ## Set the system ID.
 ##
 ## This is necessary to set the SYSID_MYGCS parameter before flying.
 ##
-## @param id_int: value of the SYSID_MYGCS parameter
+##@param id_int: an integer to set the system ID to
+##@return true if the system ID was set successfully and a connection to Mavros was establishe, false otherwise
 def Set_System_ID(id_int):
 	return_value=True
-
-	#Necesary to allow RCOverride
-	#Also checks if there is a connection to Mavros, and shuts down if there isn't
+        """This function sets the system ID and checks if it is possible to connect to mavros. The system ID
+        should be 1 to be able to use the rc/override topic."""
 
 	utils.loginfo('Connecting to Mavros ...')
 	try:
@@ -89,6 +92,7 @@ def Set_System_ID(id_int):
 ## Force the SYSID_MYGCS parameter set
 ## This function loop as long as the parameter SYSID_MYGCS is not successfully set
 ## @param id_int: value of the SYSID_MYGCS parameter
+##return true if the system id was changed and the connection to Mavros established, false otherwise
 def Wait_For_ID(id_int):
 	return_value=False
 
@@ -123,6 +127,7 @@ def Wait_For_ID(id_int):
 ## Force the arming.
 ##
 ## This function ask for the quad arm as long as this is not successful
+##@return returns true if the quad was armed, false otherwise
 def Wait_For_Arming():
 	return_value=False
 
@@ -163,27 +168,14 @@ def Wait_For_Arming():
 
 	return return_value
 
-
-## Wait until the mocap node is up and that the services are available
-def Connect_To_Mocap():
-	#Connect to the Motion Capture System, flag an error if it is unavailable
-
-	try:
-		utils.loginfo('Connecting to the mocap system...')
-		rospy.wait_for_service('mocap_get_data',10)
-	except:
-		utils.logerr('No connection to the mocap system')
-		sys.exit()
-	utils.loginfo('Connected to Mocap')
-
-	return rospy.ServiceProxy('mocap_get_data',BodyData)
-
 ## Arm the quad.
 ##
 ## This function ask for the quad arming.
 ##
 ## @param basename: name of the iris group (iris1, iris2, ...)
+##@return returns true if the quad was armed successfully and false otherwise
 def Arming_Quad(base_name=""):
+        """This function is used to arm the quad."""
 	return_value=True
 
 	#Arming the Quad

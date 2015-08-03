@@ -3,6 +3,7 @@
 
 
 import rospy
+import utils
 from abc import ABCMeta, abstractmethod
 from numpy import linalg as lg
 from mocap.msg import QuadPositionDerived
@@ -14,19 +15,21 @@ from trajectory_node import TrajectoryNode
 class Follower(Trajectory):
   """This is an abstract follower base class."""
   __metaclass__ = ABCMeta
-
+  
+  ##@param leader_state: the state of the leader
   leader_state = QuadPositionDerived() 
+  #@param done: tells whether or not the trajectory is done
   done = False 
 
   def __init__(self, trajectory_node, my_id, leader_id):
     # Getting parameters
     super(Follower, self).__init__(trajectory_node)
-    self.id = my_id
-    self.leader_id = leader_id
-    rospy.Subscriber("/body_data/id_"+str(self.leader_id),QuadPositionDerived, self.set_leader_state)
-    rospy.Subscriber("/body_data/id_"+str(self.id),QuadPositionDerived, self.set_my_state)
+    self.__id = my_id
+    self.__leader_id = leader_id
+    rospy.Subscriber("/body_data/id_"+str(self.__leader_id),QuadPositionDerived, self.__set_leader_state)
+    rospy.Subscriber("/body_data/id_"+str(self.__id),QuadPositionDerived, self.__set_my_state)
     self.calculated_state = QuadPositionDerived()
-    self.real_state = QuadPositionDerived() 
+    self.__real_state = QuadPositionDerived() 
 
     #Wait for leader
     leaderNotHere = True
@@ -55,32 +58,29 @@ class Follower(Trajectory):
     self.trajectory_node.send_permission(True)
 
   # Sets state of leader.
-  def set_leader_state(self, data):
+  ##@param data: the mocap data to set the leader state to.
+  def __set_leader_state(self, data):
     self.leader_state = data
     
   # Sets the state of follower - the quadcopter for which the trajectory is generated. 
-  def set_my_state(self, data):
-    self.real_state = data  
+  ##@param data: the mocap data to set the follower state to.
+  def __set_my_state(self, data):
+    self.__real_state = data  
 
   # Calculates distance between leader and follower.
+  ##@return the distance between leader and follower
   def __getDistance(self):
-    my_pos = [self.real_state.x, self.real_state.y, self.real_state.z]
+    my_pos = [self.__real_state.x, self.__real_state.y, self.__real_state.z]
     leader_pos = [self.leader_state.x, self.leader_state.y, self.leader_state.z]
     temp = [0.0,0.0,0.0]
     for i in range(0,2):
       temp[i] = my_pos[i] - leader_pos[i]
     return lg.norm(temp)
 
-<<<<<<< HEAD
- 
-  @abstractmethod
-  def calculateState(self):
-    """This function should calculate the state of the follower from the leader state."""
-=======
-  # Calculates the state of the follower from the leader state.
+
   @abstractmethod
   def calculate_state(self):
->>>>>>> cfbd46fb2883c9ccd5fec4764a888c83a1b082b0
+    """This function should calculate the state of the follower from the leader state."""
     pass
 
   def __set_done(self,boolean):
