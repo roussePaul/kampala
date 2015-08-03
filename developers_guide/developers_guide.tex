@@ -7,6 +7,7 @@
 
 \usepackage{graphicx} \usepackage{float}
 \PassOptionsToPackage{hyphens}{url}\usepackage[hidelinks]{hyperref}
+\usepackage[titletoc]{appendix}
 
 \hypersetup{ pdfinfo={ Author={SML}, Title={Developer's Guide},
     Creator={LaTeX} } }
@@ -35,6 +36,63 @@ in Python.
 % About this guide
 This guide provide information about how the program is structured,
 Sec.~\ref{sec:architecture}, how ...
+
+\section{Preparations}
+
+\subsection{Installation}
+For most software, the Linux operating system Ubuntu is
+recommended, and currently version 14.04 LTS (Trusty). However, some software require a Windows
+installation. A short description and the installation procedure for each
+required program is found below.
+
+Mission Planner runs on Windows only, and is used to calibrate and change settings, by
+changing parameters, of the quadcopters. Configuration of the radio
+can be done with the 3DR Radio Configuration Tool, which also is good
+for checking the connection strength (RSSI), found at
+\url{http://ardupilot.com/downloads/?did=89}.
+
+ROS, Robot Operating System, is
+a framework aimed at develop software for robots. ROS (currently)
+Indigo Igloo can be installed, together with a simulator based on
+RotorS, using Gazebo, using PX4 Firmware, can be installed using the
+instructions at \url{https://pixhawk.org/dev/ros/sitl}. To run the
+simulator with several quadcopters, Docker is required. It
+can be installed following the instructions at
+\url{https://docs.docker.com/installation/ubuntulinux/}.
+
+Scripts and other files from the summer project 2015 can be found at
+\url{https://github.com/XXXXXXXXXXXXXXXXXXXX}. It should be cloned
+into the \texttt{/src} folder in the ROS workspace. Thereafter, build
+the workspace by running \texttt{catkin\textunderscore make} in the
+workspace top directory (e.g. in \texttt{/catkin\textunderscore ws}).
+
+
+\subsection{Configuration}
+A calibration of the accelerometers of the quadcopter is
+mandatory and is done in Mission Planner. When performing the
+calibration, use a water level to setup
+a flat place. It can be checked that the calibration was well
+performed by going to \textit{Flight Data}->\textit{Status}. If $a_x$
+$a_y$ is less than 1\% of of $g = 9.8$ and $a_z = -g$ the calibration
+is satisfactory.
+
+Special conditions apply when flying indoors. Most importantly, the
+GPS will stop working. How to disable the GPS and other tips for
+flying indoors can be found at \url{http://copter.ardupilot.com/wiki/common-use-cases-and-applications/indoor-flying/}.
+
+For the radio configuration, instructions can be found at
+\url{http://copter.ardupilot.com/wiki/common-optional-hardware/common-telemetry-landingpage/common-3dr-radio-version-2/}. Check
+that parameters are exactly the same. Also, check that the signal
+strength is good (RSSI) with the 3DR Radio Configuration Tool.
+
+\subsection{Advice}
+There are some general advice when working with IRIS$^+$:
+
+\begin{itemize}
+  \item Do not do any modification after an unpacking.
+  \item Do not open the IRIS$^+$ if it can be avoided.
+\end{itemize}
+
 
 
 \section{Architecture}
@@ -138,8 +196,8 @@ subclasses of this class and use its interface.
 
 There are some classes with class names that end with
 \texttt{\textunderscore ext}. These are meant to be used in connection
-with controllers that also needs a jerk (third derivate of position)
-and snap (fourth derivate of position) reference, for example the load
+with controllers that also needs a jerk (third derivative of position)
+and snap (fourth derivative of position) reference, for example the load
 lifting controller (that at the moment of writing unfortunately is not
 working).
 
@@ -153,6 +211,47 @@ collection of different functions that have turned out to be useful,
 when writing code for trajectory generation. One nice feature is a
 function that, given position, velocity and yaw, generates the
 corresponding ROS message.
+
+
+\section{Security guard and lander}
+\label{sec:security_guard}
+
+The security guard is used for several security features during
+experiments. It gives permission to publish on the rc/override topic
+either to the blender in which case everything is working satisfactory
+or to the lander in which case something went wrong and the drone
+lands. Permission is granted to the lander if:
+\begin{itemize}
+  \item The motion capture signal is lost for more than 0.5 seconds
+  \item The drone is outside the safety zone defined in the launch
+    file iris\textunderscore nodes.launch
+  \item The landing button in the GUI is pressed
+\end{itemize}
+Once the landing mode has been initiated it cannot be revoked. That
+is, once the security guard tells the drone to land it will land.  The
+system of permissions works through ROS messages containing
+booleans. If everything works fine the security guard constantly
+publishes true on the topic irisX/security\textunderscore
+guard/controller and false on the topic irisX/security\textunderscore
+guard/lander. If something goes wrong the security guard publishes
+false on irisX/security\textunderscore guard/controller and true on
+irisX/security\textunderscore guard/lander. Once the true has been
+published on irisX/security\textunderscore guard/lander there is no
+chance to take it back. The drone will land. During landing it is
+important that the blender does not publish anything on the
+rc/override otherwise weird behavior can occur. Therefore one always
+has to make sure to publish false at least once on the topic
+irisX/security\textunderscore guard/controller to stop the blender
+from publishing. If one uses the security guard as it is implemented
+this should work without any additions.  The lander is a script that
+sets the landing mode on the APM (the firmware of the drone) and
+publishes neutral outputs on the rc/override topic. This makes the
+drone land in a controlled fashion. When the lander works properly the
+drone goes straight down. If it does not, i.e. if there is motion in
+the x- and/or y-direction, there is something wrong. Probably the
+controller is still publishing something on the rc/override. This has
+to be fixed as otherwise the drone behaves unpredictable while
+landing.
 
 
 \section{Blender}
@@ -185,46 +284,6 @@ a different point. Thus it is clear that a more sophisticated
 controller is necessary in order to do precision based tasks involving
 collision/obstacle avoidance.
 
-
-\section{Security guard and lander}
-\label{sec:security_guard}
-
-The security guard is used for several security features during
-experiments. It gives permission to publish on the rc/override topic
-either to the blender in which case everything is working satisfactory
-or to the lander in which case something went wrong and the drone
-lands. Permission is granted to the lander if:
-\begin{itemize}
-  \item The motion capture signal is lost for more than 0.5 seconds
-  \item The drone is outside the safety zone defined in the launch
-    file iris\textunderscore nodes.launch
-  \item The landing button in the GUI is pressed
-\end{itemize}
-Once the landing mode has been initiated it cannot be revoked. That
-is, once the security guard tells the drone to land it will land.  The
-system of permissions works through ROS messages containing
-booleans. If everything works fine the security guard constantly
-publishes true on the topic irisX/security\textunderscore
-guard/controller and false on the topic irisX/security\textunderscore
-guard/lander. If something goes wrong the security guard publishes
-false on irisX/security\textunderscore guard/controller and true on
-irisX/security\textunderscore guard/lander. Once the true has been
-published on irisX/security\textunderscore guard/lander there is no
-chance to take it back. The drone will land. During landing it is
-important that the blender does not publish anything on the
-rc/override otherwise weird behaviour can occur. Therefore one always
-has to make sure to publish false at least once on the topic
-irisX/security\textunderscore guard/controller to stop the blender
-from publishing. If one uses the security guard as it is implemented
-this should work without any additions.  The lander is a script that
-sets the landing mode on the APM (the firmware of the drone) and
-publishes neutral outputs on the rc/override topic. This makes the
-drone land in a controlled fashion. When the lander works properly the
-drone goes straight down. If it does not, i.e. if there is motion in
-the x- and/or y-direction, there is something wrong. Probably the
-controller is still publishing something on the rc/override. This has
-to be fixed as otherwise the drone behaves unpredictable while
-landing.
 
 \section{Controllers}
 Mainly the PID controller, Sec.~\ref{subsec:pid}, has been used in
@@ -277,7 +336,7 @@ to the drone a new terminal is opened by clicking on \textit{New
 \textit{Connect}. \textit{Param} has to be clicked in order to load
 all the parameters of the drone from the corresponding launch
 file. When the connection has been made one can press \textit{Arm} and
-the drone should arm. Then different parts of the gui can be used to
+the drone should arm. Then different parts of the GUI can be used to
 start the drone depending on what one wants to achieve.
 
 When arming the drone one sometimes gets the error message:
@@ -298,14 +357,14 @@ killing mocap disarm the drone manually by holding down the safety
 button on the drone. Do not push it again while holding the drone as
 it will arm. Shut down and restart all ROS nodes.
 
-Generally, if weird behaviour is observed: shut down all the ROS nodes
-and restart them to see if the weird behaviour stops.
+Generally, if weird behavior is observed: shut down all the ROS nodes
+and restart them to see if the weird behavior stops.
 
 There are some error messages given by Mavros that can be
 disregarded. These are DCM bad heading and FCU variance. The DCM bad
 heading will make the lamp at the back of the drone blink yellow and
 red. This can be disregarded. However, if there is some strange
-behaviour one should check the status of the drone on MissionPlanner.
+behavior one should check the status of the drone on Mission Planner.
 
 An unlikely but possible problem is that the combination of markers on
 a drone is not unique, i.e. there is another object in the lab that is
@@ -333,7 +392,7 @@ change the parameters given in the launch file while the drone is in
 the air. This is very useful for the tuning of parameters, especially
 in connection with the tracking visualizations that are started when
 arming the drone. To change the parameters while flying, change them
-in the launch file, save it and press param in the GUI. If new
+in the launch file, save it and press \textit{param} in the GUI. If new
 parameters are added and you want to use this feature for those
 parameters you will have to change the functions that update the
 parameters of the blender, PID, obstacle avoidance, etc. If you want
@@ -411,5 +470,119 @@ and \url{https://learn.adafruit.com/quadcopter-spray-can-mod/}. A
 wiring diagram for the Pixhawk can be found in
 \url{http://copter.ardupilot.com/wiki/advanced-pixhawk-quadcopter-wiring-chart/}.
 
+
+\newpage
+\begin{appendices}
+\begin{center}
+  {\bf APPENDIX}
+\end{center}
+
+\section{``Fix my IRIS'' procedure}
+If the IRIS$^+$ starts to behave strange, a standard procedure is
+outlined below, fixing many of the possible errors.
+
+\begin{itemize}
+  \item Put a fully charged battery in the drone.
+  \item Is the quad unstable? In that case, try to control it with the RC
+    transmitter.
+    \begin{itemize} 
+      \item In case of good behavior, check the controller.
+        \begin{itemize}
+          \item Is hovering term too high?
+          \item Is the gains too high?
+        \end{itemize}
+      \item If drone fails to arm, take a look at messages in Mission
+        Planner.
+      \item If propellers have different speeds, do a ESC Calibration.
+      \item If not stable with RC transmitter:
+        \begin{itemize}
+          \item Redo accelerometer calibration.
+          \item Redo compass calibration.
+        \end{itemize}
+      \item If the range of the RC transceiver is low:
+        \begin{itemize}
+          \item Redo RC transmitter calibration.
+          \item Change the battery of the drone.
+          \item Change the RC transmitter batteries.
+        \end{itemize}
+    \end{itemize}
+    Otherwise, redo calibration in Mission Planner and be careful that
+    there is no offset in the RC command (neutral position must be
+    equal to 1500).
+  \item Does Mavros fail to connect?
+    \begin{itemize}
+      \item In case of green light blinking, check 3DR radio
+        configuration.
+      \item Check USB connection.
+      \item Check configuration of the launching file (e.g. \texttt{iris1.launch}).
+      \item Don't get parameters?
+        \begin{itemize}
+          \item Reboot Mavros or reboot the drone.
+          \item Lower the air speed parameter of the 3DR radio.
+          \item As an alternative, take the time and wait for all the
+            parameters.
+        \end{itemize}
+      \item In Mission Planner, check compass health and read
+        \url{http://ardupilot.com/forum/viewtopic.php?f=48&t=10478}
+        (don't move the quad and don't close the battery slot during gyro
+        initialisation).
+    \end{itemize}
+  \item ULTIMATE FIX: Change the drone! (Drones are complex systems -- it
+    might be difficult to find the error.)
+\end{itemize}
+    
+\section{3DR Radio communication interference}
+It seems that the radios interfere when they are close, so try to have
+at least 1 meter between each of them.  However, it is not sufficient,
+if you look at the /diagnostics topic, then you will see that there
+are many Rx errors, it is the same in Mission Planner, by looking at
+the logs, we see that many errors append. One of the consequence that
+is directly visible is that that parameters are much slower to be
+loaded at the initialisation of Mavros.
+
+A quick fix as been made by just decreasing the timeout variable in
+the \texttt{mavros} package (file in
+\texttt{mavros/src/plugins/param.cpp}, \texttt{PARAM\textunderscore
+  TIMEOUT\textunderscore MS} has been changed to 100 ms instead of
+1000 ms and \texttt{RETRIES\textunderscore COUNT} has been increased
+to 5). In this way the initialisation is faster, however it does not
+solve this Rx trouble, and it might have some consequences on the
+controller if too many errors happens.  Try to reduce the numbers of
+data that are transmitted by using the "rosrun mavros mavsys rate"
+command.
+
+A good fix will be to find a firmware were the ECC can correct more
+that 25\% of errors through the communication protocol. However, it is
+not possible without getting inside the firmware code. I (Paul) did
+not managed to make the "LBT Rssi" work (listen before talk); it could
+help to reduce the number of Rx errors. A good parameter to tune is
+the Protocol, setting up to Raw Data might increase the rate at which
+we can transmit data through \texttt{rc/override}. However, as long as
+I am not sure that every thing work well, I will leave it on Mavlink.
+The Tx power does not have to be extremely high, the 3DR radio is made
+so that it can transmit data up to 500 m, since we are about 10 m of
+the quad, it is okay to set it to 5.
+
+Some people have been facing similar problems. However, none of the
+fix worked (trying with the 1.7 firmware for the 3DR radio, setting
+different \texttt{SYSID\textunderscore THISMAV}, separate every
+frequencies for each coupled radios). Some links are
+\\ \url{http://copter.ardupilot.com/wiki/common-optional-hardware/common-telemetry-landingpage/common-3dr-radio-version-2/}
+\\ \url{http://ardupilot.com/forum/viewtopic.php?f=22&t=8488}
+\\ \url{http://www.rcgroups.com/forums/showthread.php?t=2077354}
+\\ \url{http://ardupilot.com/forum/viewtopic.php?t=10000&p=24499}
+\\ \url{http://diydrones.com/forum/topics/question-on-using-multiple-3dr-radios-to-control-multiple-drones}
+
+Documentation can be found at
+\url{http://copter.ardupilot.com/wiki/common-optional-hardware/common-telemetry-landingpage/common-3dr-radio-advanced-configuration-and-technical-information/#Upgrading-radio-firmware}
+
+To get any version of the Firmware, clone
+\url{https://github.com/Dronecode/SiK} and get back to another commit
+(the one of the version you want), install sdcc with \texttt{apt-get},
+do a \texttt{make install} in the Firmware directory, the hex file
+(equal to the firmware) is the \texttt{Firmware/obj/hm\textunderscore
+  trp/radio$\sim$hm\textunderscore trp/radio$\sim$hm\textunderscore trp.ihx}.
+
+\end{appendices}
 
 \end{document}

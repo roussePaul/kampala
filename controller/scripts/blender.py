@@ -195,6 +195,16 @@ class Blender():
     AUX_rot[1] = math.sin(math.radians(-x[3]))*AUX[0]+math.cos(math.radians(-x[3]))*AUX[1]
     AUX_rot[2] = AUX[2]
 
+    # This is a complement to the saturation limit below, and eliminates the
+    # risk that norm_AUX becomes too large when the angle between AUX_rot and
+    # the z axis is too large for the quad to set out. (This would make the
+    # quad fly off in the z direction.)
+    angle_limit = 5*math.pi/180
+    if abs(math.atan(AUX_rot[0]/AUX_rot[2])) > angle_limit:
+      AUX_rot[0] = np.sign(AUX_rot[0])*math.tan(angle_limit)*abs(AUX_rot[2])
+    if abs(math.atan(AUX_rot[1]/AUX_rot[2])) > angle_limit:
+      AUX_rot[1] = np.sign(AUX_rot[1])*math.tan(angle_limit)*abs(AUX_rot[2])
+
     norm_AUX=linalg.norm(AUX_rot)
 
     #yaw control:
