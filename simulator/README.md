@@ -11,13 +11,18 @@ Same controller
 
 # Implementation
 The [Explored Solutions](#explored-solutions) gives more informations about the implementation.
+
 ## Differencies
-main differencies between the simulation and
-tilt angle
-mavros partly available
-No battery voltage drop
-Connection probably faster
-Noise on Gazebo
+
+The controller used in APM is the STABILIZE one. You control roll and pitch positions, yaw rate and the motor speeds. The one used in the simulation have the same inputs
+However, we noticed that the maximum tilting angle of the quad is smaller than the real quad (real quad: 45 degrees, simulation+PX4: 10 degrees).
+
+Mavros is partly available. Since the interface protocol is slightly different between the PX4 firmware and the APM one, it was not possible to connect directly the simulated mavlink interface to the one mavros node.
+More over the mavlink connection is probably faster than the reallity.
+
+There is a strange behavior of Gazebo, the positions given by gazebo are noisy even if the URDF file does not s
+pecify any noise on the odometry sensors! This is even stranger because the link_states topic is more noisy than the model_states one.
+To fix that we have been filtering the outputs of Gazebo. To change the cutoff frequency of the filters, you can edit the files in the ros_mocap_sim.py file.
 
 # Installation
 ## PX4 SITL
@@ -45,6 +50,11 @@ This will provide you reasons about the choosen solutions and also an insight of
 
 ## RotorS library
 
+The [RotorS library](https://github.com/ethz-asl/rotors_simulator) provide few quadcopters with 2 basic ontrollers. They are usable within ROS and Gazebo.
+However, as the model of Iris was available inside the PX4 SITL package, and as it was not straight forward to adapt the controller to the Iris model (sensor frames differents, need to tune the PID gains), we decided to give a try to the PX4 SITL one. One reason was also to have a behaviour to the real quadcopter.
+
+### References
+RotorS library: https://github.com/ethz-asl/rotors_simulator
 
 ## APM SITL
 
@@ -95,4 +105,3 @@ https://www.docker.com/
 http://wiki.ros.org/ROS/NetworkSetup
 
 ## Choosen solution
-It is not exactly
