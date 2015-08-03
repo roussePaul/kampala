@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 
-
-
 import rospy
 import sml_setup
 import sys
@@ -34,6 +32,7 @@ class PID(Controller):
   
 
   def reset(self):
+    utils.logwarn("PID reset")
     """This function resets the integral action."""
     self.d_updated = np.array([0.,0.,0.])
 
@@ -87,12 +86,16 @@ class PID(Controller):
     acc_target = np.array(x_acc_target)
     new_d = np.array([0.]*3)
     #Compute errors
+
     e=np.array(self.get_errors(x,x_target))
+
     e_dot=np.array(self.get_errors(x_vel,x_vel_target))
     for i in range(0,3):
       new_d[i]=current_d[i]+delta_t*(self.K_i[i]*((e[i]*self.Kv[i]/2)+e_dot[i]))
       new_d[i]=self.saturation(new_d[i],-self.I_lim[i],self.I_lim[i])
-      u[i] = acc_target[i]-self.Kv[i]*e_dot[i]-self.Kp[i]*e[i]
+      u_p = self.saturation(self.Kp[i]*e[i], -self.Max_acc, self.Max_acc)
+      u_v = self.saturation(self.Kv[i]*e_dot[i], -self.Max_acc, self.Max_acc)
+      u[i] = acc_target[i]-u_v-u_p
       u[i] = u[i] - new_d[i]
     self.set_d_updated(new_d)   
     return u
@@ -113,19 +116,26 @@ class PID(Controller):
     self.w = utils.Get_Parameter("PID_w",1.7)
     self.w_z  = utils.Get_Parameter("PID_w_z", 1.3)
     self.x_i = utils.Get_Parameter("PID_x_i",0.7)
+
     Kp = utils.Get_Parameter("PID_Kp",self.w*self.w)
     Kv = utils.Get_Parameter("PID_Kv",2*self.x_i*self.w)
 
-    Kv_z = utils.Get_Parameter("PID_Kv_z", 2*self.x_i*self.w_z)
     Kp_z = utils.Get_Parameter("PID_Kp_z", self.w_z*self.w_z)
+    Kv_z = utils.Get_Parameter("PID_Kv_z", 2*self.x_i*self.w_z)
 
     I_lim = utils.Get_Parameter("PID_I_lim",0.5)
     K_i = utils.Get_Parameter("PID_K_i",7)
     I_lim_z = utils.Get_Parameter("PID_I_lim_z",0.5)
     K_i_z = utils.Get_Parameter("PID_K_i_z",7)
+
+    self.Max_acc = utils.Get_Parameter("PID_Max_acc",1.0) 
+
+    self.R = utils.Get_Parameter("PID_R",1.0) 
     self.Kp = np.array([Kp,Kp,Kp_z])
     self.Kv = np.array([Kv,Kv,Kv_z])
     self.K_i = np.array([K_i,K_i,K_i_z])
     self.I_lim = np.array([I_lim,I_lim,I_lim_z])
+
+    self.reset()
 
 #EOF

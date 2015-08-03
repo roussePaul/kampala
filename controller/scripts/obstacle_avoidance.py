@@ -10,17 +10,15 @@ from mocap.msg import QuadPositionDerived
 from std_srvs.srv import Empty
 import utils
 
-
-
+## This script provides methods that calculate a potential-based controloutput for obstacle 
+## avoidance. The potential used is \f$\frac{K}{\left \| x-x_0 \right \|}\f$, where \f$x\f$ is the position of the quad and \f$x_0\f$ is the 
+## position of the obstacle. Multiple obstacles can be avoided. Which obstacles are to be avoided 
+## specified in the launch file of the drone in consideration.
 class AvoidanceController():
-  """This script provides methods that calculate a potential-based controloutput for obstacle 
-  avoidance. The potential used is K/||x-x_o||, where x is the position of the quad and x_o is the 
-  position of the obstacle. Multiple obstacles can be avoided. Which obstacles are to be avoided 
-  is specified in the launch file of the drone in consideration."""  
-  
+  ## In the constructor important variables are initialized and parameters are loaded. The gain can 
+  ## be given as a parameter in the launch file. So can the array bodies. It is checked if there is 
+  ## anything to be avoided.  
   def __init__(self):
-    """In the constructor important variables are initialized and parameters are loaded. The gain can 
-    be given as a parameter in the launch file. So can the array bodies."""   
     self.gain = 0.		      
     self.tg = TrajectoryGenerator()
     rospy.Service('obstacle_avoidance/update_parameters', Empty, self.update_parameters)
@@ -36,6 +34,7 @@ class AvoidanceController():
     else:
       self.obstacles_exist = False
       self.gain = 0.
+
 
   ##@return the potential calculated from all obstacles
   def get_potential_output(self):
@@ -84,7 +83,6 @@ class AvoidanceController():
     else:
       return 0.
     
-
   def __set_states(self,data):
     """This function updates the states when something is published on one of the mocap topics."""    
     topic_name = data._connection_header["topic"]
@@ -108,6 +106,8 @@ class AvoidanceController():
         break
     return detected   
 
+  ## Returns all distances between the drone and each object in an array. By distance, the projection of the
+  ## distance on the xy-plane is meant. These are needed to calculate the potential.    
   ##@return a list containing all distances between the drone and each object it should avoid. y distance, the projection of the distance on the xy-plane is meant.    
   def __get_distances(self):
     distances = []
@@ -122,6 +122,9 @@ class AvoidanceController():
         distances.append(distance)
     return distances
 
+  ## Returns an array of all the directions from each obstacle to the drone. Observe that these directions are 
+  ## radially outward in a coordinate system, which has its z-axis through the obstacle. No potential is
+  ## generated along the z-axis and the potential is independent of the z-direction.
   ##@return a list of the projections of the directions from each obstacle to the drone on the xy-plane
   def __get_directions(self):
     directions = []
@@ -134,11 +137,11 @@ class AvoidanceController():
         directions.append(direction) 
     return directions
 
+  ## Returns the position given a certain state.
   ##@param state: the state of an obstacle in form of a QuadPositionDerived
   ##@return a list of the form [state.x,state.y,state.z]
   def __get_pos_from_state(self, state):
     return [state.x,state.y,state.z]
-
 
   def load_params(self):
     """This function loads some parameters specified in the launch file. These are the gain of the

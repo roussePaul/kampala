@@ -7,12 +7,12 @@
 
 
 <!-- Visualisation -->
-  <arg name="rviz" default="true"/> <!-- No more than one drone visualisable -->
+  <arg name="rviz" default="false"/> <!-- No more than one drone visualisable -->
   
 
 
 <!-- Simulation -->
-  <arg name="siöulation"/> <!-- No more than one drone visualisable -->
+  <arg name="simulation"/> <!-- No more than one drone visualisable -->
   
 
 <!-- |||| LAUNCH |||| -->
@@ -49,7 +49,7 @@
 
     <node name="error_vis" pkg="controller" type="error_vis.py" respawn="true"/>
 
-    <param name="perspective_file" type="string" command="$(find gui)/scripts/rqt_config_parser.sh $(find gui)/config/IrisPlot.perspective $(arg ns) $(find gui)/config/tmp/IrisPlot_$(arg ns).perspective" />
+    <param name="perspective_file" type="string" command="$(find gui)/scripts/rqt_config_parser.sh $(find gui)/config/IrisPlot3.perspective $(arg ns) $(find gui)/config/tmp/IrisPlot_$(arg ns).perspective" />
     <node name="rqt_perspective" pkg="rqt_gui" type="rqt_gui" args="--perspective-file $(find gui)/config/tmp/IrisPlot_$(arg ns).perspective"/>
   </group>
 

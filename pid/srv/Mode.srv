@@ -1,0 +1,5 @@
+string mode
+bool run
+string params
+---
+bool success

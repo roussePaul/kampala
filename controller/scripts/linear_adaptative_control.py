@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-# PID controller for the IRIS+ in the SML Lab 
-# Gets inputs from the Security Guard and the Trajectory Generator
-# Publishes commands via Mavros' rc/override topic
-
-
 import rospy
 import sys
 import math
@@ -19,31 +14,47 @@ import numpy as np
 from scipy.interpolate import Rbf
 from scipy.interpolate import griddata
 from scipy.interpolate import NearestNDInterpolator
-
+import copy
 import gnosis.xml.pickle
 
+from controller.srv import PlotLAC 
 
-
+## Represente a vector of inputs and the associated ROS parameters of the PID controller.
+## 
+## @var params_name: list of all the controller parameters that will be adapted.
 class Point:
-  params_name = ["CONTROL_CANCEL_GRAVITY","N_yaw","K_yaw","w_inf","Ktt","Kphi","PID_w","PID_w_z","PID_I_lim_z","PID_K_i_z"]
+  params_name = ["CONTROL_CANCEL_GRAVITY"]
 
   def __init__(self):  
     self.params_value = dict()
 
+  ## Read ros parameters
   def read_param(self):
     self.params_value = dict()
     for p in Point.params_name:
       self.params_value[p] = float(rospy.get_param(p))
 
+  ## Write ROS parameters
   def write_param(self):
     for p in self.params_name:
       rospy.set_param(p,self.params_value[p])
 
+  ## set the value of this point
   def set_inputs(self,inputs):
-    self.inputs = inputs
+    self.inputs = copy.deepcopy(inputs)
 
-
-
+## Linear adaptative controller.
+##
+## [Wikipedia page](https://en.wikipedia.org/wiki/Adaptive_control).
+##
+## This node try to conteract the unmodelled effects (such as the battery voltage) by adapting the parameters of the PID controller.
+## The current implementation needs to be used with the LAC plugin.
+##
+## Support multiple inputs.
+## But in this current version, just the battery level is used.
+##
+## The main difficulty of this class was to extend it to multiple dimensions 
+## (if it was easy to find a library to perform the interpolation between the severals registered points, it was not for the extrapolation).
 class LinearAC:
   def __init__(self, filename):
     rospy.init_node("LinearAC")
@@ -53,7 +64,7 @@ class LinearAC:
     self.init_inputs()
     rospy.spin()
 
-
+  ## Init the services
   def init_services_proxy(self):
     try: 
       self.params_load = rospy.ServiceProxy("blender/update_parameters", Empty)
@@ -65,7 +76,14 @@ class LinearAC:
     rospy.Service('LinearAC/update_controller', Empty, self.update_current_point)
     rospy.Service('LinearAC/save', Empty, self.cbSave)
     rospy.Service('LinearAC/load', Empty, self.cbLoad)
+    rospy.Service('LinearAC/plot', PlotLAC, self.cbPlot)
+    rospy.Service('LinearAC/print', Empty, self.cbPrint)
 
+  ## Compute the new PID parameters associated from the current inputs.
+  ##
+  ## Callback of the LinearAC/update_controller service.
+  ##
+  ## @param msg: Empty message.
   def update_current_point(self,msg):
     current_inputs = self.get_inputs()
 
@@ -77,7 +95,17 @@ class LinearAC:
     self.params_load_PID()
     return []
 
-
+  ## Perform the multi-input interpolation/extrapolation.
+  ##
+  ## If the point is inside the convex hull, this perform a linear interpolation.
+  ## If the point is outside the convex hull, this function return 
+  ## \f[ \mathlarger{\sum_{i=1}^{N} y_i \, e^{-\frac{\left \| x-x_i  \right \|^2}{l}}}\f],
+  ## where \f$x\f$ is the input point, and \f$\left ( x_i,y_i \right )\f$ are the registered points of inputs and PID parameters.
+  ## 
+  ##  @param inputs_grid: array of registered points
+  ##  @param values: array of parameters
+  ##  @param inputs: input point we want to compute
+  ##  @param l: \f$l\f$ parameter used for the extrapolation
   def inter_extrapolate(self,inputs_grid,values,inputs,l):
     if len(values)==1:
       val = values[0].item()
@@ -105,6 +133,9 @@ class LinearAC:
 
     return val
 
+  ## Execute the parameter comuptation for every parameter of the Point.params_name
+  ##
+  ## @param current_inputs: current inputs of the LAC block (ex: battery voltage)
   def interpolate_point(self, current_inputs):
     pts = Point()
     
@@ -123,16 +154,20 @@ class LinearAC:
 
     return pts
 
+  ## Initialize all the topics of inputs
   def init_inputs(self):
     rospy.Subscriber('mavros/battery', BatteryStatus, self.cbBattery)
     self.battery_value = 12.0
 
+  ## Get the value og the battery input
   def cbBattery(self,msg):
     self.battery_value = msg.voltage
 
+  ## Get the array of inputs
   def get_inputs(self):
     return [self.battery_value]
 
+  ## Register a new points with the current inputs and the currents parameters
   def add_point(self,msg):
     point = Point()
     
@@ -144,20 +179,53 @@ class LinearAC:
     self.points.append(point)
     return []
 
+  ## Callback of the save service
   def cbSave(self,msg):
     self.save()
     return []
 
+  ## Callback of the load service
   def cbLoad(self,msg):
     self.load()
     return []
 
+  ## Callback of the plot service
+  def cbPlot(self,msg):
+    inputs = self.get_inputs()
+
+    values = [p.params_value[msg.plot_variable] for p in self.points]
+
+    vmin = min(values)-1
+    vmax = max(values)+1
+    x = np.linspace(vmin,vmax,100)
+    y = np.linspace(vmin,vmax,100)
+    
+    for i in range(0,100):
+      inputs[msg.input_variable] = x[i]
+      pts = self.interpolate_point(inputs)
+      y[i] = pts.params_value[msg.plot_variable]
+
+    utils.plot(copy.deepcopy(x),copy.deepcopy(y))
+    return []
+
+  ## Callback of the print service
+  def cbPrint(self,msg):
+    inputs_grid = [p.inputs for p in self.points]
+    utils.loginfo(inputs_grid)
+    for p_name in Point.params_name:
+      values = [p.params_value[p_name] for p in self.points]
+      utils.loginfo(p_name + " : " + str(values))
+
+    return []
+
+  ## Save the current state of the LAC node
   def save(self):
     with open(self.filename, 'w') as output:
       utils.loginfo("Save")
       outxml = gnosis.xml.pickle.dumps(self.points)
       output.write(outxml)
 
+  ## Load the state of the LAC node
   def load(self):
     if self.filename != "":
       utils.loginfo("Loading file: "+self.filename)
@@ -170,58 +238,13 @@ class LinearAC:
         self.newfile()
         return 
 
-
+  ## Create a new file
   def newfile(self):
       utils.loginfo("File \"%s\" does not exist!"%(self.filename))
       self.points = []
 
-
 if __name__ == '__main__':
   LinearAC(sys.argv[1])
 
-
-# Test program for the inter_extrapolate function
-# import numpy as np
-# from scipy.interpolate import Rbf
-# from scipy.interpolate import griddata
-# from scipy.interpolate import NearestNDInterpolator
-
-# def inter_extrapolate(inputs_grid,values,inputs):
-#   val = griddata(inputs_grid,values,inputs, method="linear")
-#   if np.isnan(val):
-#     if len(inputs)>=2:
-#       nnd = NearestNDInterpolator(inputs_grid,values)
-#       val = nnd(inputs)
-#     else:
-#       imax = np.argmax(inputs_grid)
-#       imin = np.argmin(inputs_grid)
-#       if np.abs(inputs_grid[imax]-inputs) < np.abs(inputs_grid[imin]-inputs):
-#         val = values[imax]
-#       else:
-#         val = values[imin]
-#   return val
-
-# def func(x, y):
-#     return x*(1-x)*np.cos(4*np.pi*x) * np.sin(4*np.pi*y**2)**2
-
-# if __name__ == '__main__':
-
-#   import matplotlib.pyplot as plt
-#   grid_x, grid_y = np.mgrid[0:1:100j, 0:1:100j]
-#   points = np.random.rand(100, 2)
-#   values = func(points[:,0], points[:,1])
-  
-
-#   grid_z0 = griddata(points, values, (grid_x, grid_y), method='linear')
-
-#   print len(grid_x)
-#   print len(grid_x[0])
-#   for i in range(0,len(grid_x)):
-#     for j in range(0,len(grid_x[0])):
-#       grid_z0[i][j] = inter_extrapolate(points, values, (grid_x[i][j], grid_y[i][j]))
-
-#   plt.imshow(grid_z0.T, extent=(0,1,0,1), origin='lower')
-#   plt.plot(points[:,0], points[:,1], 'k.', ms=2)
-#   plt.show()
 
 #EOF

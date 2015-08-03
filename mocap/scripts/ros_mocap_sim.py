@@ -20,6 +20,18 @@ from math import radians, degrees
 import analysis
 import utils
 
+import copy
+import control
+
+import pid
+
+from system import System
+import math
+
+import message_filters
+
+import timeit
+
 ## Convert quaternion to DCM
 # @param q1, q2, q3, q4: quaternion
 # @return dcm matrix
@@ -46,52 +58,147 @@ def quat_to_dcm(q1, q2, q3, q4):
 	m.c.z = 1.0-2.0*(q2q2 + q3q3)
 	return m
 
-class Time():
+class Signal():
+	def __init__(self,fc_p,fc_v,fc_a,dt=1/30.0):
+		s = control.tf([1.0,0.0],[1.0])
+		self.pos = System( 1 ,dt=dt)
+		self.vel = System( s/(1+s/(fc_v*2.0*math.pi)) ,dt=dt)
+		self.acc = System( (s/(1+s/(fc_a*2.0*math.pi)) )**2 ,dt=dt)
+
+	def append(self,s,t):
+		self.p = self.pos.output(s,t)
+		self.v = self.vel.output(s,t)
+		self.a = self.acc.output(s,t)
+
+		self.pos.next_state()
+		self.vel.next_state()
+		self.acc.next_state()
+
+	def get(self):
+		return [self.p, self.v, self.a]
+
+
+class State():
 	def __init__(self):
-		self.current_time=rospy.Time.now()
-		self.past_time=self.current_time
-		self.time_diff=0
+		fc_p = 10
+		fc_v = 2
+		fc_a = 1
+		self.x = Signal(fc_p,fc_v,fc_a)
+		self.y = Signal(fc_p,fc_v,fc_a)
+		self.z = Signal(fc_p,fc_v,fc_a)
+		self.roll = Signal(fc_p,fc_v,fc_a)
+		self.pitch = Signal(fc_p,fc_v,fc_a)
+		self.yaw = Signal(fc_p,fc_v,fc_a)
+		self.data = False
+		self.time = 0.0
 
-	def get_time_diff(self):
-		self.past_time=self.current_time
-		self.current_time=rospy.Time.now()
-		d_time=self.current_time-self.past_time
-		self.time_diff=d_time.secs+(d_time.nsecs/1E9)
+	def update(self,data,t):
+		data = copy.deepcopy(data)
+		self.found_body = data.found_body
+		self.x.append(data.x,t)
+		self.y.append(data.y,t)
+		self.z.append(data.z,t)
+		self.roll.append(data.roll,t)
+		self.pitch.append(data.pitch,t)
+		self.yaw.append(data.yaw,t)
 
-		return self.time_diff
+	def get_message(self):
+		result = QuadPositionDerived()
+
+		result.found_body=self.found_body
+
+		result.x=self.x.p
+		result.y=self.y.p
+		result.z=self.z.p
+		result.pitch=self.pitch.p
+		result.roll=self.roll.p
+		result.yaw=self.yaw.p
+
+		result.x_vel=self.x.v
+		result.y_vel=self.y.v
+		result.z_vel=self.z.v
+		result.pitch_vel=self.pitch.v
+		result.roll_vel=self.roll.v
+		result.yaw_vel=self.yaw.v
+
+		result.x_acc=self.x.a
+		result.y_acc=self.y.a
+		result.z_acc=self.z.a
+		result.pitch_acc=self.pitch.a
+		result.roll_acc=self.roll.a
+		result.yaw_acc=self.yaw.a
+
+		return copy.deepcopy(result)
 
 class Mocap:
 	def __init__(self):
 		utils.loginfo('Mocap starting')
-		self.bodies = []
+
+		utils.loginfo('start publishing')
+		
+		rate=rospy.Rate(30)
+
+		self.all_bodies = dict()
+
+		#Get parameters (all the body ID's that are requested)
+		self.body_names=utils.Get_Parameter('body_names',['iris1','iris2'])
+		self.body_array=utils.Get_Parameter('body_array',[1,2])
+		if type(self.body_array) is str:
+			self.body_array=ast.literal_eval(self.body_array)
+
+		#Get topic names for each requested body
+		body_topic_array=self.Get_Topic_Names(self.body_array)
+
+		#Establish one publisher topic for each requested body
+		topics_publisher=self.Get_Publishers(body_topic_array)
+
+		# Create the different body objects
+		self.body_state = []
+		for i in range(0,len(self.body_array)):
+			self.body_state.append(State())
+
+		# Suscrib to Gazebo
 		self.start_subscribes()
-		self.start_publishing()
+
+		while not rospy.is_shutdown():
+			for i in range(0,len(self.body_array)):
+				if self.body_state[i].data:
+					data = self.all_bodies[self.body_names[i]]
+
+					self.body_state[i].update(data,self.body_state[i].time)
+					topics_publisher[i].publish(self.body_state[i].get_message())
+			 		self.body_state[i].data = False
+			# for i in range(0,len(self.body_array)):
+			# 	if self.body_state[i].data:
+			# 		topics_publisher[i].publish(self.body_state[i].get_message())
+			# 		self.body_state[i].data = False
+
+			rate.sleep()
+
+		utils.logwarn('Mocap stop publishing')
 
 	def get_bodies(self,arg):
 		num_bodies = len(self.bodies.name)
 		return {'list':range(num_bodies)}
 
-
-	def get_data(self,body):
+	def get_data(self,bodies,body_id,time):
 		data = QuadPosition()
-
-		body_id = body
 
 		data.found_body = False
 		
-		if self.bodies==[]:
+		if bodies==[]:
 			utils.loginfo("Gazebo not started")
 		else:
-			if hasattr(self.bodies,'name'):
-				if body_id<len(self.bodies.name):
+			if hasattr(bodies,'name'):
+				if body_id<len(bodies.name):
 					data.found_body=True
-					data.x=self.bodies.pose[body_id].position.x
-					data.y=self.bodies.pose[body_id].position.y
-					data.z=self.bodies.pose[body_id].position.z
-					x = self.bodies.pose[body_id].orientation.x
-					y = self.bodies.pose[body_id].orientation.y
-					z = self.bodies.pose[body_id].orientation.z
-					w = self.bodies.pose[body_id].orientation.w
+					data.x=bodies.pose[body_id].position.x
+					data.y=bodies.pose[body_id].position.y
+					data.z=bodies.pose[body_id].position.z
+					x = bodies.pose[body_id].orientation.x
+					y = bodies.pose[body_id].orientation.y
+					z = bodies.pose[body_id].orientation.z
+					w = bodies.pose[body_id].orientation.w
 
 					dcm = quat_to_dcm(w,x,y,z)
 					(roll,pitch,yaw) = dcm.to_euler()
@@ -99,21 +206,77 @@ class Mocap:
 					data.pitch=degrees(pitch)
 					data.roll=degrees(roll)
 					data.yaw=degrees(yaw)
-					
-					print "Data["+str(body_id)+"] sending"
 				else:
 					print 'Body not found'
 			
-		return(data)
+		return copy.deepcopy(data)
+
+
 
 	def update_positions(self,msg):
 		#utils.loginfo('receive data from Gazebo')
-		self.bodies = msg
+		bodies = copy.deepcopy(msg)
+
+		t = rospy.Time.now()
+		time = t.secs+(t.nsecs/1.0E9)
+
+		for i in range(0,len(self.body_array)):
+			if any(self.body_names[i] == s for s in bodies.name):
+				indice_from_gazebo = bodies.name.index(self.body_names[i])
+
+				data = self.get_data(bodies,indice_from_gazebo)
+				self.body_state[i].update(data,time)
+				self.body_state[i].data = True
+		
+		if not hasattr(self,"spend"):
+			self.spend=0.0
+			self.last = rospy.Time.now()
+			
+		self.spend += timeit.default_timer()-tic
+
+		if (rospy.Time.now()-self.last).secs>0:
+			self.last = rospy.Time.now()
+			print self.spend
+			self.spend = 0.0
+
+	def update_positions_links(self,msg):
+		#utils.loginfo('receive data from Gazebo')
+		bodies = copy.deepcopy(msg)
+
+		t = rospy.Time.now()
+		time = t.secs+(t.nsecs/1.0E9)
+
+		for i in range(0,len(self.body_array)):
+			if any(self.body_names[i] == s for s in bodies.name):
+				indice_from_gazebo = bodies.name.index(self.body_names[i])
+
+				data = self.get_data(bodies,indice_from_gazebo)
+				self.body_state[i].update(data,time)
+				self.body_state[i].data = True
+		print rospy.Time.now()-t
+
+	def get_msg(self,msg):
+		#utils.loginfo('receive data from Gazebo')
+		bodies = copy.deepcopy(msg)
+
+		t = rospy.Time.now()
+		time = t.secs+(t.nsecs/1.0E9)
+
+		for i in range(0,len(self.body_array)):
+			if any(self.body_names[i] == s for s in bodies.name):
+				indice_from_gazebo = bodies.name.index(self.body_names[i])
+				data = self.get_data(bodies,indice_from_gazebo,time)
+				self.all_bodies[self.body_names[i]] = data
+				self.body_state[i].data = True
+				self.body_state[i].time = time
+				
 
 
 	def start_subscribes(self):
 		utils.loginfo('Suscrib')
-		rospy.Subscriber("/gazebo/link_states",ModelStates,self.update_positions)
+		rospy.Subscriber("/gazebo/model_states",ModelStates,self.get_msg)
+		rospy.Subscriber("/gazebo/link_states",ModelStates,self.get_msg)
+
 
 	def Get_Topic_Names(self,bodies):
 		a=len(bodies)
@@ -132,92 +295,6 @@ class Mocap:
 
 		return(result)
 
-
-	def Insert_Current_Data(self,current_data):
-		result=QuadPositionDerived()
-		result.found_body=current_data.found_body
-		result.x=current_data.x
-		result.y=current_data.y
-		result.z=current_data.z
-		result.pitch=current_data.pitch
-		result.roll=current_data.roll
-		result.yaw=current_data.yaw
-		return(result)
-
-
-	def Compute_Derivative(self,current,past,time):
-		if time==0:
-			return 0
-		result=(current-past)/time
-		return(result)
-
-
-	def Get_Derived_Data(self,current_data,past_data,time):
-		result=self.Insert_Current_Data(current_data)
-		result.x_vel=self.Compute_Derivative(current_data.x,past_data.x,time)
-		result.y_vel=self.Compute_Derivative(current_data.y,past_data.y,time)
-		result.z_vel=self.Compute_Derivative(current_data.z,past_data.z,time)
-		result.pitch_vel=self.Compute_Derivative(current_data.pitch,past_data.pitch,time)
-		result.roll_vel=self.Compute_Derivative(current_data.roll,past_data.roll,time)
-		result.yaw_vel=self.Compute_Derivative(current_data.yaw,past_data.yaw,time)
-		result.x_acc=self.Compute_Derivative(result.x_vel,past_data.x_vel,time)
-		result.y_acc=self.Compute_Derivative(result.y_vel,past_data.y_vel,time)
-		result.z_acc=self.Compute_Derivative(result.z_vel,past_data.z_vel,time)
-		result.pitch_acc=self.Compute_Derivative(result.pitch_vel,past_data.pitch_vel,time)
-		result.roll_acc=self.Compute_Derivative(result.roll_vel,past_data.roll_vel,time)
-		result.yaw_acc=self.Compute_Derivative(result.yaw_vel,past_data.yaw_vel,time)
-		return(result)
-
-
-	def start_publishing(self):
-		
-		utils.loginfo('start publishing')
-		
-		rate=rospy.Rate(30)
-		timer=Time()
-		#Get parameters (all the body ID's that are requested)
-		self.body_names=utils.Get_Parameter('body_names',['iris1::base_link','iris2::base_link'])
-		self.body_array=utils.Get_Parameter('body_array',[1,2])
-		if type(self.body_array) is str:
-			self.body_array=ast.literal_eval(self.body_array)
-
-		#Get topic names for each requested body
-		body_topic_array=self.Get_Topic_Names(self.body_array)
-
-		#Establish one publisher topic for each requested body
-		topics_publisher=self.Get_Publishers(body_topic_array)
-
-		#Initialize empty past data list
-		mocap_past_data=[]
-		empty_data=QuadPositionDerived()
-		for i in range(0,len(self.body_array)):
-			mocap_past_data.append(empty_data)
-
-		while not rospy.is_shutdown():
-
-			delta_time=timer.get_time_diff()
-
-			if self.bodies:
-				for i in range(0,len(self.body_array)):
-					if any(self.body_names[i] == s for s in self.bodies.name):
-
-						indice_from_gazebo = self.bodies.name.index(self.body_names[i])
-						body_id = self.body_array[i]
-
-						utils.loginfo('body ' + str(self.body_names[i]) + ' ' + str(body_id))
-
-						mocap_data=self.get_data(indice_from_gazebo)
-						mocap_data_derived=self.Get_Derived_Data(mocap_data,mocap_past_data[i],delta_time)
-
-						#update past mocap data
-						mocap_past_data[i]=mocap_data_derived
-
-						#Publish data on topic
-						topics_publisher[i].publish(mocap_data_derived)
-
-			rate.sleep()
-
-		utils.logwarn('Mocap stop publishing')
 
 
 if __name__=="__main__":

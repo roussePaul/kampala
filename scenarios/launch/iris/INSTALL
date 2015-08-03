@@ -1,4 +1,4 @@
-to install the static serial, copy the "99-usb-serial.rules" in the "/etc/udev/rules.d/" folder
+to install the static serial association (this will give always the same name to the serial interface of Iris in linux), copy the "99-usb-serial.rules" in the "/etc/udev/rules.d/" folder
 
 to add a new USB symbolic link, see 
 http://hintshop.ludvig.co.nz/show/persistent-names-usb-serial-devices/

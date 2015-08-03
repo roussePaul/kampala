@@ -20,7 +20,8 @@ from Trajectory_node import TrajectoryNode
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from straight_line_class import StraightLineGen
-
+from linear_adaptative_control import Point
+from controller.srv import PlotLAC 
 
 
 import threading
@@ -65,11 +66,14 @@ class LinearAdaptativeControl(Plugin):
 
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
-        
+        self._widget.cVariable.insertItems(0,Point.params_name)
+
         self._widget.bLoad.clicked.connect(self.call_load)
         self._widget.bAddPoint.clicked.connect(self.call_add_point)
         self._widget.bUpdate.clicked.connect(self.call_update_controller)
         self._widget.bSave.clicked.connect(self.call_save)
+        self._widget.bPlot.clicked.connect(self.call_plot)
+        self._widget.bPrint.clicked.connect(self.call_print)
 
 
     def call_load(self):
@@ -90,6 +94,17 @@ class LinearAdaptativeControl(Plugin):
         self.name = self._widget.IrisInputBox.currentText()
         save = rospy.ServiceProxy("/%s/LinearAC/save"%(self.name), Empty)
         save()
+
+    def call_plot(self):
+        self.name = self._widget.IrisInputBox.currentText()
+        variable = self._widget.cVariable.currentText()
+        pr = rospy.ServiceProxy("/%s/LinearAC/plot"%(self.name), PlotLAC)
+        pr(0,variable)
+
+    def call_print(self):
+        self.name = self._widget.IrisInputBox.currentText()
+        pr = rospy.ServiceProxy("/%s/LinearAC/print"%(self.name), Empty)
+        pr()
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here

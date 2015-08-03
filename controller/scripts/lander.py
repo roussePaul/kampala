@@ -17,10 +17,8 @@ def callback(data):
         landmode()
         rospy.sleep(0.5)
         landpub()
-        
-        
-        
 
+## Switch the quad to the landing mode
 def landmode():
     """This function uses the service mavros/set_mode to set the mode of the quad to the 
     landing mode."""
@@ -33,6 +31,8 @@ def landmode():
             except rospy.ServiceException as ex:
                 rospy.logerr('[LD]: set_mode attempt not successful')
 
+## Start to publish the null command on the RC topic (all the stick in the neutral position).
+## This function publish until ROS is shutdown.
 def landpub():
     """This function publishes neutral commands on mavros/rc/override."""
     pub = rospy.Publisher('mavros/rc/override', OverrideRCIn, queue_size=1000)
@@ -42,14 +42,12 @@ def landpub():
         pub.publish(all_sticks_centered)
         r.sleep()
     
-
+## Init the lander node.
 def lander():
     """This function initializes the lander node and subscribes to the topic security_guard/lander."""
     rospy.init_node('Lander')
 
     rospy.Subscriber("security_guard/lander", Permission, callback)
-    
-    
 
     rospy.spin()
 
