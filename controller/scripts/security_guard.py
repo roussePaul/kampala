@@ -69,6 +69,10 @@ def Interrupt_Flight(lander_channel,controller_channel):
 
 ## Initialize the quadcopter flight mode, change the system ID and arm
 def Prepare_For_Flight():
+	mode_success=sml_setup.Set_Flight_Mode('LAND')
+
+	rospy.sleep(2)
+
 	#Set the flight mode to stabilize (default)
 	mode_success=sml_setup.Set_Flight_Mode('STABILIZE')
 

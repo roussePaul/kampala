@@ -43,16 +43,18 @@ Apply for both the simulated and the real quad -->
 			<param name="CONTROL_ARMING_MIN" value="1010"/>
 			<param name="Ktt" value="637."/>
 			<param name="Kphi" value="637."/>
-			<param name="PID_w" value="1.5"/>
-			<param name="PID_w_z" value="1.1"/>
+			<param name="PID_w" value="1.0"/>
+			<param name="PID_w_z" value="1.5"/>
 			<param name="N_yaw" value="500"/>
 			<param name="K_yaw" value="2"/>
 			<param name="w_inf" value="2"/>
-			<param name="PID_I_lim" value="0.1"/>
+			<param name="PID_I_lim" value="100.0"/>
 			<param name="PID_K_i" value="1.0"/>
 			<param name="PID_CONTROL_MIN" value="1000"/>
-			<param name="PID_I_lim_z" value="1.0"/>
-			<param name="PID_K_i_z" value="0.5"/>
+			<param name="PID_I_lim_z" value="200.0"/>
+			<param name="PID_K_i_z" value="1.0"/>
+			<param name="PID_Max_acc" value="0.8"/>
+			<param name="PID_R" value="0.0"/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
             <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
 			<param name="my_id" value="8"/>
