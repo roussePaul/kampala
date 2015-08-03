@@ -171,4 +171,16 @@ Advantages:
 
 Inconvenients:
 * it is the not the APM firmware
-* the setup is coöplex and not straight forward to do (need dockers)
+* the setup is complex and not straight forward to do (need dockers)
+
+# Troubleshoot
+
+* "Couldn't find an AF_INET address for...":
+
+Wrong network configuration: one of the machine/docker is not well configured, you need to check the environment variable:
+```Bash
+ROS_IP="IP OF THIS COMPUTER"
+ROS_HOSTNAME="IP OF THIS COMPUTER"
+ROS_MASTER_URI="http://IP OF THIS COMPUTER:11311"
+```
+Check these variables (ros_master_uri) when the ROS master is launched.
