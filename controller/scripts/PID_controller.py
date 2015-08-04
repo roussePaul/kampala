@@ -10,12 +10,12 @@ from point import *
 from controller.msg import PlotData
 from mavros.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
-from controller.msg import Permission
 from std_srvs.srv import Empty
 import analysis
 import utils
 from numpy import linalg as lg
 import numpy as np
+from std_msgs.msg import Float64
 import copy
 
 
@@ -28,6 +28,8 @@ class PID(Controller):
     during flight is provided (PID_controller/update_parameters)."""
     self.load_PID_parameters()
     self.d_updated = np.array([0.,0.,0.]) # Integral term
+    self.integral_xy_pub = rospy.Publisher('visualization/integral_xy',Float64,queue_size = 10) 
+    self.integral_z_pub = rospy.Publisher('visualization/integral_z',Float64,queue_size = 10)
     rospy.Service('PID_controller/update_parameters', Empty, self.update_parameters)
   
 
@@ -97,7 +99,9 @@ class PID(Controller):
       u_v = self.saturation(self.Kv[i]*e_dot[i], -self.Max_acc, self.Max_acc)
       u[i] = acc_target[i]-u_v-u_p
       u[i] = u[i] - new_d[i]
-    self.set_d_updated(new_d)   
+    self.set_d_updated(new_d)
+    self.integral_xy_pub.publish(new_d[0])
+    self.integral_z_pub.publish(new_d[2])   
     return u
 
   ##@param value: a real number

@@ -6,6 +6,7 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
 from std_srvs.srv import Empty
+from std_msgs.msg import Int32
 from gazebo_msgs.srv import DeleteModel
 
 import analysis
@@ -56,7 +57,7 @@ class MyPlugin(Plugin):
         ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'MyPlugin.ui')
         # Extend the widget with all attributes and children from UI file
         loadUi(ui_file, self._widget)
-        # Give QObjects reasonable names
+        # Give QObjects reasonable namescore servic
         self._widget.setObjectName('MyPluginUi')
         # Show _widget.windowTitle on left-top of each plugin (when 
         # it's set in _widget). This is useful when you open multiple 
@@ -134,13 +135,13 @@ class MyPlugin(Plugin):
         
         
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
-        self.controller_channel = rospy.Publisher('/%s/security_guard/controller'%(self.name),Permission,queue_size=10)
+        self.controller_channel = rospy.Publisher('/%s/security_guard/controller'%(self.name),Int32,queue_size=10)
         
 
 
     def Land(self):
       self.lander_channel.publish(Permission(True))
-      self.controller_channel.publish(Permission(False))
+      self.controller_channel.publish(2)
       #land = rospy.ServiceProxy("/%s/SecurityGuard/land"%(self.name), Empty)
       #land()
       

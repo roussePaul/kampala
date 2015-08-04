@@ -15,6 +15,7 @@ import sml_setup
 import sys
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
+from std_msgs.msg import Int32
 
 import analysis
 import utils
@@ -67,7 +68,7 @@ class Point():
 		return(self.time_secs)
 
 ##@param lander_channel: the publisher publishing permission to the lander
-##@param controller_channer: the publisher publishing permission to the controller
+##@param controller_channel: the publisher publishing permission to the controller
 def Interrupt_Flight(lander_channel,controller_channel):
 	"""This function is used to interrupt the flight by giving permission to the lander and
         disabling the controller."""
@@ -75,7 +76,7 @@ def Interrupt_Flight(lander_channel,controller_channel):
 	utils.logerr('Flight interrupted, landing mode active')
 	while not rospy.is_shutdown():
 		lander_channel.publish(True)
-		controller_channel.publish(False)
+		controller_channel.publish(1)
 		rate.sleep()
 
 ## Initialize the quadcopter flight mode, change the system ID and arm
@@ -132,7 +133,7 @@ def Within_Boundaries(x,y,z):
 def Security_Check(current_point):
         """This function checks whether or not the quad is found by the motion capture system."""
 	keep_controller=False
-
+        lost_mocap=False
 	if current_point.get_time()<0.5:
 		if current_point.found_body:
 			if Within_Boundaries(current_point.x,current_point.y,current_point.z):
@@ -140,17 +141,19 @@ def Security_Check(current_point):
 			else:
 				utils.logerr('Out of boundaries.')
 				keep_controller=False
-				return keep_controller
+				return [keep_controller,lost_mocap]
 		else:
 			utils.logerr('Body not found.')
 			keep_controller=False
-			return keep_controller
+                        lost_mocap=True
+			return [keep_controller,lost_mocap]
 	else:
 		utils.logerr('Lost mocap signal (no signal during more than 0.5 seconds).')
 		keep_controller=False
-		return keep_controller
+                lost_mocap=True
+		return [keep_controller,lost_mocap]
 
-	return keep_controller
+	return [keep_controller,lost_mocap]
 
 ## Callback that listen to the topic trajectory_gen/done
 ##
@@ -227,9 +230,9 @@ if __name__=='__main__':
 
 	## Init variables
 	current_point=Point()
-	controller_on=True
+	controller_on=[True, False]
 	lander_permission=Permission()
-	controller_permission=Permission()
+	controller_permission=0
 	trajectory_done=Trajectory()
 
 	## Get the body ID as a parameter
@@ -238,7 +241,7 @@ if __name__=='__main__':
 
 	## Publish topics
 	lander_channel=rospy.Publisher('security_guard/lander',Permission,queue_size=10)
-	controller_channel=rospy.Publisher('security_guard/controller',Permission,queue_size=10)
+	controller_channel=rospy.Publisher('security_guard/controller',Int32,queue_size=10)
 	data_forward=rospy.Publisher('security_guard/data_forward',QuadPositionDerived,queue_size=10)
 
 	## Subscribe topics
@@ -256,26 +259,33 @@ if __name__=='__main__':
 		# Security Check
 		controller_on=Security_Check(current_point)
 		if trajectory_done.is_done:
-			controller_on=False
+			controller_on[0]=False 
+                        controller_on[1]=False
 
 		# Manage the permissions
-		if controller_on:
+		if controller_on[0]:
 			lander_permission.permission=False
-			controller_permission.permission=True
-		else:
+			controller_permission=0
+		elif not controller_on[0] and controller_on[1]:
 			utils.logerr('Initiate landing mode')
-
 			lander_permission.permission=True
-			controller_permission.permission=False
+			controller_permission=1
 			while not rospy.is_shutdown():
 				lander_channel.publish(lander_permission)
 				controller_channel.publish(controller_permission)
 				loop_rate.sleep()
 
+                else:
+			utils.logerr('Initiate landing mode')
+			controller_permission=2
+			while not rospy.is_shutdown():
+				controller_channel.publish(controller_permission)
+				loop_rate.sleep()              
+
 		#Publish the permissions
 		lander_channel.publish(lander_permission)
 		controller_channel.publish(controller_permission)
-		if controller_on:
+		if controller_on[0]:
 			quad_state=Get_Quad_State(current_point)
 			data_forward.publish(quad_state)
 
