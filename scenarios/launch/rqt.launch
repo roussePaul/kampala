@@ -1,17 +1,6 @@
 <launch>
 <!-- Set the ROS environment variables -->
-  <group if="$(arg simulation)">
-    <env name="ROS_IP" value="172.17.42.1"/>
-    <env name="ROS_HOSTNAME" value="172.17.42.1"/>
-  </group>
-
-  <group unless="$(arg simulation)">
-    <env name="ROS_IP" value="192.168.0.205"/>
-    <env name="ROS_HOSTNAME" value="192.168.0.205"/>
-    <env name="ROS_MASTER_URI" value="http://192.168.0.205:11311"/>
-  </group>
-
-  <arg name="simulation"/>
+  <arg name="simulation" default="$(env SIMULATION)"/>
   <rosparam param="/simulation" subst_value="true">$(arg simulation)</rosparam>
   
 <!-- GUI -->

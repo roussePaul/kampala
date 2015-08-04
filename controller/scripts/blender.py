@@ -171,7 +171,6 @@ class Blender():
         if type(self.controller) is PID:
           d_pub.publish(self.controller.get_d_updated()[1])
       elif self.instr.permission == 2:
-        print("ccccccccccccccccccccccc")
         target_point.x = current_point.x
         target_point.y = current_point.y
         target_point.z = current_point.z
@@ -186,7 +185,6 @@ class Blender():
         target_point.yaw_acc = 0
         self.landmode()
       else:
-        print("***********************")
         break 
       loop_rate.sleep()
                 

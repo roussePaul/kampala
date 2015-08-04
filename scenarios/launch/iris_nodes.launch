@@ -7,7 +7,7 @@
 
 
 <!-- Visualisation -->
-  <arg name="rviz" default="false"/> <!-- No more than one drone visualisable -->
+  <arg name="rviz" default="true"/> <!-- No more than one drone visualisable -->
   
 
 

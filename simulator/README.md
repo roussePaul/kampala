@@ -11,32 +11,96 @@ Same controller
 
 # Implementation
 The [Explored Solutions](#explored-solutions) gives more informations about the implementation.
+
 ## Differencies
-main differencies between the simulation and
-tilt angle
-mavros partly available
-No battery voltage drop
-Connection probably faster
-Noise on Gazebo
+
+The controller used in APM is the STABILIZE one. You control roll and pitch positions, yaw rate and the motor speeds. The one used in the simulation have the same inputs
+However, we noticed that the maximum tilting angle of the quad is smaller than the real quad (real quad: 45 degrees, simulation+PX4: 10 degrees).
+
+Mavros is partly available. Since the interface protocol is slightly different between the PX4 firmware and the APM one, it was not possible to connect directly the simulated mavlink interface to the one mavros node.
+More over the mavlink connection is probably faster than the reallity.
+
+There is a strange behavior of Gazebo, the positions given by gazebo are noisy even if the URDF file does not s
+pecify any noise on the odometry sensors! This is even stranger because the link_states topic is more noisy than the model_states one.
+To fix that we have been filtering the outputs of Gazebo. To change the cutoff frequency of the filters, you can edit the files in the ros_mocap_sim.py file.
 
 # Installation
+
 ## PX4 SITL
+
+Follow this tutorial: https://pixhawk.org/dev/ros/sitl
+
+To install the simulated quads, first, you need to follow: https://pixhawk.org/dev/ros/automated_sitl. Perform the step so that we are able to use docker as a not root user.
+
+Then follow the next section to install the simulated quads.
+
 ## Add a new quadcopter
+
+Execute the following commands:
+```Bash
+cd ~/catkin_ws/src/kampala/simulation/scripts
+docker run --privileged -e DISPLAY=$DISPLAY --name=docker-iris-1 -it px4io/px4-ros-full bash 
+docker start docker-iris-1
+docker exec -it docker-iris-1 bash -c "`cat init_ws_docker.sh`"
+```
+Change the docker-iris-1 to the iris you want to create (ex: docker-iris-2).
+The configuration of the simulated quad is made in the scenarios/launch/iris/irisX.launch file: 
+```XML
+<!-- Body id of the quad that will be used by the mocap simulation script -->
+<arg name="body_id" value="2"/>
+<!-- Docker name of the sitl simulation -->
+<arg name="docker" value="docker-iris-2"/>
+```
 
 # Gazebo
 
 ## URDF description
-## Add a component to the quad
-## Track the position with mocap
-## Troubleshoot
-Version of gazebo used
-Noise on the link_state topic, filter added to get ride of it
+Small introduction to the URDF syntax: http://gazebosim.org/tutorials/?tut=ros_urdf. As we are using an old Gazebo version, the URDF tutorial is not fully supported.
+The files used to for the iris description are in the [description](description/) folder.
+They are using a macro language that enable us to use some variables inside ROS: [Xacro](http://wiki.ros.org/xacro).
 
-# PX4 SITL
-## Installation
-## Create a new simulated quad
-## Controller
-## Mavros
+## Add a component to the quad
+
+We did not try to add an external component to the quad directly through a URDF description. However, it should be possible.
+
+Instead we have directly been added the components inside the [iris_base.xacro](description/iris_base.xacro) file.
+
+## Track the position with mocap
+To get the position, of a link, you can add:
+```XML
+<xacro:odometry_plugin_macro
+      namespace="${namespace}/load_pose"
+      odometry_sensor_suffix="gt"
+      parent_link="${namespace}/load_link"
+      pose_topic="pose"
+      pose_with_covariance_topic="pose_with_covariance"
+      position_topic="position"
+      transform_topic="transform"
+      odometry_topic="odometry"
+      parent_frame_id="world"
+      mass_odometry_sensor="0.00001"
+      measurement_divisor="1"
+      measurement_delay="0"
+      unknown_delay="0.0"
+      noise_normal_position="0 0 0"
+      noise_normal_quaternion="0 0 0"
+      noise_normal_linear_velocity="0 0 0"
+      noise_normal_angular_velocity="0 0 0"
+      noise_uniform_position="0 0 0"
+      noise_uniform_quaternion="0 0 0"
+      noise_uniform_linear_velocity="0 0 0"
+      noise_uniform_angular_velocity="0 0 0"
+      enable_odometry_map="false"
+      odometry_map=""
+      image_scale=""
+    >
+      <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /> <!-- [kg.m^2] [kg.m^2] [kg.m^2] [kg.m^2] [kg.m^2] [kg.m^2] -->
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+</xacro:odometry_plugin_macro>
+```
+inside the URDF file.
+
+To add it to the tracked body inside mocap you have to change the [mocap launch file](../mocap/launch/mocap.launch). Read the comments to figur out how to do it.
 
 # Explored solutions
 
@@ -45,6 +109,11 @@ This will provide you reasons about the choosen solutions and also an insight of
 
 ## RotorS library
 
+The [RotorS library](https://github.com/ethz-asl/rotors_simulator) provide few quadcopters with 2 basic ontrollers. They are usable within ROS and Gazebo.
+However, as the model of Iris was available inside the PX4 SITL package, and as it was not straight forward to adapt the controller to the Iris model (sensor frames differents, need to tune the PID gains), we decided to give a try to the PX4 SITL one. One reason was also to have a behaviour to the real quadcopter.
+
+### References
+RotorS library: https://github.com/ethz-asl/rotors_simulator
 
 ## APM SITL
 
@@ -95,4 +164,24 @@ https://www.docker.com/
 http://wiki.ros.org/ROS/NetworkSetup
 
 ## Choosen solution
-It is not exactly
+We have choosen the PX4 SITL mainly because it was the first one we managed to make it work.
+
+Advantages:
+* as it is running the PX4 firmware, it is really possible to add an extra controller and test it on the simulator before trying it on the real quad.
+
+Inconvenients:
+* it is the not the APM firmware
+* the setup is complex and not straight forward to do (need dockers)
+
+# Troubleshoot
+
+* "Couldn't find an AF_INET address for...":
+
+Wrong network configuration: one of the machine/docker is not well configured, you need to check the environment variable:
+```Bash
+ROS_IP="IP OF THIS COMPUTER"
+ROS_HOSTNAME="IP OF THIS COMPUTER"
+ROS_MASTER_URI="http://IP OF THIS COMPUTER:11311"
+```
+Check these variables (ros_master_uri) when the ROS master is launched.
+

@@ -1,5 +1,5 @@
 <launch>
-  <arg name="simulation" default="true"/>
+  <arg name="simulation" default="$(env SIMULATION)"/>
 
 <!-- SIMULATION -->
   <group if="$(arg simulation)">
