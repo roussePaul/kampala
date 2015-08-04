@@ -131,3 +131,28 @@ Follow the guide in the [raspberrypi](raspberrypi).
 
 # Simulator Setup
 Follow the guide in the [simulator](simulator).
+
+# Bashrc
+Copy this file at the end of your ~/.bashrc file:
+
+```Bash
+# Function to configure the network for the simulation
+function sim {
+ip=`/sbin/ifconfig docker0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+export ROS_IP=$ip
+export ROS_HOSTNAME=$ip
+export ROS_MASTER_URI=http://$ip:11311
+export SIMULATION="true"
+}
+
+# Function to configure the network for the real quad
+function real {
+ip=`/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+export ROS_IP=$ip
+export ROS_HOSTNAME=$ip
+export ROS_MASTER_URI=http://$ip:11311
+export SIMULATION="false"
+}
+
+sim
+```

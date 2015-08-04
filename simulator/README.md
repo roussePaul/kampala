@@ -184,3 +184,4 @@ ROS_HOSTNAME="IP OF THIS COMPUTER"
 ROS_MASTER_URI="http://IP OF THIS COMPUTER:11311"
 ```
 Check these variables (ros_master_uri) when the ROS master is launched.
+
