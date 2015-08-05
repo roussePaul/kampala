@@ -1,0 +1,63 @@
+==  Keywords for presentation ==
+
+
+__Paul__
+
+- Project overview -
+Aim
+Creating software architecture
+Safe flying
+GUI
+Trajectory generation and following 
+Advanced task such as leader following, collision avoidance and load lifting
+
+- IRIS -
+Internal software
+Flytime 15 min
+Carry 500 g
+
+- Architecture overview -
+
+- Security features -
+Mocap signal lost
+Safety zone
+Landing requested
+
+- Simulator -
+Same interface
+Test
+One and multilple
+
+
+__Erik__
+
+- GUI -
+
+
+__Benjamin__
+
+- Trajectory following -
+Points with pos, vel, acc
+Yaw
+
+- PID -
+
+- Obstacle avoidance -
+Potential
+Ignoring z-direction
+
+
+__Johan__
+
+- Leader following -
+One quad follows a second
+Constant distance
+Other ways possible: Do circle with larger radius
+
+-Load lifting -
+Hook/gripper
+Can be controlled in the same way as motors
+More advanced gripper possible:
+     More degrees of freedom
+Can be used to move goods in a warehouse 
+
