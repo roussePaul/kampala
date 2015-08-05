@@ -3,14 +3,12 @@
 
 
 import rospy
-import utils
 from abc import ABCMeta, abstractmethod
 from numpy import linalg as lg
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from trajectory import Trajectory
 from trajectory_node import TrajectoryNode
-
 
 class Follower(Trajectory):
   """This is an abstract follower base class."""
@@ -43,7 +41,7 @@ class Follower(Trajectory):
   def loop(self):
     rate = rospy.Rate(15.)
     leader_init_state = self.leader_state
-    rospy.sleep(5)
+    rospy.sleep(5.)
 
     # Main loop for publishing points.
     while not rospy.is_shutdown() and not self.is_done():
@@ -52,8 +50,8 @@ class Follower(Trajectory):
       self.trajectory_node.send_permission(False)
       distance = self.__getDistance()
       rate.sleep()
-      if self.leader_state.found_body == False or distance < 0.9: 
-        utils.logwarn('Leader: '+str(self.leader_state.found_body)+', Distance:'+str(distance))
+      if self.leader_state.found_body == False or distance < 0.5: 
+        #utils.logwarn('Leader: '+str(self.leader_state.found_body)+', Distance:'+str(distance))
         self.__set_done(True)
     self.trajectory_node.send_permission(True)
 
@@ -73,7 +71,7 @@ class Follower(Trajectory):
     my_pos = [self.__real_state.x, self.__real_state.y, self.__real_state.z]
     leader_pos = [self.leader_state.x, self.leader_state.y, self.leader_state.z]
     temp = [0.0,0.0,0.0]
-    for i in range(0,2):
+    for i in range(0,3):
       temp[i] = my_pos[i] - leader_pos[i]
     return lg.norm(temp)
 

@@ -14,6 +14,7 @@ import sml_setup
 import sys
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
+from std_msgs.msg import Int32
 
 import analysis
 import utils
@@ -122,7 +123,7 @@ def Within_Boundaries(x,y,z):
 def Security_Check(current_point):
         """This function checks whether or not the quad is found by the motion capture system."""
 	keep_controller=False
-
+        lost_mocap = False
 	if current_point.get_time()<0.5:
 		if current_point.found_body:
 			if Within_Boundaries(current_point.x,current_point.y,current_point.z):
@@ -130,17 +131,19 @@ def Security_Check(current_point):
 			else:
 				utils.logerr('Out of boundaries.')
 				keep_controller=False
-				return keep_controller
+				return [keep_controller,lost_mocap]
 		else:
 			utils.logerr('Body not found.')
 			keep_controller=False
-			return keep_controller
+                        lost_mocap=True
+			return [keep_controller,lost_mocap]
 	else:
 		utils.logerr('Lost mocap signal (no signal during more than 0.5 seconds).')
 		keep_controller=False
-		return keep_controller
+                lost_mocap=True
+		return [keep_controller,lost_mocap]
 
-	return keep_controller
+	return [keep_controller,lost_mocap]
 
 ##@param data: an instance of the class Permission defined by the corresponding ROS msg
 ##@param end_trajectory: an instance of the class Trajectory defined in this script
@@ -150,6 +153,9 @@ def Trajectory_Done(data,end_trajectory):
 		if not end_trajectory.is_done:
 			utils.loginfo('Trajectory is completed')
 		end_trajectory.is_done=True
+
+def Landing_Permission(data,landing_permission):
+	landing_permission.permission = data.permission
 
 ##@param data: a point object
 ##@param pont_obj: a point object
@@ -209,9 +215,11 @@ if __name__=='__main__':
 	loop_rate=rospy.Rate(30)
 	current_point=Point()
 
-	controller_on=True
+	controller_on=[True,False]
 	lander_permission=Permission()
-	controller_permission=Permission()
+        landing_permission=Permission()
+        landing_permission.permission=False
+	controller_permission=0
 	trajectory_done=Trajectory()
 
 	#Get the body ID as a parameter
@@ -220,12 +228,13 @@ if __name__=='__main__':
 
 	#Publish topics
 	lander_channel=rospy.Publisher('security_guard/lander',Permission,queue_size=10)
-	controller_channel=rospy.Publisher('security_guard/controller',Permission,queue_size=10)
+	controller_channel=rospy.Publisher('security_guard/controller',Int32,queue_size=10)
 	data_forward=rospy.Publisher('security_guard/data_forward',QuadPositionDerived,queue_size=10)
 
 	#Subscribe topics
 	rospy.Subscriber(mocap_topic,QuadPositionDerived,New_Point,current_point)
 	rospy.Subscriber('trajectory_gen/done',Permission,Trajectory_Done,trajectory_done)
+        rospy.Subscriber('gui/land',Permission,Landing_Permission,landing_permission)
 
 	#Connect to Qualysis Motion Capture System
 	body_info=sml_setup.Connect_To_Mocap_Message()
@@ -239,19 +248,40 @@ if __name__=='__main__':
 
 	
 	while not rospy.is_shutdown():
-		controller_on=Security_Check(current_point)
-		if trajectory_done.is_done:
-			controller_on=False
+		controller_on=Security_Check(current_point) 
+                if landing_permission.permission:
+                        utils.logerr('Initiate landing mode')
+                        print("Lander")
+			controller_permission=2
+			while not rospy.is_shutdown():
+				#lander_channel.publish(lander_permission)
+                                quad_state=Get_Quad_State(current_point)
+                                data_forward.publish(quad_state)                  #should not use mocap to land
+				controller_channel.publish(controller_permission)
+				loop_rate.sleep()
 
-		if controller_on:
+                
+		if trajectory_done.is_done:
+			controller_on=[False,False]
+
+		if controller_on[0]:
 			lander_permission.permission=False
-			controller_permission.permission=True
-		else:
+			controller_permission=0
+		elif not controller_on[0] and controller_on[1]:
 			utils.logerr('Initiate landing mode')
 
 			lander_permission.permission=True
-			controller_permission.permission=False
+			controller_permission=1
 			while not rospy.is_shutdown():
+				lander_channel.publish(lander_permission)
+				controller_channel.publish(controller_permission)
+				loop_rate.sleep()
+                else:
+                        utils.logerr('Initiate landing mode')
+                        print(".................")
+			controller_permission=2
+			while not rospy.is_shutdown():
+                                print("******************")
 				lander_channel.publish(lander_permission)
 				controller_channel.publish(controller_permission)
 				loop_rate.sleep()

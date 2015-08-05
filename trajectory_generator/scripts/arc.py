@@ -133,7 +133,7 @@ if __name__ == '__main__':
     #acc_gen = AccGen(tn,[0.,0.,0.6],[0.6,0.,0.6],[0.,0.3,0.])
     #acc_gen.loop(0.)
     #t = acc_gen.get_t_f()
-    a_gen = ArcGen(tn,[0.,0.,0.6],[0.6,0.,0.6],[0.,0.3,0.],2*math.pi)
+    a_gen = ArcGen(tn,[0.,0.,0.6],[0.6,0.,0.6],[0.,0.6,0.],2*math.pi)
     a_gen.loop(0.)
     
   except rospy.ROSInterruptException:

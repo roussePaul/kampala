@@ -6,6 +6,7 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
 from std_srvs.srv import Empty
+from std_msgs.msg import Int32
 from gazebo_msgs.srv import DeleteModel
 
 import analysis
@@ -22,7 +23,7 @@ class MyPlugin(Plugin):
         
         
         self.simulation = rospy.get_param('/simulation','false')
-
+        self.land_pub = []
         self.controller_channel = []
         self.land_permission = Permission()
         self.controller_permission = Permission()
@@ -130,15 +131,15 @@ class MyPlugin(Plugin):
         inputstring = "roslaunch scenarios connect.launch simulation:=%s ns:=%s" % (self.simulation,self.name)
         self.execute(inputstring)
         
-        
+        self.land_pub = rospy.Publisher('/%s/gui/land'%(self.name),Permission,queue_size=10)
         self.lander_channel = rospy.Publisher('/%s/security_guard/lander'%(self.name),Permission,queue_size=10)
-        self.controller_channel = rospy.Publisher('/%s/security_guard/controller'%(self.name),Permission,queue_size=10)
+        self.controller_channel = rospy.Publisher('/%s/security_guard/controller'%(self.name),Int32,queue_size=10)
         
 
 
     def Land(self):
-      self.lander_channel.publish(Permission(True))
-      self.controller_channel.publish(Permission(False))
+      #self.lander_channel.publish(Permission(True))
+      self.land_pub.publish(Permission(True))
       #land = rospy.ServiceProxy("/%s/SecurityGuard/land"%(self.name), Empty)
       #land()
       
@@ -149,6 +150,7 @@ class MyPlugin(Plugin):
         self.execute(inputstring)
 
     def Arm(self):
+        self.land_pub.publish(Permission(False))
         inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s simulation:=%s" % (self.name,self.simulation)
         self.execute(inputstring)
 

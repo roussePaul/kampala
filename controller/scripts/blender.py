@@ -23,9 +23,10 @@ from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
 from std_srvs.srv import Empty
 import utils
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Int32
 import numpy as np
 from numpy import linalg
+from mavros.srv import SetMode
 
 
 #Constants
@@ -44,7 +45,8 @@ class Blender():
     self.avoidance = AvoidanceController()
     body_id = utils.Get_Parameter('body_id',8)
     self.load_id = utils.Get_Parameter('load_id',body_id)
-
+    self.pitch_pub = rospy.Publisher("visualization/pitch",Float64,queue_size=10)
+    self.roll_pub = rospy.Publisher("visualization/roll",Float64,queue_size=10)
     # Check what controller should be used
     self.controller_type = utils.Get_Parameter("controller_type","PID")
     if self.controller_type == "load_transport":
@@ -75,7 +77,7 @@ class Blender():
     #Subscribe to /derivator/pos_data to get position, velocity and acceleration
     rospy.Subscriber('security_guard/data_forward',QuadPositionDerived,self.new_point,current_point)
     #Subscribe to /security_guard/controller to get permission to publish to rc/override
-    rospy.Subscriber('security_guard/controller',Permission,self.get_permission)
+    rospy.Subscriber('security_guard/controller',Int32,self.get_permission)
 
     
     if self.controller_type == "load_transport":
@@ -91,12 +93,9 @@ class Blender():
     rospy.Subscriber("/body_data/id_"+str(self.load_id),QuadPositionDerived,self.new_point,current_load_point)
 
   def get_permission(self,data):
-    if self.instr.permission:
-      if not data.permission:
-        self.instr.permission=False
-
+    self.instr.permission = data.data
     if not self.instr.start:
-      if data.permission:
+      if self.instr.permission == 0:
         self.instr.start=True
 
   def wait_for_security_guard(self,obj):
@@ -110,6 +109,7 @@ class Blender():
         return data_initdata_initdata_init
       rate.sleep()
 
+  ##starts the blender
   def run_blender(self):
     """The function to be called to start the blender. It takes care of the calculations of control outputs
     and publishes these on the mavros/rc/override topic."""
@@ -153,26 +153,56 @@ class Blender():
 
       #current_load_point = deepcopy(current_point)
       #current_load_point.z = current_point.z - 5.0
-
-      if type(self.controller) is PID:
-        u_cont = self.controller.get_output(current_point,target_point)
-        u_cont[2] = u_cont[2] + 9.8
-      elif type(self.controller) is LoadTransportController:
-        u_cont = self.controller.get_output(current_load_point,current_point,target_point)
-
-      u = self.blend(u_cont, current_point, target_point)
-      command_controlled = self.get_controloutput(u,x,x_target)
-  
       #If OK from security guard, publish the messages via Mavros to the drone
-      if self.instr.permission:
+      if self.instr.permission == 0:
+        if type(self.controller) is PID:
+          u_cont = self.controller.get_output(current_point,target_point)
+          u_cont[2] = u_cont[2] + 9.8
+        elif type(self.controller) is LoadTransportController:
+          u_cont = self.controller.get_output(current_load_point,current_point,target_point)
+
+        u = self.blend(u_cont, current_point, target_point)
+        command_controlled = self.get_controloutput(u,x,x_target)
+  
         data=OverrideRCIn()
         data.channels=command_controlled
         rc_override.publish(data)
+        ## Show the integrale action for the z component
         if type(self.controller) is PID:
           d_pub.publish(self.controller.get_d_updated()[1])
-      else:
-        break
+      elif self.instr.permission == 2:
+        for i in range(0,120):
+          target_point.x = current_point.x
+          target_point.y = current_point.y
+          target_point.z = 0.5
+          target_point.yaw = current_point.yaw
+          target_point.x_vel = 0.0  
+          target_point.y_vel = 0.0
+          target_point.z_vel = 0.0
+          target_point.yaw_vel = 0.0      
+          target_point.x_acc = 0.0
+          target_point.y_acc = 0.0
+          target_point.z_acc = 0.0
+          target_point.yaw_acc = 0.0
+          if type(self.controller) is PID:
+            u_cont = self.controller.get_output(current_point,target_point)
+            u_cont[2] = u_cont[2] + 9.8
+          elif type(self.controller) is LoadTransportController:
+            u_cont = self.controller.get_output(current_load_point,current_point,target_point)
 
+          u = self.blend(u_cont, current_point, target_point)
+          command_controlled = self.get_controloutput(u_cont,x,x_target) 
+  
+          data=OverrideRCIn()
+          data.channels=command_controlled
+          rc_override.publish(data)
+          loop_rate.sleep()
+        all_sticks_centered = [1500,1500,1000,1500,0,0,0,0]
+        rc_override.publish(all_sticks_centered)
+        self.landmode()
+        break
+      else:
+        break 
       loop_rate.sleep()
                 
 
@@ -220,8 +250,10 @@ class Blender():
 
     # Implement some saturation
     throttle=self.saturation(throttle,1000,2000)
-    pitch=self.saturation(pitch,1350,1700)  
-    roll=self.saturation(roll,1350,1700)   
+    pitch=self.saturation(pitch,1200,1800)
+    roll=self.saturation(roll,1200,1800)
+    self.pitch_pub.publish(pitch)
+    self.roll_pub.publish(roll)
     return [roll,pitch,throttle,yaw_rate,0,self.channel6,0,0]
 
 
@@ -325,6 +357,21 @@ class Blender():
     self.FREQUENCY = utils.Get_Parameter("CONTROLLER_FREQUENCY",30)
 
     self.controller_type = utils.Get_Parameter("controller_type","PID")
+
+
+  ## Switch the quad to the landing mode
+  def landmode(self):
+    """This function uses the service mavros/set_mode to set the mode of the quad to the 
+    landing mode."""
+    mode_set=False
+    for i in range(0,10):
+        if not mode_set:
+            try:
+                set_mode = rospy.ServiceProxy('mavros/set_mode', SetMode)
+                mode_set = set_mode(base_mode=0, custom_mode='LAND')
+            except rospy.ServiceException as ex:
+                rospy.logerr('[LD]: set_mode attempt not successful')
+
 
 if __name__ == "__main__":
   bl = Blender()

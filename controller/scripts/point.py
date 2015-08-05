@@ -121,7 +121,7 @@ class Instruction():
     """This is a simple class used to check the permissions given by the security guard."""
     def __init__(self):
         self.start=False
-        self.permission=True
+        self.permission=0
 
 ##@param obj: an instance of the class Point or PointExt
 ##@return the position, velocity and acceleration associated with the object obj

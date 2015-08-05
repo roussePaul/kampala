@@ -3,9 +3,9 @@
 
 
 import rospy
-import utils
 from trajectory_gen_follower import Follower
 from trajectory_node import TrajectoryNode
+
 
 class ConstantFollower(Follower):  
   """This class generates points for a follower following a leader,
@@ -19,7 +19,7 @@ class ConstantFollower(Follower):
 
   # Calculates the state of the follower from the leader state
   def calculate_state(self):
-    self.calculated_state.x = self.leader_state.x + self.__offset[0]
+    self.calculated_state.x = self.leader_state.x + self.__offset[0] 
     self.calculated_state.y = self.leader_state.y + self.__offset[1]
     self.calculated_state.z = self.leader_state.z + self.__offset[2]
     #self.calculated_state.yaw = self.leader_state.yaw
@@ -36,9 +36,9 @@ class ConstantFollower(Follower):
 if __name__ == '__main__':
   try:
     traj = TrajectoryNode()
-    offset = [0.,1.,0.]
-    my_id = 2
-    leader_id = 1
+    offset = [0.0,-1.0,0.0]
+    my_id = 21
+    leader_id = 8
     ConstantFollower(traj,offset,my_id,leader_id).loop()
   except rospy.ROSInterruptException:
     pass
