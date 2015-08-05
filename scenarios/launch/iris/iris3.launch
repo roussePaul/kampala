@@ -22,7 +22,7 @@
 				<param name="target_component_id" value="1" />
 			</group>
 			
-			<param name="body_id" value="16"/>
+			<param name="body_id" value="15"/>
 
 	<!-- CONTROLLER -->
 	<!-- Main values -->

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-# Node that provide a service that proviede a trigger called at the beginning of experiments
-# it store the initial time of the beginning of experiments
+## Node that provide a service that proviede a trigger called at the beginning of experiments
+## it store the initial time of the beginning of experiments
+## Never used and tested but might be useful!
 
 import rospy
 from analysis.srv import Trigger

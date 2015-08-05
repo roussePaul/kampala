@@ -6,9 +6,13 @@ from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 
-from pid.srv import GetPIDParameters, SetPIDParameters,Autotune
+import pid
+from pid.srv import GetPIDParameters, SetPIDParameters,Autotune,Mode
 from autotuner import Autotuner
 from identification import Identification
+from pid_controller import PID
+
+import utils
 
 class AutotunerPlugin(Plugin):
     
@@ -53,7 +57,8 @@ class AutotunerPlugin(Plugin):
         self._widget.bUpdateControllerList.clicked.connect(self.UpdateControllerList)
         self._widget.cIdentificationMethod.currentIndexChanged.connect(self.UpdateSynthesisList)
 
-        self._widget.bAutotune.clicked.connect(self.Autotune)
+        self._widget.bMode.clicked.connect(self.setMode)
+        self._widget.cMode.insertItems(0,PID.mode_list)
 
         self.init_identification()
 
@@ -72,16 +77,15 @@ class AutotunerPlugin(Plugin):
         self._widget.cSynthesisMethod.clear()
         self._widget.cSynthesisMethod.insertItems(0,synthesis_list)
 
-    def Autotune(self):
-        identification_method = self._widget.cIdentificationMethod.currentText()
-        synthesis_method = self._widget.cSynthesisMethod.currentText()
+    def setMode(self):
+        mode = self._widget.cMode.currentText()
 
-        path = self._widget.cIdentificationMethod.currentText() +"/autotune"
-        rospy.wait_for_service(path)
-        autotune = rospy.ServiceProxy('autotune', Autotune)
-
-        autotune(identification_method,synthesis_method)
-
+        path = self._widget.cPID.currentText() +"/set_mode"
+        try:
+            set_mode = rospy.ServiceProxy(path, Mode)
+            ret = set_mode(mode,True,"")            
+        except rospy.ServiceException as exc:
+            utils.logerr("Service did not process request: " + str(exc))
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here

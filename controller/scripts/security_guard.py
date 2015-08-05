@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-#Security feature of autonomous drone flight in the SML lab
-#Checks the data coming from Qualysis, as well as the safety boundaries set for the drone
-#In case of violations, disables the controller, and enables the landing node
+## Security feature of autonomous drone flight in the SML lab.
+## Mabnage the permissions of the differents node
+## Checks the data coming from Qualysis, as well as the safety boundaries set for the drone.
+## In case of violations, disables the controller, and enables the landing node
 
 """This script provides the security guard that gives permission to either the controller or 
 the lander to publish commands to the drone. Which of the two is the case depends on whether or not
@@ -25,7 +26,7 @@ class Trajectory():
 	def __init__(self):
 		self.is_done=False
 
-
+## Class to 
 class Point():
         """The functionality of this class is similar to that of the other point classes.
         Extra functionality is provided concerning timing. This is necessary to identify
@@ -78,10 +79,14 @@ def Interrupt_Flight(lander_channel,controller_channel):
 		controller_channel.publish(False)
 		rate.sleep()
 
+## Initialize the quadcopter flight mode, change the system ID and arm
 ##@return true if the quad was successfully armed, false otherwise
 def Prepare_For_Flight():
-        """This function sets the flight mode of the quad, sets the system ID to allow RC override and
-        arms the quad."""
+	mode_success=sml_setup.Set_Flight_Mode('LAND')
+
+	rospy.sleep(2)
+
+	#Set the flight mode to stabilize (default)
 	mode_success=sml_setup.Set_Flight_Mode('STABILIZE')
 	ID_success=sml_setup.Set_System_ID(1)
 	arming_success=sml_setup.Arming_Quad()
@@ -91,7 +96,7 @@ def Prepare_For_Flight():
 		return False
 
 
-
+## Check if the quadcopter is inside the safety area
 ##@param x: the x-component of the position of the quad
 ##@param y: the y-component of the position of the quad
 ##@param z: the z-component of the position of the quad
@@ -116,8 +121,13 @@ def Within_Boundaries(x,y,z):
 	return False
 
 
-  
-
+## Check all the security requirement.
+##
+## Check: 
+## - if the mocap connection is up
+## - if the body was found
+## - if the quad is inside the safety area
+##
 ##@param current_point: the current point object associated with the quad
 ##@return true if the quad is still tracked by the motion capture system, false otherwise
 def Security_Check(current_point):
@@ -145,6 +155,8 @@ def Security_Check(current_point):
 
 	return [keep_controller,lost_mocap]
 
+## Callback that listen to the topic trajectory_gen/done
+##
 ##@param data: an instance of the class Permission defined by the corresponding ROS msg
 ##@param end_trajectory: an instance of the class Trajectory defined in this script
 def Trajectory_Done(data,end_trajectory):
@@ -154,9 +166,14 @@ def Trajectory_Done(data,end_trajectory):
 			utils.loginfo('Trajectory is completed')
 		end_trajectory.is_done=True
 
+<<<<<<< HEAD
 def Landing_Permission(data,landing_permission):
 	landing_permission.permission = data.permission
 
+=======
+## Callback of the mocap topic
+##
+>>>>>>> 3099c9beaef814810531a4f6f0e3c507328f6429
 ##@param data: a point object
 ##@param pont_obj: a point object
 def New_Point(data,point_obj):
@@ -183,6 +200,8 @@ def New_Point(data,point_obj):
 	point_obj.update_time()
 	return
 
+## Copy a point object
+##
 ##@param obj: a point object
 ##@return the QuadPositionDerived object corresponding to the point object obj
 def Get_Quad_State(obj):
@@ -211,42 +230,39 @@ def Get_Quad_State(obj):
 
 
 if __name__=='__main__':
+	## Initialize the node
 	rospy.init_node('security_guard_topic')
 	loop_rate=rospy.Rate(30)
-	current_point=Point()
-
+        ## Init variables
 	controller_on=[True,False]
+	current_point=Point()
 	lander_permission=Permission()
         landing_permission=Permission()
         landing_permission.permission=False
 	controller_permission=0
 	trajectory_done=Trajectory()
 
-	#Get the body ID as a parameter
+	## Get the body ID as a parameter
 	body_id=utils.Get_Parameter('body_id',8)
 	mocap_topic='/body_data/id_'+str(body_id)
 
-	#Publish topics
+	## Publish topics
 	lander_channel=rospy.Publisher('security_guard/lander',Permission,queue_size=10)
 	controller_channel=rospy.Publisher('security_guard/controller',Int32,queue_size=10)
 	data_forward=rospy.Publisher('security_guard/data_forward',QuadPositionDerived,queue_size=10)
 
-	#Subscribe topics
+	## Subscribe topics
 	rospy.Subscriber(mocap_topic,QuadPositionDerived,New_Point,current_point)
 	rospy.Subscriber('trajectory_gen/done',Permission,Trajectory_Done,trajectory_done)
         rospy.Subscriber('gui/land',Permission,Landing_Permission,landing_permission)
 
-	#Connect to Qualysis Motion Capture System
-	body_info=sml_setup.Connect_To_Mocap_Message()
 
-
-	#Prepare the Iris for flight (set system ID and arm)
+	## Prepare the Iris for flight (set system ID and arm)
 	ready_to_fly=Prepare_For_Flight()
-
 	if not ready_to_fly:
 		Interrupt_Flight(lander_channel,controller_channel)
 
-	
+	## Main loop of the security guard.
 	while not rospy.is_shutdown():
 		controller_on=Security_Check(current_point) 
                 if landing_permission.permission:
@@ -260,8 +276,7 @@ if __name__=='__main__':
 				controller_channel.publish(controller_permission)
 				loop_rate.sleep()
 
-                
-		if trajectory_done.is_done:
+               
 			controller_on=[False,False]
 
 		if controller_on[0]:
@@ -286,6 +301,7 @@ if __name__=='__main__':
 				controller_channel.publish(controller_permission)
 				loop_rate.sleep()
 
+		#Publish the permissions
 		lander_channel.publish(lander_permission)
 		controller_channel.publish(controller_permission)
 		if controller_on:

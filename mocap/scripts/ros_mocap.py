@@ -9,8 +9,6 @@ Set the found_body attribute after 5 missing packets from Qualisys in order to s
 No filter is implemented.
 """
 
-#!/usr/bin/env python
-
 import rospy
 import mocap_source
 import sys

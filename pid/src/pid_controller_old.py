@@ -2,6 +2,8 @@
 
 import rospy
 from autotuner import Autotuner
+from identification import Identification
+from synthesis import Synthesis
 from std_srvs.srv import Empty
 
 from pid.srv import GetPIDParameters, SetPIDParameters, Autotune
@@ -9,6 +11,7 @@ from pid.srv import GetPIDParameters, SetPIDParameters, Autotune
 import numpy as np
 from numpy.linalg import inv
 import math
+
 
 class PID:
     current_pid_id = 0
@@ -23,52 +26,55 @@ class PID:
         Autotuner.add_controller(self.name)
 
         self.read_params()
+        self.write_params()
         self.init_controller()
         self.init_services()
 
         # mode of the controller: "controller", "identification"
         self.mode = "controller"
+
     def init_services(self):
-        rospy.Service(self.path+'autotune', Autotune, self.identify)
-        rospy.Service(self.path+'set_gains', SetPIDParameters, self.set_params)
-        rospy.Service(self.path+'get_gains', GetPIDParameters, self.get_params)
+        rospy.Service(self.path+'autotune', Autotune, self.autotune)
+        rospy.Service(self.path+'set_gains', SetPIDParameters, self.c_set_params)
+        rospy.Service(self.path+'get_gains', GetPIDParameters, self.c_get_params)
 
 
-    def controller(self,y0,ym,time):
+    def controller(self,ym,y0,time):        
         if self.mode == "controller":
-            return self.get_command(y0,ym,time)
+            return self.get_command(y0-ym,time)
 
-        if self.mode == "identifier":
+        if self.mode == "identification":
             if self.identifier.state !="done":
-                self.identifier.get_command(y0-ym,time)
+                return self.identifier.get_command(y0-ym,time)
             else:
-                params = self.identifier.params
+                params = self.identifier.identification
+                print params
                 gains = self.synthesiser.synthetise(params)
-                self.K = gains["K"]
-                self.Ti = gains["Ti"]
-                self.Td = gains["Td"]
-                self.b = gains["b"]
-                self.c = gains["c"]
-                self.N = gains["N"]
-                self.write_params()
+                self.set_params(gains)
                 self.mode = "controller"
+                return self.get_command(y0-ym,time)
 
 
+    def autotune(self,msg):
 
-    def identify(self,msg):
-        self.identifier = Identification(msg.method1)
-        self.synthesiser = Synthesis([msg.method1,msg.method2])
-        self.mode = "identification"
+        if self.mode != "identification":
+            self.identifier = Identification(method=msg.method1)
+            self.synthesiser = Synthesis([msg.method1,msg.method2])
+            self.mode = "identification"
+            self.identifier.start()
+        else:
+            self.mode = "controller"
         return []
 
 # define updates of the parameters of the pid
     def read_params(self):
-        self.K = rospy.get_param(self.name+"/K",1.0)
+        self.K = rospy.get_param(self.name+"/K",0.05)
         self.Ti = rospy.get_param(self.name+"/Ti",10000.0)
         self.Td = rospy.get_param(self.name+"/Td",0.001)
         self.b = rospy.get_param(self.name+"/b",1.0)
         self.c = rospy.get_param(self.name+"/c",1.0)
         self.N = rospy.get_param(self.name+"/N",100.0)
+        self.u0 = rospy.get_param(self.name+"/u0",0.0)
 
     def write_params(self):
         rospy.set_param(self.name+"/K",self.K)
@@ -77,17 +83,25 @@ class PID:
         rospy.set_param(self.name+"/b",self.b)
         rospy.set_param(self.name+"/c",self.c)
         rospy.set_param(self.name+"/N",self.N)
+        rospy.set_param(self.name+"/u0",self.u0)
 
-    def set_params(self,msg):
+
+    def c_set_params(self,msg):
         params = dict(zip(msg.keys,msg.values))
-        for param_name in msg.params:
-            if hasattr(self,param_name):
-                self[param_name] = msg.params[param_name]
-        self.write_params()
-
+        self.set_params(params)
         return []
 
-    def get_params(self,msg):
+    def set_params(self,params):
+        print params
+        for param_name in params:
+            if hasattr(self,param_name):
+                setattr(self,param_name,params[param_name])
+                print param_name +  " " +str(getattr(self,param_name))
+        self.write_params()
+
+        self.init_controller()
+
+    def c_get_params(self,msg):
         srv = Controller
         params = {"N":self.N,"Ti":self.Ti,"Td":self.Td,"b":self.b,"c":self.c,"K":self.K}
         srv.keys = params.keys()
@@ -160,7 +174,7 @@ class PID:
 
         U = C*self.X + D*y
 
-        return U.item((0,0))
+        return U.item((0,0)) + self.u0
 
 if __name__=="__main__":
     rospy.init_node("pid_test")

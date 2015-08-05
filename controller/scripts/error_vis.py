@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+
 """This script publishes messages that will be used by rqt_plot nodes to show the errors between target and actual position/velocity."""
+
 
 import rospy
 from mocap.msg import QuadPositionDerived

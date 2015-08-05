@@ -24,6 +24,7 @@ class MyPlugin(Plugin):
         
         self.simulation = rospy.get_param('/simulation','false')
         self.land_pub = []
+
         self.controller_channel = []
         self.land_permission = Permission()
         self.controller_permission = Permission()
@@ -128,7 +129,8 @@ class MyPlugin(Plugin):
 
 
     def Connect(self):
-        inputstring = "roslaunch scenarios connect.launch simulation:=%s ns:=%s" % (self.simulation,self.name)
+        self.rpi = utils.Get_Parameter('/'+self.name+'/rpi','false')            # raspberry pi parameter for the connection (connect.launch)
+        inputstring = "roslaunch scenarios connect.launch simulation:=%s ns:=%s rpi:=%s" % (self.simulation,self.name,self.rpi)
         self.execute(inputstring)
         
         self.land_pub = rospy.Publisher('/%s/gui/land'%(self.name),Permission,queue_size=10)

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>168</width>
-    <height>185</height>
+    <width>204</width>
+    <height>253</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -77,6 +77,27 @@
         <bool>false</bool>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="bPrint">
+       <property name="text">
+        <string>Print</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QComboBox" name="cVariable"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="bPlot">
+         <property name="text">
+          <string>Plot</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <spacer name="verticalSpacer">

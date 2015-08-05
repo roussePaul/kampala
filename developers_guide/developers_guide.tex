@@ -12,7 +12,9 @@
 \hypersetup{ pdfinfo={ Author={SML}, Title={Developer's Guide},
     Creator={LaTeX} } }
 
-\title{Developer's Guide} \author{SML}
+\title{Developer's Guide for software from \\Quadcopter ACCESS Summer Project 2015}
+\author{Erik Berglund, Paul Rousse, Benjamin
+  Summ and Johan Sundin \\at SML, KTH}
 
 
 \begin{document}
@@ -23,58 +25,64 @@
 % Short about our project 
 This document describes the different parts of the program for
 quadcopters developed on the Access Summer Project, 2015, and before,
-in the Smart Mobility Lab, KTH.
+in the Smart Mobility Lab (SML), KTH.
 
 % The hardware that we used 
-The quadcopters used, and for which this guide is aimed, are the 3DR
-IRIS$^+$. As a motion capture system Qualisys was used. The
-quadcopters use the Pixhawk autopilot. For changing settings of the
-quadcopters the program Mission Planner, version XXX, was used,
-\url{http://planner.ardupilot.com/}. Most parts of the code is written
-in Python.
+The quadcopter type used, and for which this guide is aimed, is the
+3DR IRIS$^+$. As a motion capture system Qualisys,
+\url{http://www.qualisys.com/}, was used. The quadcopters use the
+Pixhawk autopilot. Most parts of the program is written in Python.
 
-% About this guide
-This guide provide information about how the program is structured,
-Sec.~\ref{sec:architecture}, how ...
 
 \section{Preparations}
+This section describes how to set up the different parts of the
+program on a fresh computer. Subsec.~\ref{subsec:installation}
+describes the installation procedure and
+Subsec.~\ref{subsec:configuration} the required configuration
+procedure. Finally, some advice are outlined in
+Subsec.~\ref{subsec:advice}.
 
 \subsection{Installation}
-For most software, the Linux operating system Ubuntu is
-recommended, and currently version 14.04 LTS (Trusty). However, some software require a Windows
-installation. A short description and the installation procedure for each
-required program is found below.
+\label{subsec:installation}
+For the main part of the software that was used in the project, the
+Linux operating system Ubuntu is recommended, and currently version
+14.04 LTS (Trusty). However, some software require a Windows
+installation. A short description and the installation procedure for
+each required program is found below. Scripts and other files from the
+summer project 2015 can be found at
+\url{https://github.com/XXXXXXXXXXXXXXXXXXXX}.
 
-Mission Planner runs on Windows only, and is used to calibrate and change settings, by
-changing parameters, of the quadcopters. Configuration of the radio
-can be done with the 3DR Radio Configuration Tool, which also is good
-for checking the connection strength (RSSI), found at
-\url{http://ardupilot.com/downloads/?did=89}.
-
-ROS, Robot Operating System, is
-a framework aimed at develop software for robots. ROS (currently)
-Indigo Igloo can be installed, together with a simulator based on
-RotorS, using Gazebo, using PX4 Firmware, can be installed using the
-instructions at \url{https://pixhawk.org/dev/ros/sitl}. To run the
-simulator with several quadcopters, Docker is required. It
-can be installed following the instructions at
+ROS, Robot Operating System, is a framework aimed at develop software
+for robots. ROS (currently Indigo Igloo) can be installed, together
+with a simulator based on RotorS, using Gazebo and the PX4 Firmware,
+by following the instructions in the summer project 2015 github
+\texttt{README.md} file. This file also contains other information
+about the installation procedure. To run the simulator with several
+quadcopters, Docker is required. It can be installed following the
+instructions at
 \url{https://docs.docker.com/installation/ubuntulinux/}.
 
-Scripts and other files from the summer project 2015 can be found at
-\url{https://github.com/XXXXXXXXXXXXXXXXXXXX}. It should be cloned
-into the \texttt{/src} folder in the ROS workspace. Thereafter, build
-the workspace by running \texttt{catkin\textunderscore make} in the
-workspace top directory (e.g. in \texttt{/catkin\textunderscore ws}).
+The github repository should be cloned into the \texttt{/src} folder
+in the ROS workspace. Then, go to the workspace top directory (e.g.
+\texttt{/catkin\textunderscore ws}). Thereafter, source and build the
+workspace by first running \texttt{source devel/setup.bash} and then
+\texttt{catkin\textunderscore make}.
+
+To calibrate and change settings of the quadcopters, Mission Planner
+can be used. It runs on Windows only. Configuration of the radio can
+be done with the 3DR Radio Configuration Tool, also good for checking
+the connection strength (RSSI). It is found at
+\url{http://ardupilot.com/downloads/?did=89}.
 
 
 \subsection{Configuration}
-A calibration of the accelerometers of the quadcopter is
-mandatory and is done in Mission Planner. When performing the
-calibration, use a water level to setup
-a flat place. It can be checked that the calibration was well
-performed by going to \textit{Flight Data}->\textit{Status}. If $a_x$
-$a_y$ is less than 1\% of of $g = 9.8$ and $a_z = -g$ the calibration
-is satisfactory.
+\label{subsec:configuration}
+Calibrations of the accelerometers of the quadcopters are mandatory
+and can be done in Mission Planner. When performing the calibration,
+use a water level to setup a flat place. It can be checked that a
+calibration was well performed by going to \textit{Flight
+ Data}$\rightarrow$\textit{Status}. If $a_x$ and $a_y$ are less than
+1\% of $g = 9.8$ and $a_z = -g$ the calibration is satisfactory.
 
 Special conditions apply when flying indoors. Most importantly, the
 GPS will stop working. How to disable the GPS and other tips for
@@ -83,9 +91,19 @@ flying indoors can be found at \url{http://copter.ardupilot.com/wiki/common-use-
 For the radio configuration, instructions can be found at
 \url{http://copter.ardupilot.com/wiki/common-optional-hardware/common-telemetry-landingpage/common-3dr-radio-version-2/}. Check
 that parameters are exactly the same. Also, check that the signal
-strength is good (RSSI) with the 3DR Radio Configuration Tool.
+strength is good (RSSI) with the 3DR Radio Configuration Tool. To
+connect the correct antenna to the correct IRIS$^+$ copy
+\texttt{/scenarios/launch/99-usb-serial.rules} to the
+\texttt{/etc/udev/rules.d/} folder. If only using the antennas in the
+SML this is enough (the name of the serial interface of one specific antenna is always
+the same). Otherwise, or to add a new antenna, see
+\url{http://hintshop.ludvig.co.nz/show/persistent-names-usb-serial-devices/}
+or run \texttt{udevadm info -a -n /dev/ttyUSB0 | grep '{serial}' |
+  head -n1} and add a line with the result to
+\texttt{99-usb-serial.rules}.
 
 \subsection{Advice}
+\label{subsec:advice}
 There are some general advice when working with IRIS$^+$:
 
 \begin{itemize}
@@ -94,27 +112,27 @@ There are some general advice when working with IRIS$^+$:
 \end{itemize}
 
 
-
 \section{Architecture}
 \label{sec:architecture}
 
 \begin{figure}[h!]                                                               
   \centering \includegraphics[width=\textwidth]{figures/architecture}
   \caption{The architecture used in ROS. Only main parts and
-    connections in shown. X $= 1, 2, 3, \dots$}
+    connections are shown. ``Etc ...'' indicates that other similar
+    parts easily can be added. X $= 1, 2, 3, \dots$}
   \label{fig:architecture}                                                              
 \end{figure}
 
 The program is using ROS, \textit{The Robot Operating System}, to
-connect different parts of the program. A basic knowledge of ROS is
+connect different parts. A basic knowledge of ROS is
 assumed. The architecture used in the program is shown in
-Fig.~\ref{fig:architecture}. Circles does not correspond to ROS nodes
-strictly, but describes the different parts of the
+Fig.~\ref{fig:architecture}. Circles do not correspond to ROS nodes
+strictly, but describe the different parts of the
 program. Rectangles, however, correspond to ROS topics. ROS packages
-are also written in the figure. Arrows with black head corresponds to
+are also written in the figure. Arrows with black head correspond to
 publication to a topic, if the arrow points from a circle to a topic,
 and subscription to a topic, if the arrow points from a topic to a
-circle. Names in the following paragraphs are referring to
+circle. Names in the following paragraphs refer to
 Fig.~\ref{fig:architecture}.
 
 The goal of the program is to process commands from the user,
@@ -122,223 +140,52 @@ forwarded through the GUI, so that the quadcopter, either in the real
 world or in the simulator, acts as the user intends. The GUI can start
 different ROS launch files, in turn staring scripts that publishes
 points for the quadcopter to follow. These scripts are located in the
-\texttt{trajectory\textunderscore generator} package, and for example publishes
-points for a line or an arc, see Sec.~\ref{sec:trajectory}. Also, the GUI can publish particular
-points itself, not using a predefined script. For more information of
-the GUI, see Sec.~\ref{sec:gui}. Apart from commands from the user,
+\texttt{trajectory\textunderscore generator} package, and for example
+publishes points for a line or an arc, see
+Sec.~\ref{sec:trajectory}. Also, the GUI can publish specific points
+itself, not using a predefined script. For more information of the
+GUI, see Sec.~\ref{sec:gui}. Apart from commands from the user,
 information about the quadcopter's location, speed, acceleration,
 pitch, roll and yaw is also needed. This is provided by Qualisys,
-taken into the ROS framework by the mocap package.
+taken into the ROS framework by the \texttt{mocap} package.
 
 A controller can be applied, since both the target point and the
-current point is known. This is done in the controller package. The
-current point is processed by the Security Guard. If not the
-quadcopter is within certain safety limits, etc., the Lander node is
-told to land the quadcopter by the Security Guard. If it is, the
-Blender is told to further process the data. For more information about the Security Guard, see Sec.~\ref{sec:security_guard}. The blender got it's name
-because it can ``blend'' outputs of different controllers and
-collision avoidance, see Sec.~\ref{sec:blender}. The outputs of the controllers are then
-transformed to roll, pitch, throttle and yaw in the Blender. This is
-then sent to Mavros on the topic /irisX/mavros/rc/override/ (X $= 1,
-2, 3, 4, \dots$) and finally to the quadcopter.
+current point are known. This is done in the \texttt{controller}
+package, see Sec.~\ref{sec:controllers}. The current point is processed by the Security Guard. If not
+the quadcopter is within certain safety limits, etc., the Lander
+is told to land the quadcopter by the Security Guard. If it is, the
+Blender is told to further process the data. For more information
+about the Security Guard, see Sec.~\ref{sec:security_guard}. The
+blender got it's name because it can ``blend'' outputs of different
+controllers and collision avoidance, see Sec.~\ref{sec:blender}. The
+outputs of the controllers are then transformed to roll, pitch,
+throttle and yaw in the Blender. This is sent to Mavros on the
+topic /irisX/mavros/rc/override/ (X $= 1, 2, 3, 4, \dots$) and finally
+to the quadcopter.
 
 
 \section{GUI}
 \label{sec:gui}
 
 
-\section{Trajectory generation and trajectory following}
-\label{sec:trajectory}
-
-In the \texttt{trajectory\textunderscore generator} package there are
-different scripts that are meant to be used together with the
-PID-controller in the \texttt{controller} package. These scripts
-generate a reference for the PID-controller that respects the
-controller's interface. This means that not only target positions are
-generated, but also target velocities and accelerations. The PID uses
-these together with the data of the motion capture system to compute
-the control output.
-
-To calculate the references certain continuous time laws are
-used. These depend, of course, on the trajectory to be performed. The
-time laws are then discretized using the publishing frequency of the
-trajectory node. Each trajectory uses a trajectory node to publish its
-data and only one such node should be used within one script. This
-assures that the same node is publishing the points all the time and
-hence there is no risk of interference between different nodes.
-
-The target points are published on the topic
-/irisX/trajectory\textunderscore gen/target, where X is the number
-given to the drone. The blender subscribes to this topic and passes
-the necessary information to the PID.
-
-In the launch file of each drone there is a parameter called
-obstacle\textunderscore avoidance. This parameter can be set to true
-or false depending on whether obstacles should be avoided or not. The
-obstacles to be avoided are specified through the parameter
-OBSTACLES\textunderscore TO\textunderscore AVOID. Observe that an
-obstacle that is not registered with the motion capture system or
-outside the area of detection will be ignored.
-
-The avoidance itself is done through a potential between the drone and
-the obstacle, pushing the drone away from the obstacle. Here the
-z-direction is ignored, meaning that the drone is pushed away radially
-outward from an infinitely long cylinder whose axis is along the
-z-direction in the SML-frame.  This is done, mainly because two drones
-should repel each other even when they are at different
-heights. Obviously, it would be of use to improve this algorithm as
-one might want the drones to avoid obstacles that are in some finite
-interval along the z-axis.
-
-For trajectories, an abstract class called \texttt{Trajectory} that
-defines the interface of a trajectory is used. All trajectories are
-subclasses of this class and use its interface.
-
-There are some classes with class names that end with
-\texttt{\textunderscore ext}. These are meant to be used in connection
-with controllers that also needs a jerk (third derivative of position)
-and snap (fourth derivative of position) reference, for example the load
-lifting controller (that at the moment of writing unfortunately is not
-working).
-
-There are also different classes used for leader following. Here,
-there also is an abstract base class that can be used for different
-ways of leader following.
-
-A useful class in the package \texttt{trajectory\textunderscore
-  generator} is the \texttt{TrajectoryGenerator} class. It contains a
-collection of different functions that have turned out to be useful,
-when writing code for trajectory generation. One nice feature is a
-function that, given position, velocity and yaw, generates the
-corresponding ROS message.
-
-
-\section{Security guard and lander}
-\label{sec:security_guard}
-
-The security guard is used for several security features during
-experiments. It gives permission to publish on the rc/override topic
-either to the blender in which case everything is working satisfactory
-or to the lander in which case something went wrong and the drone
-lands. Permission is granted to the lander if:
-\begin{itemize}
-  \item The motion capture signal is lost for more than 0.5 seconds
-  \item The drone is outside the safety zone defined in the launch
-    file iris\textunderscore nodes.launch
-  \item The landing button in the GUI is pressed
-\end{itemize}
-Once the landing mode has been initiated it cannot be revoked. That
-is, once the security guard tells the drone to land it will land.  The
-system of permissions works through ROS messages containing
-booleans. If everything works fine the security guard constantly
-publishes true on the topic irisX/security\textunderscore
-guard/controller and false on the topic irisX/security\textunderscore
-guard/lander. If something goes wrong the security guard publishes
-false on irisX/security\textunderscore guard/controller and true on
-irisX/security\textunderscore guard/lander. Once the true has been
-published on irisX/security\textunderscore guard/lander there is no
-chance to take it back. The drone will land. During landing it is
-important that the blender does not publish anything on the
-rc/override otherwise weird behavior can occur. Therefore one always
-has to make sure to publish false at least once on the topic
-irisX/security\textunderscore guard/controller to stop the blender
-from publishing. If one uses the security guard as it is implemented
-this should work without any additions.  The lander is a script that
-sets the landing mode on the APM (the firmware of the drone) and
-publishes neutral outputs on the rc/override topic. This makes the
-drone land in a controlled fashion. When the lander works properly the
-drone goes straight down. If it does not, i.e. if there is motion in
-the x- and/or y-direction, there is something wrong. Probably the
-controller is still publishing something on the rc/override. This has
-to be fixed as otherwise the drone behaves unpredictable while
-landing.
-
-
-\section{Blender}
-\label{sec:blender}
-
-The blender is found in the \texttt{controller} package. It is used
-for two things. The first is taking in acceleration outputs from
-different controllers and blending these according to some scheme. The
-second is to calculate the control outputs after blending the
-accelerations and then publish these on the topic
-irisX/mavros/rc/override in order to control the drone.
-
-As of now, the blender takes an acceleration from the PID and one from
-the obstacle avoidance and performs a convex combination of these. The
-constant with which the acceleration from the obstacle avoidance is
-weighted is dependent on the distance to the obstacle. The blender
-uses a method of the obstacle avoidance to get this constant. Of
-course, if obstacle avoidance is turned of the output is only
-calculated from the output of the PID.
-
-Currently, there is a problem with this kind of blending of
-accelerations. The problem is that convergence to a goal point cannot
-be guaranteed in this way, in fact it can be easily thought of an
-example where convergence does not occur. Assume that the quadcopter
-is hovering at a certain point which is its target and another
-quadcopter is approaching. Assume that the first quadcopter tries to
-avoid the second one, but the second one does not try to avoid the
-first. Then the first one will move away from its target and hover at
-a different point. Thus it is clear that a more sophisticated
-controller is necessary in order to do precision based tasks involving
-collision/obstacle avoidance.
-
-
-\section{Controllers}
-Mainly the PID controller, Sec.~\ref{subsec:pid}, has been used in
-this project. However, a new controller can easily be added by
-modifying the blender, Sec.~\ref{sec:blender}, and using the interface
-provided by the abstract base class \texttt{Controller}.
-
-\subsection{PID controller}
-\label{subsec:pid}
-The PID controller in the \texttt{controller} package is not just a
-normal PID controller. The proportional and derivative gains are
-coupled in a certain way. It is therefore not possible to change these
-gains independently by using the parameters given in the launch
-files. If they have to be changed independently one can either change
-them directly in the script of the PID without using the coupling
-between them or one can change the damping constant named
-x\textunderscore i in the script of the controller. It has not really
-been necessary to do this however.  It should be sufficient to change
-the parameters CONTROL\textunderscore CANCEL\textunderscore GRAVITY,
-PID\textunderscore w, PID\textunderscore w\textunderscore z,
-PID\textunderscore I\textunderscore lim, PID \textunderscore
-K\textunderscore i, PID\textunderscore I\textunderscore
-lim\textunderscore z and PID\textunderscore K\textunderscore
-i\textunderscore z. The first parameter is crucial for performance in
-the z-direction as it is used to counterbalance gravity. It has been
-observed that this parameter might have to be retuned for different
-battery levels. The next two parameters are used to adjust both the
-proportional and the derivative gain in an optimal way with respect to
-each other. The PID\textunderscore w is for x and y and
-PID\textunderscore w\textunderscore z is for z. The I\textunderscore
-lim and K\textunderscore i are the saturation and gain of the integral
-term. The ones with \textunderscore z in the end are for the
-z-direction, the other ones for x and y. There is no need for a high
-saturation limit in the x and y direction but in the z direction it
-should be rather high to guarantee robustness against the change in
-battery level. The parameters that currently are in the launch files
-work fine for iris2, iris3 and iris4.  Observe that the value of the
-parameters Kphi and Ktt should be 637 for both.
-
-\section{Useful facts for experimentation}
+\section{How to fly}
 For experimentation using the GUI two different launch files have to
 be started. These are \texttt{mocap.launch} in the \texttt{mocap}
-package and \texttt{rqt.launch} in the \texttt{scenarios}
-package. Both take an argument called \texttt{simulation}. To start
-the mocap one opens a terminal and writes \texttt{roslaunch mocap
-  mocap.launch simulation:=false}. To start the GUI one writes
-\texttt{roslaunch scenarios rqt.launch simulation:=false}. To connect
-to the drone a new terminal is opened by clicking on \textit{New
-  Terminal} in the GUI. Then one has to click \textit{Param} and
-\textit{Connect}. \textit{Param} has to be clicked in order to load
-all the parameters of the drone from the corresponding launch
+package and \texttt{rqt.launch} in the \texttt{scenarios} package. To
+start the mocap one opens a terminal and writes \texttt{real} and then
+\texttt{roslaunch mocap mocap.launch}. To start the GUI one writes
+\texttt{real} and then \texttt{roslaunch scenarios rqt.launch}. To
+connect to the drone a new terminal is opened by clicking on
+\textit{New Terminal} in the GUI. Then one has to click \textit{Param}
+and \textit{Connect}. \textit{Param} has to be clicked in order to
+load all the parameters of the drone from the corresponding launch
 file. When the connection has been made one can press \textit{Arm} and
 the drone should arm. Then different parts of the GUI can be used to
-start the drone depending on what one wants to achieve.
+start the drone depending on what one wants to achieve. To run the
+simulator the procedure is repeated, but with writing \texttt{sim}
+instead of \texttt{real}.
 
+\subsection{Advice}
 When arming the drone one sometimes gets the error message:
 \texttt{Throttle below FS}. This tells you that the throttle is too
 low, but usually it is not. One should try to kill the Mavros node,
@@ -407,6 +254,191 @@ It is advised that somebody operates the GUI at all times in order to
 make the drone land in emergency situations.
 
 
+\section{Trajectory generation and trajectory following}
+\label{sec:trajectory}
+
+In the \texttt{trajectory\textunderscore generator} package there are
+different scripts that are meant to be used together with a controller
+in the \texttt{controller} package (mainly the \texttt{PID}
+controller). These scripts generate a reference for the controller
+that respects the controller's interface. This means that not only
+target positions are generated, but also target velocities and
+accelerations. A controller uses these together with the data of the
+motion capture system to compute the control output. The interface of
+the trajectory generator scripts is defined by the abstract class
+called \texttt{Trajectory}. All trajectory generators are subclasses
+of this class and use its interface.
+
+There are some classes with class names that end with
+\texttt{\textunderscore ext}. These are meant to be used in connection
+with controllers that also need a jerk (third derivative of position)
+and snap (fourth derivative of position) reference, for example the load
+lifting controller (that at the moment of writing unfortunately is not
+working).
+
+To calculate the references certain continuous time laws are
+used. These depend, of course, on the trajectory to be performed. The
+time laws are then discretized using the publishing frequency of the
+trajectory node. Each trajectory uses a trajectory node to publish its
+data and only one such node should be used within one script. This
+assures that the same node is publishing the points all the time and
+hence there is no risk of interference between different nodes.
+
+The target points are published on the topic
+\texttt{/irisX/trajectory\textunderscore gen/target}, X $= 1, 2, 3,
+4, \dots$. The blender subscribes to this topic and passes the
+necessary information to the PID.
+
+A useful class in the package \texttt{trajectory\textunderscore
+  generator} is the \texttt{TrajectoryGenerator} class. It contains a
+collection of different functions that have turned out to be useful
+when writing code for trajectory generation. One nice feature is a
+function that, given position, velocity and yaw, generates the
+corresponding ROS message.
+
+There are also different classes used for leader following. Here,
+there also is an abstract base class that can be used for different
+ways of leader following.
+
+\subsection{Obstacle avoidance}
+\label{subsec:obstacle_avoidance}
+In the launch file of each drone there is a parameter called
+\texttt{obstacle\textunderscore avoidance}. This parameter can be set to true
+or false depending on whether obstacles should be avoided or not. The
+obstacles to be avoided are specified through the parameter
+\texttt{OBSTACLES\textunderscore TO\textunderscore AVOID}. Observe that an
+obstacle that is not registered with the motion capture system or
+outside the area of detection will be ignored.
+
+The avoidance itself is done through a potential between the drone and
+the obstacle, pushing the drone away from the obstacle. Here the
+z-direction is ignored, meaning that the drone is pushed away radially
+outward from an infinitely long cylinder whose axis is along the
+z-direction in the SML-frame. This is done mainly because two drones
+should repel each other even when they are at different
+heights. Obviously, it would be of use to improve this algorithm as
+one might want the drones to avoid obstacles that are in some finite
+interval along the z-axis.
+
+
+\section{Security guard and lander}
+\label{sec:security_guard}
+
+The Security Guard is used for several security features during
+experiments. It gives permission to publish on the
+\texttt{rc/override} topic either to the Blender, in which case
+everything is working satisfactory, or to the Lander, in which case
+something went wrong, and the drone lands. Permission is granted to the
+lander if:
+\begin{itemize}
+  \item The motion capture signal is lost for more than 0.5 seconds
+  \item The drone is outside the safety zone defined in the launch
+    file \texttt{iris\textunderscore nodes.launch}
+  \item The landing button in the GUI is pressed
+\end{itemize}
+Once the landing mode has been initiated it cannot be revoked. That
+is, once the Security Guard tells the drone to land it will land. The
+system of permissions works through ROS messages containing
+booleans. If everything works fine the Security Guard constantly
+publishes true on the topic \texttt{irisX/security\textunderscore
+  guard/controller} and false on the topic
+\texttt{irisX/security\textunderscore guard/lander}. If something goes
+wrong the Security Guard publishes false on
+\texttt{irisX/security\textunderscore guard/controller} and true on
+\texttt{irisX/security\textunderscore guard/lander}. Once the true has
+been published on \texttt{irisX/security\textunderscore guard/lander}
+there is no chance to take it back. The drone will land. During
+landing it is important that the blender does not publish anything on
+the texttt{rc/override} topic, otherwise weird behavior can
+occur. Therefore, one always has to make sure to publish false at least
+once on the topic \texttt{irisX/security\textunderscore guard/controller} to
+stop the Blender from publishing. If one uses the Security Guard as it
+is implemented this should work without any additions.  
+
+The Lander is a script that sets the landing mode on the APM (the
+firmware of the drone) and publishes neutral outputs on the
+\texttt{rc/override} topic. This makes the drone land in a controlled
+fashion. When the lander works properly the drone goes straight
+down. If it does not, i.e. if there is motion in the x- and/or
+y-direction, there is something wrong. Probably the controller is
+still publishing something on the \texttt{rc/override}. This has to be
+fixed, as otherwise the drone behaves unpredictable while landing.
+
+
+\section{Blender}
+\label{sec:blender}
+
+The Blender is found in the \texttt{controller} package. It is used
+for two things. The first is taking in acceleration outputs from
+different controllers and blending these according to some scheme. The
+second is to calculate the control outputs after blending the
+accelerations and then publish these on the topic
+\texttt{irisX/mavros/rc/override} in order to control the drone.
+
+As of now, the Blender takes an acceleration from a controller and one
+from the obstacle avoidance and performs a convex combination of
+these. The constant with which the acceleration from the obstacle
+avoidance is weighted is dependent on the distance to the
+obstacle. The Blender uses a method of the obstacle avoidance to get
+this constant. Of course, if obstacle avoidance is turned off the
+output is only calculated from the output of the controller.
+
+Currently, there is a problem with this kind of blending of
+accelerations. The problem is that convergence to a goal point cannot
+be guaranteed in this way. In fact it can be easily thought of an
+example where convergence does not occur. Assume that the quadcopter
+is hovering at a certain point, which is its target, and another
+quadcopter is approaching. Furthermore, assume that the first
+quadcopter tries to avoid the second one, but the second one does not
+try to avoid the first. Then the first one will move away from its
+target and hover at a different point. Thus it is clear that a more
+sophisticated controller is necessary in order to do precision based
+tasks involving collision/obstacle avoidance.
+
+
+\section{Controllers}
+\label{sec:controllers}
+Mainly the PID controller, Sec.~\ref{subsec:pid}, has been used in
+this project. However, a new controller can easily be added by
+modifying the Blender, Sec.~\ref{sec:blender}, and using the interface
+provided by the abstract base class \texttt{Controller}.
+
+\subsection{PID controller}
+\label{subsec:pid}
+The PID controller in the \texttt{controller} package is not just a
+normal PID controller. The proportional and derivative gains are
+coupled in a certain way. It is therefore not possible to change these
+gains independently by using the parameters given in the launch
+files. If they have to be changed independently one can either change
+them directly in the script of the PID without using the coupling
+between them or one can change the damping constant named
+\texttt{x\textunderscore i} in the script of the controller. It has
+not really been necessary to do this, however.  It should be
+sufficient to change the parameters \texttt{CONTROL\textunderscore
+  CANCEL\textunderscore GRAVITY}, \texttt{PID\textunderscore w},
+\texttt{PID\textunderscore w\textunderscore z},
+\texttt{PID\textunderscore I\textunderscore lim},
+\texttt{PID\textunderscore} \texttt{K\textunderscore i},
+\texttt{PID\textunderscore I\textunderscore lim\textunderscore z} and
+\texttt{PID\textunderscore K\textunderscore i\textunderscore z}. The
+first parameter is crucial for performance in the z-direction as it is
+used to counterbalance gravity. It has been observed that this
+parameter might have to be retuned for different battery levels. The
+next two parameters are used to adjust both the proportional and the
+derivative gain in an optimal way with respect to each other. The
+\texttt{PID\textunderscore w} is for x and y and
+\texttt{PID\textunderscore w\textunderscore} z is for z. The
+\texttt{I\textunderscore lim} and \texttt{K\textunderscore i} are the
+saturation and gain of the integral term. The ones with
+\texttt{\textunderscore z} in the end are for the z-direction, the
+other ones for x and y. There is no need for a high saturation limit
+in the x and y direction but in the z direction it should be rather
+high to guarantee robustness against the change in battery level. The
+parameters that currently are in the launch files work fine for iris2,
+iris3 and iris4.  Observe that the value of the parameters
+\texttt{Kphi} and \texttt{Ktt} should be 637 for both.
+
+
 \section{Connecting servos}
 \label{sec:servos}
 IRIS$^+$ uses the Pixhawk autopilot. On the Pixhawk there are outputs
@@ -415,7 +447,7 @@ divided in eight ``main outputs'', MAIN OUT 1-8, and six ``auxiliary
 outputs'', AUX OUT 1-6. MAIN OUT 1-4 are occupied by the the four
 motors. However, MAIN OUT 1-8 should be avoided for servos anyway
 since these update at a rate of 400 Hz by default. AUX OUT 1-6 update
-at 50 Hz, which is standard for servos.
+at 50 Hz -- standard for servos.
 
 \begin{figure}[h!]                                                               
   \centering
@@ -433,10 +465,10 @@ the way that setting \texttt{BRD\textunderscore PWM\textunderscore
 
 The IRIS$^+$ transmitter and receiver has eight channels. This is
 reflected in the way that a vector of eight components can be sent to
-the quad via the topic /irisX/mavros/rc/override/. The first four
+the quad via the topic \texttt{/irisX/mavros/rc/override/}. The first four
 components are for roll, pitch, throttle and yaw, leaving the other
-four for servos. In addition to that, the different channels needs to
-be connected to the different servo outputs on the Pixhawk. This can
+four for servos. In addition to that, the different channels need to
+be linked to the different servo outputs on the Pixhawk. This can
 be done in the Mission Planner. In Mission Planner, the eight channels
 are named RC1-RC8. The different servo ports are named in a similar
 way: RC1-RC8 corresponds to MAIN OUT 1-8 and RC9-RC14 corresponds to
@@ -454,13 +486,13 @@ not AUX OUT 1-6.}
 The Pixhawk does not provide power to the servos itself, so these must
 be powered in other ways. A BEC or ESC, providing 5 V, can be used,
 for example. It can be connected to the servo outputs on the Pixhawk
-or to the servo directly. By default, the ground pins are connected to
+or to a servo directly. By default, the ground pins are connected to
 the ground of the battery, by a wire to MAIN OUT 1 ground pin. Also,
 on the bottom of the IRIS$^+$ there are a black cable connected to AUX
 OUT 6 ground pin and a white cable connected to AUX OUT 1 signal
 pin. In addition to this, there is a red power cable and another black
 ground wire connected to the battery of the IRIS$^+$, providing 12
-V. So, if the voltage is lowered to around 5 V this can be used. So if
+V. If the voltage is lowered to around 5 V this can be used. So, if
 only one servo is needed, the quadcopter does not even needs to be
 opened!
 
@@ -483,7 +515,7 @@ outlined below, fixing many of the possible errors.
 
 \begin{itemize}
   \item Put a fully charged battery in the drone.
-  \item Is the quad unstable? In that case, try to control it with the RC
+  \item Is the drone unstable? In that case, try to control it with the RC
     transmitter.
     \begin{itemize} 
       \item In case of good behavior, check the controller.
