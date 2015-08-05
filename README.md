@@ -156,4 +156,6 @@ if [ !  -z "$ip" ];
     export SIMULATION="false"
 fi
 }
+
+sim
 ```

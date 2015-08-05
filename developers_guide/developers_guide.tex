@@ -48,22 +48,25 @@ For the main part of the software that was used in the project, the
 Linux operating system Ubuntu is recommended, and currently version
 14.04 LTS (Trusty). However, some software require a Windows
 installation. A short description and the installation procedure for
-each required program is found below.
+each required program is found below. Scripts and other files from the
+summer project 2015 can be found at
+\url{https://github.com/XXXXXXXXXXXXXXXXXXXX}.
 
-ROS, Robot Operating System, is
-a framework aimed at develop software for robots. ROS (currently)
-Indigo Igloo can be installed, together with a simulator based on
-RotorS, using Gazebo and the PX4 Firmware, using the
-instructions at \url{https://pixhawk.org/dev/ros/sitl}. To run the
-simulator with several quadcopters, Docker is required. It
-can be installed following the instructions at
+ROS, Robot Operating System, is a framework aimed at develop software
+for robots. ROS (currently Indigo Igloo) can be installed, together
+with a simulator based on RotorS, using Gazebo and the PX4 Firmware,
+by following the instructions in the summer project 2015 github
+\texttt{README.md} file. This file also contains other information
+about the installation procedure. To run the simulator with several
+quadcopters, Docker is required. It can be installed following the
+instructions at
 \url{https://docs.docker.com/installation/ubuntulinux/}.
 
-Scripts and other files from the summer project 2015 can be found at
-\url{https://github.com/XXXXXXXXXXXXXXXXXXXX}. It should be cloned
-into the \texttt{/src} folder in the ROS workspace. Thereafter, build
-the workspace by running \texttt{catkin\textunderscore make} in the
-workspace top directory (e.g. in \texttt{/catkin\textunderscore ws}).
+The github repository should be cloned into the \texttt{/src} folder
+in the ROS workspace. Then, go to the workspace top directory (e.g.
+\texttt{/catkin\textunderscore ws}). Thereafter, source and build the
+workspace by first running \texttt{source devel/setup.bash} and then
+\texttt{catkin\textunderscore make}.
 
 To calibrate and change settings of the quadcopters, Mission Planner
 can be used. It runs on Windows only. Configuration of the radio can
@@ -168,18 +171,19 @@ to the quadcopter.
 \section{How to fly}
 For experimentation using the GUI two different launch files have to
 be started. These are \texttt{mocap.launch} in the \texttt{mocap}
-package and \texttt{rqt.launch} in the \texttt{scenarios}
-package. Both take an argument called \texttt{simulation}. To start
-the mocap one opens a terminal and writes \texttt{roslaunch mocap
-  mocap.launch simulation:=false}. To start the GUI one writes
-\texttt{roslaunch scenarios rqt.launch simulation:=false}. To connect
-to the drone a new terminal is opened by clicking on \textit{New
-  Terminal} in the GUI. Then one has to click \textit{Param} and
-\textit{Connect}. \textit{Param} has to be clicked in order to load
-all the parameters of the drone from the corresponding launch
+package and \texttt{rqt.launch} in the \texttt{scenarios} package. To
+start the mocap one opens a terminal and writes \texttt{real} and then
+\texttt{roslaunch mocap mocap.launch}. To start the GUI one writes
+\texttt{real} and then \texttt{roslaunch scenarios rqt.launch}. To
+connect to the drone a new terminal is opened by clicking on
+\textit{New Terminal} in the GUI. Then one has to click \textit{Param}
+and \textit{Connect}. \textit{Param} has to be clicked in order to
+load all the parameters of the drone from the corresponding launch
 file. When the connection has been made one can press \textit{Arm} and
 the drone should arm. Then different parts of the GUI can be used to
-start the drone depending on what one wants to achieve.
+start the drone depending on what one wants to achieve. To run the
+simulator the procedure is repeated, but with writing \texttt{sim}
+instead of \texttt{real}.
 
 \subsection{Advice}
 When arming the drone one sometimes gets the error message:
