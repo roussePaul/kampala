@@ -166,14 +166,11 @@ def Trajectory_Done(data,end_trajectory):
 			utils.loginfo('Trajectory is completed')
 		end_trajectory.is_done=True
 
-<<<<<<< HEAD
 def Landing_Permission(data,landing_permission):
 	landing_permission.permission = data.permission
 
-=======
 ## Callback of the mocap topic
 ##
->>>>>>> 3099c9beaef814810531a4f6f0e3c507328f6429
 ##@param data: a point object
 ##@param pont_obj: a point object
 def New_Point(data,point_obj):
@@ -293,10 +290,8 @@ if __name__=='__main__':
 				loop_rate.sleep()
                 else:
                         utils.logerr('Initiate landing mode')
-                        print(".................")
 			controller_permission=2
 			while not rospy.is_shutdown():
-                                print("******************")
 				lander_channel.publish(lander_permission)
 				controller_channel.publish(controller_permission)
 				loop_rate.sleep()

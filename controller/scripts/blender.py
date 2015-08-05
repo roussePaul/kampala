@@ -269,6 +269,7 @@ class Blender():
     if self.obstacle_avoidance:
       alpha = self.avoidance.get_blending_constant()
       utils.loginfo(alpha)
+      print(alpha)
     else:
       alpha = 0
     for i in range(0,2):
@@ -355,7 +356,7 @@ class Blender():
     self.CONTROL_CANCEL_GRAVITY = utils.Get_Parameter("CONTROL_CANCEL_GRAVITY",1400)	
 
     self.FREQUENCY = utils.Get_Parameter("CONTROLLER_FREQUENCY",30)
-
+    self.obstacle_avoidance = utils.Get_Parameter("obstacle_avoidance","False")
     self.controller_type = utils.Get_Parameter("controller_type","PID")
 
 

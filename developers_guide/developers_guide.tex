@@ -326,44 +326,11 @@ interval along the z-axis.
 
 The Security Guard is used for several security features during
 experiments. It gives permission to publish on the
-\texttt{rc/override} topic either to the Blender, in which case
-everything is working satisfactory, or to the Lander, in which case
-something went wrong, and the drone lands. Permission is granted to the
-lander if:
-\begin{itemize}
-  \item The motion capture signal is lost for more than 0.5 seconds
-  \item The drone is outside the safety zone defined in the launch
-    file \texttt{iris\textunderscore nodes.launch}
-  \item The landing button in the GUI is pressed
-\end{itemize}
-Once the landing mode has been initiated it cannot be revoked. That
-is, once the Security Guard tells the drone to land it will land. The
-system of permissions works through ROS messages containing
-booleans. If everything works fine the Security Guard constantly
-publishes true on the topic \texttt{irisX/security\textunderscore
-  guard/controller} and false on the topic
-\texttt{irisX/security\textunderscore guard/lander}. If something goes
-wrong the Security Guard publishes false on
-\texttt{irisX/security\textunderscore guard/controller} and true on
-\texttt{irisX/security\textunderscore guard/lander}. Once the true has
-been published on \texttt{irisX/security\textunderscore guard/lander}
-there is no chance to take it back. The drone will land. During
-landing it is important that the blender does not publish anything on
-the texttt{rc/override} topic, otherwise weird behavior can
-occur. Therefore, one always has to make sure to publish false at least
-once on the topic \texttt{irisX/security\textunderscore guard/controller} to
-stop the Blender from publishing. If one uses the Security Guard as it
-is implemented this should work without any additions.  
+\texttt{rc/override} topic either to the Blender or to the Lander. Permission is granted to the lander if the motion capture signal is lost for more than 0.5 seconds. The Lander sets the flight mode of the quad to landing mode and publishes neutral commands on the texttt{rc/override} topic. When the lander is used, the landing is not controlled since there is no feedback. Therefore, the drone keeps moving in the xy-plane during landing. This should be fixed sooner or later. It was looked into using internal measurements to get feedback for the landing and there are some mavros topics that provide these measurements, but with the firmware used on iris 3 and iris 4 these topics don't give any information. However, the firmware on iris 2 can access the information. Observe that this is a beta firmware and not the firmware pre installed on the iris and it was chosen to not change the firmware on iris 3 and iris 4 to avoid trouble. If the drone is outside of the safety area defined in the launch file \texttt{iris\textunderscore nodes.launch} or the landing button is pushed, the landing is controlled with the PID, still using the motion capture data.
 
-The Lander is a script that sets the landing mode on the APM (the
-firmware of the drone) and publishes neutral outputs on the
-\texttt{rc/override} topic. This makes the drone land in a controlled
-fashion. When the lander works properly the drone goes straight
-down. If it does not, i.e. if there is motion in the x- and/or
-y-direction, there is something wrong. Probably the controller is
-still publishing something on the \texttt{rc/override}. This has to be
-fixed, as otherwise the drone behaves unpredictable while landing.
+The important topics that manage the landing are \texttt{irisX/security\textunderscore guard/controller} and \texttt{irisX/security\textunderscore guard/lander}. As long as everything works and no landing is desired a zero is published on \texttt{irisX/security\textunderscore guard/controller} and false is published on \texttt{irisX/security\textunderscore guard/lander}. When the landing button is pushed a 2 is published on \texttt{irisX/security\textunderscore guard/controller} and false is published on \texttt{irisX/security\textunderscore guard/lander}. The drone goes to a height of 0.5m and then the landing mode is set. If the mocap signal is lost a 1 is published on \texttt{irisX/security\textunderscore guard/controller} and true is published on \texttt{irisX/security\textunderscore guard/lander}. In this case the controller is turned of and the flight mode is set to landing mode. 
 
+Since here potentially different nodes are publishing on the topic texttt{rc/override} it is of importance that only one node publishes at a time. Two nodes publishing on this topic can cause conflicting outputs and therefore strange behaviour during landing.
 
 \section{Blender}
 \label{sec:blender}
