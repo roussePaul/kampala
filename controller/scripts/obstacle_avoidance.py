@@ -64,7 +64,7 @@ class AvoidanceController():
     the final control output. This constant varies continuously from alpha_min to alpha_max. Also,
     for certain distances the value is constant at alpha_min or alpha_max respectively. If none of 
     the obstacles is detected, the constant is set to zero."""
-    alpha_max = 0.6  			# <= 1.
+    alpha_max = 0.8  			# <= 1.
     alpha_min = 0.			# >=0.
     r_min = 0.9 			
     r_max = 2.
