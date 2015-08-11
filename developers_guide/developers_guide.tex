@@ -12,7 +12,7 @@
 \hypersetup{ pdfinfo={ Author={SML}, Title={Developer's Guide},
     Creator={LaTeX} } }
 
-\title{Developer's Guide for software from \\Quadcopter ACCESS Summer Project 2015}
+\title{Developer's Guide for software from \\Coordination of Autonomous Aerial Vehicles, ACCESS Summer Project 2015}
 \author{Erik Berglund, Paul Rousse, Benjamin
   Summ and Johan Sundin \\at SML, KTH}
 
@@ -125,17 +125,15 @@ There are some general advice when working with IRIS$^+$:
   \label{fig:architecture}                                                              
 \end{figure}
 
-The program is using ROS, \textit{The Robot Operating System}, to
-connect different parts. A basic knowledge of ROS is
-assumed. The architecture used in the program is shown in
+The program is using ROS to connect different parts. A basic knowledge
+of ROS is assumed. The architecture used in the program is shown in
 Fig.~\ref{fig:architecture}. Circles do not correspond to ROS nodes
-strictly, but describe the different parts of the
-program. Rectangles, however, correspond to ROS topics. ROS packages
-are also written in the figure. Arrows with black head correspond to
-publication to a topic, if the arrow points from a circle to a topic,
-and subscription to a topic, if the arrow points from a topic to a
-circle. Names in the following paragraphs refer to
-Fig.~\ref{fig:architecture}.
+strictly, but describe the different parts of the program. Rectangles,
+however, correspond to ROS topics. ROS packages are also written in
+the figure. Arrows with black head correspond to publication to a
+topic, if the arrow points from a circle to a topic, and subscription
+to a topic, if the arrow points from a topic to a circle. Names in the
+following paragraphs refer to Fig.~\ref{fig:architecture}.
 
 The goal of the program is to process commands from the user,
 forwarded through the GUI, so that the quadcopter, either in the real
@@ -541,7 +539,7 @@ outlined below, fixing many of the possible errors.
 \section{3DR Radio communication interference}
 It seems that the radios interfere when they are close, so try to have
 at least 1 meter between each of them.  However, it is not sufficient,
-if you look at the /diagnostics topic, then you will see that there
+if you look at the \texttt{/diagnostics} topic, then you will see that there
 are many Rx errors, it is the same in Mission Planner, by looking at
 the logs, we see that many errors append. One of the consequence that
 is directly visible is that that parameters are much slower to be
