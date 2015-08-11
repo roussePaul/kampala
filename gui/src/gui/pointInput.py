@@ -93,7 +93,7 @@ class pointInputPlugin(Plugin):
         self.pointlist = []
         self.filelist = os.listdir(self.pwd + '/src/kampala/gui/src/gui/DXFFiles')
         self.filelist2 = os.listdir(self.pwd + '/src/kampala/gui/src/gui/ActionFiles') 
-        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4',"iris5"])
         self._widget.DXFInputBox.insertItems(0,self.filelist)
         self._widget.ActionInputBox.insertItems(0,self.filelist2)
 

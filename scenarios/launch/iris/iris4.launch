@@ -22,7 +22,7 @@
 				<param name="target_component_id" value="1" />
 			</group>
 			
-			<param name="body_id" value="21"/>
+			<param name="body_id" value="20"/>
 
 	<!-- CONTROLLER -->
 	<!-- Main values -->
@@ -38,11 +38,11 @@
 			<param name="K_yaw" value="2"/>
 			<param name="PID_w_inf" value="2"/>
 			<param name="PID_I_lim" value="0.2"/>
-			<param name="PID_K_i" value="1.0"/>
+			<param name="PID_K_i" value="1."/>
 			<param name="CONTROL_MIN" value="1000"/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1.5"/>
-            		<param name="OBSTACLES_TO_AVOID" value="[8]"/>
-			<param name="my_id" value="21"/>
+            		<param name="OBSTACLES_TO_AVOID" value="[22]"/>
+			<param name="my_id" value="20"/>
 			<param name="PID_I_lim_z" value="1."/>
 			<param name="PID_K_i_z" value="1.0"/>
 	<!-- Unimportant values -->

@@ -26,8 +26,8 @@
       <!-- Add a body tracked by mocap -->
       <!-- The identifier correspond to the position of the body that appears in the Qualisys list -->
       <!-- To add a body, add the Qualisys id and the name of the body (I am not sure that the names are still used) -->
-	  <rosparam param="/body_array">[8,16,17,21]</rosparam>
-	  <rosparam param="/body_names">["iris1","iris2","iris3","iris4"]</rosparam>
+	  <rosparam param="/body_array">[20,14,18,21,22]</rosparam>
+	  <rosparam param="/body_names">["iris1","iris2","iris3","iris4","iris5"]</rosparam>
 
 	  <!-- Launch the mocap node -->
 	  <node name="ros_mocap" pkg="mocap" type="ros_mocap.py" respawn="true" output="screen">

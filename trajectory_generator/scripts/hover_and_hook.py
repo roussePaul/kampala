@@ -52,7 +52,7 @@ class Hooker(Trajectory):
     rate.sleep()
     rospy.sleep(3.)
     hook_func = rospy.ServiceProxy('blender/set_channel6', SetChannel6)
-    hook_func(0)
+    hook_func(1000)
     self.__node.send_msg(msg)
     rate.sleep()
     

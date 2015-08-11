@@ -86,7 +86,7 @@ calibration was well performed by going to \textit{Flight
 
 Special conditions apply when flying indoors. Most importantly, the
 GPS will stop working. How to disable the GPS and other tips for
-flying indoors can be found at \url{http://copter.ardupilot.com/wiki/common-use-cases-and-applications/indoor-flying/}.
+flying indoors can be found at \url{http://copter.ardupilot.com/wiki/common-use-cases-and-applications/indoor-flying/}. Also, be sure to set the parameter \texttt{GPS\textunderscore TYPE} to \texttt{0}, so that it is disabled. 
 
 For the radio configuration, instructions can be found at
 \url{http://copter.ardupilot.com/wiki/common-optional-hardware/common-telemetry-landingpage/common-3dr-radio-version-2/}. Check
@@ -101,6 +101,8 @@ the same). Otherwise, or to add a new antenna, see
 or run \texttt{udevadm info -a -n /dev/ttyUSB0 | grep '{serial}' |
   head -n1} and add a line with the result to
 \texttt{99-usb-serial.rules}.
+
+For radio calibration, use the values of the parameters specified in the document \texttt{/scenarios/launch/iris/default\textunderscore param\textunderscore override.param} in the git folder.
 
 \subsection{Advice}
 \label{subsec:advice}
@@ -162,6 +164,12 @@ outputs of the controllers are then transformed to roll, pitch,
 throttle and yaw in the Blender. This is sent to Mavros on the
 topic /irisX/mavros/rc/override/ (X $= 1, 2, 3, 4, \dots$) and finally
 to the quadcopter.
+
+\section{Documentation}
+\label{sec:documentation}
+
+To get the documentation of all the packages open a terminal and go to your catkin workspace. In the workspace go to \texttt{src/kampala} and write \texttt{sh gen\textunderscore doc.sh}. The documentation will be auto-generated and when the generation is done a message is shown which tells you where the documentation is to be found. The path will be similar to \texttt{home/user/workspace\textunderscore name/doc}. Here you find a folder for each package. To access the documentation of the package \texttt{package} open the folder \texttt{package} in the folder \texttt{doc} and go to \texttt{html}. Here open the file \texttt{annotated.html}.
+
 
 
 \section{GUI}

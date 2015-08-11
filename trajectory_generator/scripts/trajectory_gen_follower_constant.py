@@ -37,8 +37,8 @@ if __name__ == '__main__':
   try:
     traj = TrajectoryNode()
     offset = [0.0,-1.0,0.0]
-    my_id = 21
-    leader_id = 8
+    my_id = 20
+    leader_id = 22
     ConstantFollower(traj,offset,my_id,leader_id).loop()
   except rospy.ROSInterruptException:
     pass

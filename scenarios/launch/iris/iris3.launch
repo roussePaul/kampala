@@ -7,7 +7,7 @@
 	<arg name="launch" default="false"/>
 
 	<group ns="$(arg ns)">
-        	<param name="obstacle_avoidance" type="bool" value="False"/>
+        	<param name="obstacle_avoidance" type="bool" value="True"/>
 	</group>
 	<group unless="$(arg simulation)">
 
@@ -22,7 +22,7 @@
 				<param name="target_component_id" value="1" />
 			</group>
 			
-			<param name="body_id" value="15"/>
+			<param name="body_id" value="14"/>
 
 	<!-- CONTROLLER -->
 	<!-- Main values -->
@@ -38,14 +38,14 @@
 			<param name="K_yaw" value="2"/>
 			<param name="w_inf" value="2"/>
 			<param name="PID_w" value="1.5"/>
-			<param name="PID_I_lim" value="0.6"/>
-			<param name="PID_K_i" value="0.1"/>
+			<param name="PID_I_lim" value="1."/>
+			<param name="PID_K_i" value="0.2"/>
 			<param name="PID_w_z" value="1."/>
 			<param name="PID_I_lim_z" value="1.5"/>
 			<param name="PID_K_i_z" value="1."/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
-                        <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
-			<param name="my_id" value="16"/>
+                        <param name="OBSTACLES_TO_AVOID" value="[23]"/>
+			<param name="my_id" value="14"/>
 	<!-- Unimportant values -->
 		<!-- <param name="CONTROL_MIN" value="1000"/>
 		<param name="CONTROL_NEUTRAL" value="1500"/>

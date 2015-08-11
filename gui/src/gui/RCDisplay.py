@@ -98,7 +98,7 @@ class RCDisplayPlugin(Plugin):
 
         # Setting other variables
 
-        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4',"iris5"])
         self.batterysub = ''
         self.sub = ''
         

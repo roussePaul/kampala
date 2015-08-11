@@ -80,7 +80,7 @@ class MyPlugin(Plugin):
         self._widget.StartInputField.returnPressed.connect(self.Autocomplete)
         self._widget.FileInputBox.currentIndexChanged.connect(self.FillIn)
         
-        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4','iris5'])
         self._widget.FileInputBox.insertItems(0,self.filelist)
         if self.simulation:
             self._widget.TerminateButton.clicked.connect(self.Terminate)

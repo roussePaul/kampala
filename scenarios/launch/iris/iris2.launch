@@ -33,7 +33,7 @@ Apply for both the simulated and the real quad -->
 			</group>
 		
 		<!-- MOCAP CONFIGURATION -->
-			<param name="body_id" value="8"/>
+			<param name="body_id" value="22"/>
 
 		<!-- CONTROLLER -->
 			<!-- Main values -->
@@ -57,7 +57,7 @@ Apply for both the simulated and the real quad -->
 			<param name="PID_R" value="0.0"/>
 			<param name="OBSTACLE_AVOIDANCE_K" value="1."/>
             <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
-			<param name="my_id" value="8"/>
+			<param name="my_id" value="22"/>
 		<!-- Unimportant values -->
 			<!-- These values are automatically computed by the PID controller as it is writen here, you can override by uncommenting them -->
 			<!-- <param name="CONTROL_MIN" value="1000"/> -->

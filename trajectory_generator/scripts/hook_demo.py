@@ -62,14 +62,15 @@ class HookDemo():
     start = [self.__state.x,self.__state.y,self.__state.z]
     end = [self.__load_pos.x,self.__load_pos.y,1.]
     StraightLineGen(self.__node,start,end).loop(0.)
-    rospy.sleep(4.)
+    rospy.sleep(5.)
     start = [self.__state.x,self.__state.y,self.__state.z]
-    end = [self.__load_pos.x-0.02,self.__load_pos.y+0.01,0.9]
+    end = [self.__load_pos.x-0.02,self.__load_pos.y+0.01,0.90]
     StraightLineGen(self.__node,start,end).loop(0.)
-    rospy.sleep(2.)
+    rospy.sleep(5.)
     start = [self.__state.x,self.__state.y,self.__state.z]
     end = [self.__load_pos.x-0.02,self.__load_pos.y+0.01,0.85]
     StraightLineGen(self.__node,start,end).loop(0.)
+    rospy.sleep(1.)
     hooker = Hooker(self.__node)
     hooker.hover_and_hook(end)
     self.__adjust_gravity_cancel(60)
@@ -126,7 +127,7 @@ class HookDemo():
         if dist < 0.1:
           self.__adjust_gravity_cancel(60)
         start = [self.__state.x,self.__state.y,self.__state.z]
-        end = [0.,-1.,1.]
+        end = [0.,0.,1.]
         StraightLineGen(self.__node,start,end).loop(0.)
         
        
@@ -138,7 +139,7 @@ class HookDemo():
   
 if __name__ == '__main__':
   try:
-    hook_demo = HookDemo(21,[0.,0.,0.85]) 
+    hook_demo = HookDemo(18,[0.,-1.,0.85]) 
     hook_demo.demo()
   except rospy.ROSInterruptException:
     pass
