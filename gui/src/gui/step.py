@@ -16,7 +16,7 @@ import subprocess
 import trajectory_generator
 from trajectory import Trajectory
 from trajectory_generato import TrajectoryGenerator
-from Trajectory_node import TrajectoryNode
+from trajectory_node import TrajectoryNode
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 

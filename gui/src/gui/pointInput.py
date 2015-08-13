@@ -1,4 +1,4 @@
-# Erik Berlund 2015
+# Erik Berglund 2015
 # A GUI plugin with which you can send listed instructions to the drone one at a time.
 # You can also create, modify, save and load instruction lists with the plugin.
 
@@ -21,7 +21,7 @@ import subprocess
 import trajectory_generator
 from trajectory import Trajectory
 from trajectory_generato import TrajectoryGenerator
-from Trajectory_node import TrajectoryNode
+from trajectory_node import TrajectoryNode
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from straight_line_class import StraightLineGen

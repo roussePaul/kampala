@@ -7,6 +7,7 @@ from gui.step import StepPlugin
 from gui.pointInput import pointInputPlugin
 from gui.RCDisplay import RCDisplayPlugin
 from gui.utility import utilityPlugin
+from gui.tabbedGUI import tabbedGUIPlugin
 from rqt_gui.main import Main
 
 plugin = 'gui'
