@@ -152,6 +152,10 @@ def Get_Derived_Data(current_data,past_data,time):
 	result.pitch_acc=Compute_Derivative(result.pitch_vel,past_data.pitch_vel,time)
 	result.roll_acc=Compute_Derivative(result.roll_vel,past_data.roll_vel,time)
 	result.yaw_acc=Compute_Derivative(result.yaw_vel,past_data.yaw_vel,time)
+	
+	# CORRECT THIS: time of MOCAP IS NOT BEING USED!!!!!!!
+	result.time_diff = time
+
 	return(result)
 
 

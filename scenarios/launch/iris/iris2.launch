@@ -33,7 +33,7 @@ Apply for both the simulated and the real quad -->
 			</group>
 		
 		<!-- MOCAP CONFIGURATION -->
-			<param name="body_id" value="22"/>
+			<param name="body_id" value="21"/>
 
 		<!-- CONTROLLER -->
 			<!-- Main values -->

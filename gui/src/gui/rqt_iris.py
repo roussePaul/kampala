@@ -117,6 +117,7 @@ class MyPlugin(Plugin):
         self.name = self._widget.IrisInputBox.currentText()
         inputstring = "roslaunch scenarios %s.launch simulation:=%s" % (self.name,self.simulation)
         self.executeBlocking(inputstring)
+        #A sleep for 0.2 seconds that allows the file to be properly launched before you try to load it. 
         rospy.sleep(2.)
         
         try: 

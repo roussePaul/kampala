@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>558</width>
+    <height>690</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="6" column="1">
+    <widget class="QCheckBox" name="Xcheck">
+     <property name="text">
+      <string>x</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="1">
+    <widget class="QCheckBox" name="V_XCheck">
+     <property name="text">
+      <string>v_x</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QCheckBox" name="XDescheck">
+     <property name="text">
+      <string>xd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="2">
+    <widget class="QCheckBox" name="YDescheck">
+     <property name="text">
+      <string>yd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="2">
+    <widget class="QCheckBox" name="V_YCheck">
+     <property name="text">
+      <string>v_y</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="1">
+    <widget class="QCheckBox" name="V_XDesckeck">
+     <property name="text">
+      <string>v_x d</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="2">
+    <widget class="QCheckBox" name="Ycheck">
+     <property name="text">
+      <string>y</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="3">
+    <widget class="QCheckBox" name="ZDescheck">
+     <property name="text">
+      <string>zd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="2">
+    <widget class="QCheckBox" name="V_YDescheck">
+     <property name="text">
+      <string>v_y d</string>
+     </property>
+    </widget>
+   </item>
+   <item row="18" column="1">
+    <widget class="QCheckBox" name="channel1check">
+     <property name="text">
+      <string>channel 1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="3">
+    <widget class="QCheckBox" name="Zcheck">
+     <property name="text">
+      <string>z</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="3">
+    <widget class="QCheckBox" name="V_ZDescheck">
+     <property name="text">
+      <string>v_z d</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="3">
+    <widget class="QCheckBox" name="V_ZCheck">
+     <property name="text">
+      <string>v_z</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="1" colspan="5">
+    <widget class="QFrame" name="frame_3">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="18" column="2">
+    <widget class="QCheckBox" name="channel2check">
+     <property name="text">
+      <string>channel 2</string>
+     </property>
+    </widget>
+   </item>
+   <item row="18" column="3">
+    <widget class="QCheckBox" name="channel3check">
+     <property name="text">
+      <string>channel 3</string>
+     </property>
+    </widget>
+   </item>
+   <item row="18" column="4">
+    <widget class="QCheckBox" name="channel4check">
+     <property name="text">
+      <string>channel 4</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="4">
+    <widget class="QComboBox" name="IrisInputBox"/>
+   </item>
+   <item row="0" column="5">
+    <widget class="QPushButton" name="startButton">
+     <property name="text">
+      <string>set Quad</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1" colspan="5">
+    <widget class="QFrame" name="frame_2">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" colspan="5">
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

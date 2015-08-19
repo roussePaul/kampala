@@ -127,6 +127,10 @@ class State():
 		result.pitch_acc=self.pitch.a
 		result.roll_acc=self.roll.a
 		result.yaw_acc=self.yaw.a
+		
+		# The time_diff is added to make the position plot on the
+		# GUI work
+		result.time_diff = 0.05
 
 		return copy.deepcopy(result)
 

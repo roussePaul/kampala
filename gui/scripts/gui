@@ -8,6 +8,8 @@ from gui.pointInput import pointInputPlugin
 from gui.RCDisplay import RCDisplayPlugin
 from gui.utility import utilityPlugin
 from gui.tabbedGUI import tabbedGUIPlugin
+from gui.positionPlot import positionPlotPlugin
+from gui.saver import saverPlugin
 from rqt_gui.main import Main
 
 plugin = 'gui'

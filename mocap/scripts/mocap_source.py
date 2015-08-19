@@ -1,3 +1,4 @@
+# Author: Matteo Vanin
 #parser of response message for a command type of message
 import socket   #for sockets
 import sys      #for exit
@@ -11,7 +12,7 @@ class Mocap(object):
         #set IP and PORT of the Qtm PC
         if host is None:
             #host='130.237.50.87'
-            host = '130.237.50.71'
+            host = '130.237.50.84'
         if port is None:
             port = 22224
         self.host = host
