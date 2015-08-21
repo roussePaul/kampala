@@ -37,7 +37,7 @@ class Recorder():
 
         if data.record_iris1 != self.last_msg.record_iris1:
             if data.record_iris1:
-                self.p1 = subprocess.Popen(['rosbag','record','-O', self.pwd + '/src/kampala/analysis/bagfiles/iris1_'+str(rospy.get_time()),'/body_data/id_'+str(self.irisdict['iris1'])])
+                self.p1 = subprocess.Popen(['rosbag','record','-O', self.pwd + '/src/kampala/analysis/bagfiles/iris1_'+str(rospy.get_time()),'/body_data/id_'+str(self.irisdict['iris1']),'/iris1/trajectory_gen/target','/iris1/mavros/rc/override'])
             else:
                 self.terminate_process_and_children(self.p1)
 

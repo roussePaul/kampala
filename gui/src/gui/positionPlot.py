@@ -1,12 +1,12 @@
 import os
 import rospy
 import QtGui
+import QtCore
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from PyQt4.QtCore import QObject, pyqtSignal
 import pyqtgraph as pg
-
 import analysis
 import utils
 import subprocess
@@ -16,22 +16,11 @@ from mocap.msg import QuadPositionDerived
 
 class positionPlotPlugin(Plugin):
 
+    
+    Update = pyqtSignal(list,list,pg.PlotDataItem)
 
-    Xon = pyqtSignal(float)
-    Yon = pyqtSignal(float)
-    Zon = pyqtSignal(float)
-    Xoff = pyqtSignal()
-    Yoff = pyqtSignal() 
-    Zoff = pyqtSignal()
-    Xvelon = pyqtSignal(float)
-    Yvelon = pyqtSignal(float)
-    Zvelon = pyqtSignal(float)
-    Xveloff = pyqtSignal()
-    Yveloff = pyqtSignal()
-    Zveloff = pyqtSignal()
-
-
-
+    UpdateV = pyqtSignal()
+    
     def __init__(self, context):
         super(positionPlotPlugin, self).__init__(context)
         # Give QObjects reasonable names
@@ -72,30 +61,40 @@ class positionPlotPlugin(Plugin):
 
         #Setting coordinate independent variables
 
+        
+
+        self.plotwidget = pg.PlotWidget()
+    
+
+        self.velplotwidget = pg.PlotWidget()
+    
+
+        self.channelplotwidget = pg.PlotWidget()
+
+        self.time_offset = rospy.get_time()
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4','iris5'])
         self.id = rospy.get_param('/body_array',[1,2,3,4,5])[self._widget.IrisInputBox.currentIndex()]
 
-        plotwidget = pg.PlotWidget()
-        plotwidget.getPlotItem().addLegend()
 
-        velplotwidget = pg.PlotWidget()
-        velplotwidget.getPlotItem().addLegend()
-
-        channelplotwidget = pg.PlotWidget()
-        channelplotwidget.getPlotItem().addLegend()
-        
+        self.plotwidget.getPlotItem().addLegend()
+        self.velplotwidget.getPlotItem().addLegend()
+        self.channelplotwidget.getPlotItem().addLegend()
 
         layout = QtGui.QGridLayout()
         vellayout = QtGui.QGridLayout()
         channellayout = QtGui.QGridLayout()
-        layout.addWidget(plotwidget)
-        vellayout.addWidget(velplotwidget)
-        channellayout.addWidget(channelplotwidget)
+        layout.addWidget(self.plotwidget)
+        vellayout.addWidget(self.velplotwidget)
+        channellayout.addWidget(self.channelplotwidget)
 
-        plotwidget.getPlotItem().setLabel('left','position','m')
-        plotwidget.getPlotItem().setLabel('bottom','time','s')
-        velplotwidget.getPlotItem().setLabel('left','speed','m/s')
-        velplotwidget.getPlotItem().setLabel('bottom','time','s')
+        self.plotitem = self.plotwidget.getPlotItem()
+        self.velplotitem = self.velplotwidget.getPlotItem()
+        self.channelplotitem = self.channelplotwidget.getPlotItem()
+
+        self.plotitem.setLabel('left','position','m')
+        self.plotitem.setLabel('bottom','time','s')
+        self.velplotitem.setLabel('left','speed','m/s')
+        self.velplotitem.setLabel('bottom','time','s')
 
 
 
@@ -103,155 +102,230 @@ class positionPlotPlugin(Plugin):
         self._widget.frame_2.setLayout(vellayout)
         self._widget.frame_3.setLayout(channellayout)
         self.timevector = [0]*100
+        self.dtimevector = [0]*20
+        self.channeltimevector = [0]*100
         self.sub = ''
+        self.dsub = ''
         self.channelsub = ''
 
         
         #Setting variables for each coordinate and channel
         
         self.Xplotvector = [0]*100
-        self.Xcurve = plotwidget.getPlotItem().plot(self.timevector,self.Xplotvector, name='x')
+        self.Xcurve = self.plotitem.plot(self.timevector,self.Xplotvector, name='x')
         self.Xcurve.setPen(pg.mkPen('r'))
         
         self.Yplotvector = [0]*100
-        self.Ycurve = plotwidget.getPlotItem().plot(self.timevector,self.Yplotvector, name='y')
+        self.Ycurve = self.plotitem.plot(self.timevector,self.Yplotvector, name='y')
         self.Ycurve.setPen(pg.mkPen('g'))
 
         self.Zplotvector = [0]*100
-        self.Zcurve = plotwidget.getPlotItem().plot(self.timevector,self.Zplotvector, name='z')
-        self.Zcurve.setPen(pg.mkPen('b'))
+        self.Zcurve = self.plotitem.plot(self.timevector,self.Zplotvector, name='z')
+        self.Zcurve.setPen(pg.mkPen('y'))
+
+        self.XDesplotvector = [0]*20
+        self.XDescurve = self.plotitem.plot(self.dtimevector,self.XDesplotvector, name='x<sub>d</sub>')
+        self.XDescurve.setPen(pg.mkPen(color=(100,0,0)))
+
+        self.YDesplotvector = [0]*20
+        self.YDescurve = self.plotitem.plot(self.dtimevector,self.YDesplotvector, name='y<sub>d</sub>')
+        self.YDescurve.setPen(pg.mkPen(color=(0,100,0)))
+
+        self.ZDesplotvector = [0]*20
+        self.ZDescurve = self.plotitem.plot(self.dtimevector,self.ZDesplotvector, name='z<sub>d</sub>')
+        self.ZDescurve.setPen(pg.mkPen(color=(255,255,100)))
 
         self.Xvelplotvector = [0]*100
-        self.Xvelcurve = velplotwidget.getPlotItem().plot(self.timevector,self.Xvelplotvector, name='v<sub>x</sub>')
+        self.Xvelcurve = self.velplotitem.plot(self.timevector,self.Xvelplotvector, name='v<sub>x</sub>')
         self.Xvelcurve.setPen(pg.mkPen('r'))
         
         self.Yvelplotvector = [0]*100
-        self.Yvelcurve = velplotwidget.getPlotItem().plot(self.timevector,self.Yvelplotvector, name='v<sub>y</sub>')
+        self.Yvelcurve = self.velplotitem.plot(self.timevector,self.Yvelplotvector, name='v<sub>y</sub>')
         self.Yvelcurve.setPen(pg.mkPen('g'))
 
         self.Zvelplotvector = [0]*100
-        self.Zvelcurve = velplotwidget.getPlotItem().plot(self.timevector,self.Zvelplotvector, name='v<sub>z</sub>')
-        self.Zvelcurve.setPen(pg.mkPen('b'))
+        self.Zvelcurve = self.velplotitem.plot(self.timevector,self.Zvelplotvector, name='v<sub>z</sub>')
+        self.Zvelcurve.setPen(pg.mkPen('y'))
+
+        self.XDesvelplotvector = [0]*20
+        self.XDesvelcurve = self.velplotitem.plot(self.dtimevector,self.XDesvelplotvector, name='v<sub>xd</sub>')
+        self.XDesvelcurve.setPen(pg.mkPen(color=(100,0,0)))
+
+        self.YDesvelplotvector = [0]*20
+        self.YDesvelcurve = self.velplotitem.plot(self.dtimevector,self.YDesvelplotvector, name='v<sub>yd</sub>')
+        self.YDesvelcurve.setPen(pg.mkPen(color=(0,100,0)))
+
+        self.ZDesvelplotvector = [0]*20
+        self.ZDesvelcurve = self.velplotitem.plot(self.dtimevector,self.ZDesvelplotvector, name='v<sub>zd</sub>')
+        self.ZDesvelcurve.setPen(pg.mkPen(color=(255,255,100)))
 
         self.channel1plotvector = [0]*100
-        self.channel1curve = channelplotwidget.getPlotItem().plot(self.channel1plotvector)
+        self.channel1curve = self.channelplotitem.plot(self.channeltimevector,self.channel1plotvector, name='channel1')
+        self.channel1curve.setPen(pg.mkPen(color=(255,0,0)))
+
+        self.channel2plotvector = [0]*100
+        self.channel2curve = self.channelplotitem.plot(self.channeltimevector,self.channel2plotvector, name='channel2')
+        self.channel2curve.setPen(pg.mkPen(color=(0,255,0)))
+
+        self.channel3plotvector = [0]*100
+        self.channel3curve = self.channelplotitem.plot(self.channeltimevector,self.channel3plotvector, name='channel3')
+        self.channel3curve.setPen(pg.mkPen(color=(0,0,255),width=3))
+
+        self.channel4plotvector = [0]*100
+        self.channel4curve = self.channelplotitem.plot(self.channeltimevector,self.channel4plotvector, name='channel4')
+        self.channel4curve.setPen(pg.mkPen(color=(100,100,100),style=QtCore.Qt.DashLine))
 
         #Connecting slots to signals
         self._widget.startButton.clicked.connect(self.setQuad)
-        self.Xon.connect(self.XonUpdate)
-        self.Yon.connect(self.YonUpdate)
-        self.Zon.connect(self.ZonUpdate)
-        self.Xoff.connect(self.XoffUpdate)
-        self.Yoff.connect(self.YoffUpdate)
-        self.Zoff.connect(self.ZoffUpdate)
-        self.Xvelon.connect()
+        self.Update.connect(self.UpdatePlot)
+        self.UpdateV.connect(self.UpdateView)
+
+        # Defining quicker references to the functions used to see if the checkboxes for each curve are checked,
+        # to shorten lookup time.
         
+        self.xcheck = self._widget.Xcheck.isChecked
+        self.ycheck = self._widget.Ycheck.isChecked
+        self.zcheck = self._widget.Zcheck.isChecked
+
+        self.xdcheck = self._widget.XDescheck.isChecked
+        self.ydcheck = self._widget.YDescheck.isChecked
+        self.zdcheck = self._widget.ZDescheck.isChecked
+
+        self.vxcheck = self._widget.V_XCheck.isChecked
+        self.vycheck = self._widget.V_YCheck.isChecked
+        self.vzcheck = self._widget.V_ZCheck.isChecked
+
+        self.vxdcheck = self._widget.V_XDescheck.isChecked
+        self.vydcheck = self._widget.V_YDescheck.isChecked
+        self.vzdcheck = self._widget.V_ZDescheck.isChecked
+
+        self.ch1check = self._widget.channel1check.isChecked
+        self.ch2check = self._widget.channel2check.isChecked
+        self.ch3check = self._widget.channel3check.isChecked
+        self.ch4check = self._widget.channel4check.isChecked
        
 
 
-    def callback(self,data):
+    
+    def mocapcallback(self,data):
 
         self.timevector[:-1] = self.timevector[1:]
-        self.timevector[-1] = self.timevector[-2] + data.time_diff
+        self.timevector[-1] = self.getTime()
+
+        self.Xplotvector[:-1] = self.Xplotvector[1:]
+        self.Xplotvector[-1] = data.x
+        self.Yplotvector[:-1] = self.Yplotvector[1:]
+        self.Yplotvector[-1] = data.y
+        self.Zplotvector[:-1] = self.Zplotvector[1:]
+        self.Zplotvector[-1] = data.z
+
+        self.Xvelplotvector[:-1] = self.Xvelplotvector[1:]
+        self.Xvelplotvector[-1] = data.x_vel
+        self.Yvelplotvector[:-1] = self.Yvelplotvector[1:]
+        self.Yvelplotvector[-1] = data.y_vel
+        self.Zvelplotvector[:-1] = self.Zvelplotvector[1:]
+        self.Zvelplotvector[-1] = data.z_vel
+        
+        self.UpdateV.emit()
+
+        if self.xcheck():
+            self.Update.emit(self.Xplotvector,self.timevector,self.Xcurve)           
+        if self.ycheck():
+            self.Update.emit(self.Yplotvector,self.timevector,self.Ycurve)
+        if self.zcheck():
+            self.Update.emit(self.Zplotvector,self.timevector,self.Zcurve)
+    
+        if self.vxcheck():
+            self.Update.emit(self.Xvelplotvector,self.timevector,self.Xvelcurve)
+        if self.vycheck():
+            self.Update.emit(self.Yvelplotvector,self.timevector,self.Yvelcurve)
+        if self.vzcheck():
+            self.Update.emit(self.Zvelplotvector,self.timevector,self.Zvelcurve)
         
 
-        if self._widget.Xcheck.isChecked():
-            self.Xon.emit(data.x)
-        else:
-            self.Xoff.emit()
-                      
-        if self._widget.Ycheck.isChecked():
-            self.Yon.emit(data.y)
-        else:
-            self.Yoff.emit()
+    def rcoverridecallback(self,data):
 
-        if self._widget.Zcheck.isChecked():
-            self.Zon.emit(data.z)
-        else:
-            self.Zoff.emit()
+        self.channeltimevector[:-1] = self.channeltimevector[1:]
+        self.channeltimevector[-1] = self.getTime()
 
-            
-
-        if self._widget.V_XCheck.isChecked():
-            self.Xvelplotvector[:-1] = self.Xvelplotvector[1:]
-            self.Xvelplotvector[-1] = data.x_vel
-            self.Xvelcurve.setData(self.timevector,self.Xvelplotvector)
-        else:
-            self.Xvelplotvector[:-1] = self.Xvelplotvector[1:]
-            self.Xvelplotvector[-1] = 0.0
-            self.Xvelcurve.setData(self.timevector,self.Xvelplotvector)
-
-
-        if self._widget.V_YCheck.isChecked():
-            self.Yvelplotvector[:-1] = self.Yvelplotvector[1:]
-            self.Yvelplotvector[-1] = data.y_vel
-            self.Yvelcurve.setData(self.timevector,self.Yvelplotvector)
-        else:
-            self.Yvelplotvector[:-1] = self.Yvelplotvector[1:]
-            self.Yvelplotvector[-1] = 0.0
-            self.Yvelcurve.setData(self.timevector,self.Yvelplotvector)
-
-        if self._widget.V_ZCheck.isChecked():
-            self.Zvelplotvector[:-1] = self.Zvelplotvector[1:]
-            self.Zvelplotvector[-1] = data.z_vel
-            self.Zvelcurve.setData(self.timevector,self.Zvelplotvector)
-        else:
-            self.Zvelplotvector[:-1] = self.Zvelplotvector[1:]
-            self.Zvelplotvector[-1] = 0.0
-            self.Zvelcurve.setData(self.timevector,self.Zvelplotvector)
-
-    def XonUpdate(self,data):
-        self.Xplotvector[:-1] = self.Xplotvector[1:]
-        self.Xplotvector[-1] = data
-        self.Xcurve.setData(self.timevector,self.Xplotvector)
-
-    def YonUpdate(self,data):
-        self.Yplotvector[:-1] = self.Yplotvector[1:]
-        self.Yplotvector[-1] = data
-        self.Ycurve.setData(self.timevector,self.Yplotvector)
-
-    def ZonUpdate(self,data):
-        self.Zplotvector[:-1] = self.Zplotvector[1:]
-        self.Zplotvector[-1] = data
-        self.Zcurve.setData(self.timevector,self.Zplotvector)
-
-    def XoffUpdate(self):
-        self.Xplotvector[:-1] = self.Xplotvector[1:]
-        self.Xplotvector[-1] = 0.0
-        self.Xcurve.setData(self.timevector,self.Xplotvector)
-
-    def YoffUpdate(self):
-        self.Yplotvector[:-1] = self.Yplotvector[1:]
-        self.Yplotvector[-1] = 0.0
-        self.Ycurve.setData(self.timevector,self.Yplotvector)
-
-    def ZoffUpdate(self):
-        self.Zplotvector[:-1] = self.Zplotvector[1:]
-        self.Zplotvector[-1] = 0.0
-        self.Zcurve.setData(self.timevector,self.Zplotvector)
-
-
-
-
-
-    def callback2(self,data):
-        
         self.channel1plotvector[:-1] = self.channel1plotvector[1:]
-        if self._widget.channel1check.isChecked():
-            self.channel1plotvector[-1] = data.channels[0]
-        else:
-            self.channel1plotvector[-1] = 0.0
-        self.channel1curve.setData(self.channel1plotvector)
+        self.channel1plotvector[-1] = data.channels[0]
+        self.channel2plotvector[:-1] = self.channel2plotvector[1:]
+        self.channel2plotvector[-1] = data.channels[1]
+        self.channel3plotvector[:-1] = self.channel3plotvector[1:]
+        self.channel3plotvector[-1] = data.channels[2]
+        self.channel4plotvector[:-1] = self.channel4plotvector[1:]
+        self.channel4plotvector[-1] = data.channels[3]
+
+        if self.ch1check():
+            self.Update.emit(self.channel1plotvector,self.channeltimevector,self.channel1curve)
+        if self.ch2check():
+            self.Update.emit(self.channel2plotvector,self.channeltimevector,self.channel2curve)
+        if self.ch3check():
+            self.Update.emit(self.channel3plotvector,self.channeltimevector,self.channel3curve)
+        if self.ch4check():
+            self.Update.emit(self.channel4plotvector,self.channeltimevector,self.channel4curve)
+
+    def targetcallback(self,data):
+
+        self.dtimevector[:-1] = self.dtimevector[1:]
+        self.dtimevector[-1] = self.getTime()
+
+        self.XDesplotvector[:-1] = self.XDesplotvector[1:]
+        self.XDesplotvector[-1] = data.x
+        self.YDesplotvector[:-1] = self.YDesplotvector[1:]
+        self.YDesplotvector[-1] = data.y
+        self.ZDesplotvector[:-1] = self.ZDesplotvector[1:]
+        self.ZDesplotvector[-1] = data.z
+
+        self.XDesvelplotvector[:-1] = self.XDesvelplotvector[1:]
+        self.XDesvelplotvector[-1] = data.x_vel
+        self.YDesvelplotvector[:-1] = self.YDesvelplotvector[1:]
+        self.YDesvelplotvector[-1] = data.y_vel
+        self.ZDesvelplotvector[:-1] = self.ZDesvelplotvector[1:]
+        self.ZDesvelplotvector[-1] = data.z_vel
+
+        if self.xdcheck():
+            self.Update.emit(self.XDesplotvector,self.dtimevector,self.XDescurve)
+        if self.ydcheck():
+            self.Update.emit(self.YDesplotvector,self.dtimevector,self.YDescurve)
+        if self.zdcheck():
+            self.Update.emit(self.ZDesplotvector,self.dtimevector,self.ZDescurve)
+        
+        if self.vxdcheck():
+            self.Update.emit(self.XDesvelplotvector,self.dtimevector,self.XDesvelcurve)
+        if self.vydcheck():
+            self.Update.emit(self.YDesvelplotvector,self.dtimevector,self.YDesvelcurve)
+        if self.vzdcheck():
+            self.Update.emit(self.ZDesvelplotvector,self.dtimevector,self.ZDesvelcurve)
+ 
+
+    def UpdatePlot(self,vector,timevector,curve):
+        curve.setData(timevector,vector)
+
+    def UpdateView(self):
+        self.plotitem.setXRange(self.timevector[0],self.timevector[-1])
+        self.velplotitem.setXRange(self.timevector[0],self.timevector[-1])
+        self.channelplotitem.setXRange(self.channeltimevector[0],self.channeltimevector[-1])
+        
 
 
     def setQuad(self):
         self.id = rospy.get_param('/body_array',[1,2,3,4,5])[self._widget.IrisInputBox.currentIndex()]
         if self.sub != '':
             self.sub.unregister()
-        self.sub = rospy.Subscriber('/body_data/id_' + str(self.id) , QuadPositionDerived, self.callback)
+        self.sub = rospy.Subscriber('/body_data/id_' + str(self.id) , QuadPositionDerived, self.mocapcallback)
         if self.channelsub != '':
             self.channelsub.unregister()
-        self.channelsub = rospy.Subscriber('/' + self._widget.IrisInputBox.currentText() + '/mavros/rc/override', OverrideRCIn, self.callback2)
+        self.channelsub = rospy.Subscriber('/' + self._widget.IrisInputBox.currentText() + '/mavros/rc/override', OverrideRCIn, self.rcoverridecallback)
+        if self.dsub != '':
+            self.dsub.unregister()
+        self.dsub = rospy.Subscriber('/' + self._widget.IrisInputBox.currentText() + '/trajectory_gen/target', QuadPositionDerived, self.targetcallback)
+
+    def getTime(self):
+        time = rospy.get_time() - self.time_offset
+        return time
+
     def shutdown_plugin(self):
         # TODO unregister all publishers here
         pass
