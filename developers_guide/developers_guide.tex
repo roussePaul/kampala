@@ -79,9 +79,10 @@ the connection strength (RSSI). It is found at
 \label{subsec:configuration}
 Calibrations of the accelerometers of the quadcopters are mandatory
 and can be done in Mission Planner. When performing the calibration,
-use a water level to setup a flat place. It can be checked that a
-calibration was well performed by going to \textit{Flight
- Data}$\rightarrow$\textit{Status}. If $a_x$ and $a_y$ are less than
+use a water level to setup a flat place. In lack of this, a
+recommendation is to use a wall. It can be checked that a calibration
+was well performed by going to \textit{Flight
+  Data}$\rightarrow$\textit{Status}. If $a_x$ and $a_y$ are less than
 1\% of $g = 9.8$ and $a_z = -g$ the calibration is satisfactory.
 
 Special conditions apply when flying indoors. Most importantly, the
@@ -130,7 +131,7 @@ of ROS is assumed. The architecture used in the program is shown in
 Fig.~\ref{fig:architecture}. Circles do not correspond to ROS nodes
 strictly, but describe the different parts of the program. Rectangles,
 however, correspond to ROS topics. ROS packages are also written in
-the figure. Arrows with black head correspond to publication to a
+the figure. Arrows with black heads correspond to publication to a
 topic, if the arrow points from a circle to a topic, and subscription
 to a topic, if the arrow points from a topic to a circle. Names in the
 following paragraphs refer to Fig.~\ref{fig:architecture}.
@@ -138,7 +139,7 @@ following paragraphs refer to Fig.~\ref{fig:architecture}.
 The goal of the program is to process commands from the user,
 forwarded through the GUI, so that the quadcopter, either in the real
 world or in the simulator, acts as the user intends. The GUI can start
-different ROS launch files, in turn staring scripts that publishes
+different ROS launch files, in turn starting scripts that publishes
 points for the quadcopter to follow. These scripts are located in the
 \texttt{trajectory\textunderscore generator} package, and for example
 publishes points for a line or an arc, see
@@ -156,7 +157,7 @@ the quadcopter is within certain safety limits, etc., the Lander
 is told to land the quadcopter by the Security Guard. If it is, the
 Blender is told to further process the data. For more information
 about the Security Guard, see Sec.~\ref{sec:security_guard}. The
-blender got it's name because it can ``blend'' outputs of different
+Blender got it's name because it can ``blend'' outputs of different
 controllers and collision avoidance, see Sec.~\ref{sec:blender}. The
 outputs of the controllers are then transformed to roll, pitch,
 throttle and yaw in the Blender. This is sent to Mavros on the
@@ -166,7 +167,7 @@ to the quadcopter.
 \section{Documentation}
 \label{sec:documentation}
 
-To get the documentation of all the packages open a terminal and go to your catkin workspace. In the workspace go to \texttt{src/kampala} and write \texttt{sh gen\textunderscore doc.sh}. The documentation will be auto-generated and when the generation is done a message is shown which tells you where the documentation is to be found. The path will be similar to \texttt{home/user/workspace\textunderscore name/doc}. Here you find a folder for each package. To access the documentation of the package \texttt{package} open the folder \texttt{package} in the folder \texttt{doc} and go to \texttt{html}. Here open the file \texttt{annotated.html}.
+To get the documentation of all the packages open a terminal and go to your catkin workspace. In the workspace go to \texttt{src/kampala} and write \texttt{sh gen\textunderscore doc.sh}. The documentation will be auto-generated and when the generation is done a message is shown which tells you where the documentation is to be found. The path will be similar to \texttt{home/user/workspace\textunderscore name/doc}. Here you find a folder for each package. To access the documentation of the package \texttt{package} open the folder \texttt{package} in the folder \texttt{doc} and go to \texttt{html}. Here open the file \texttt{annotated.html}, for example.
 
 
 
@@ -208,16 +209,16 @@ fails it is probable that the whole mechanism has failed. Killing
 mocap will only make the drone behave more violently. Instead of
 killing mocap disarm the drone manually by holding down the safety
 button on the drone. Do not push it again while holding the drone as
-it will arm. Shut down and restart all ROS nodes.
-
-Generally, if weird behavior is observed: shut down all the ROS nodes
-and restart them to see if the weird behavior stops.
+it will arm. Shut down and restart all ROS nodes. Generally, if weird
+behavior is observed: shut down all the ROS nodes and restart them to
+see if the weird behavior stops.
 
 There are some error messages given by Mavros that can be
-disregarded. These are DCM bad heading and FCU variance. The DCM bad
-heading will make the lamp at the back of the drone blink yellow and
-red. This can be disregarded. However, if there is some strange
-behavior one should check the status of the drone on Mission Planner.
+disregarded. These are \texttt{DCM bad heading} and \texttt{FCU
+  variance}. The \texttt{DCM bad heading} will make the lamp at the back of the
+drone blink yellow and red. This can be disregarded. However, if there
+is some strange behavior one should check the status of the drone on
+Mission Planner.
 
 An unlikely but possible problem is that the combination of markers on
 a drone is not unique, i.e. there is another object in the lab that is
@@ -245,7 +246,7 @@ change the parameters given in the launch file while the drone is in
 the air. This is very useful for the tuning of parameters, especially
 in connection with the tracking visualizations that are started when
 arming the drone. To change the parameters while flying, change them
-in the launch file, save it and press \textit{param} in the GUI. If new
+in the launch file, save it and press \textit{Param} in the GUI. If new
 parameters are added and you want to use this feature for those
 parameters you will have to change the functions that update the
 parameters of the blender, PID, obstacle avoidance, etc. If you want
@@ -253,8 +254,8 @@ to use this feature for a controller of your own you can add a ROS
 service to your controller that calls a function that updates the
 parameters. To get this function connected with the GUI you have to
 add it in the function called Param() in the script
-\texttt{rqt\textunderscore iris.py} in gui/src/gui. As this is used in
-the blender and the PID these can be used as examples.
+\texttt{rqt\textunderscore iris.py} in \texttt{gui/src/gui}. As this is used in
+the Blender and the PID these can be used as examples.
 
 It is advised that somebody operates the GUI at all times in order to
 make the drone land in emergency situations.
@@ -265,15 +266,15 @@ make the drone land in emergency situations.
 
 In the \texttt{trajectory\textunderscore generator} package there are
 different scripts that are meant to be used together with a controller
-in the \texttt{controller} package (mainly the \texttt{PID}
-controller). These scripts generate a reference for the controller
-that respects the controller's interface. This means that not only
-target positions are generated, but also target velocities and
-accelerations. A controller uses these together with the data of the
-motion capture system to compute the control output. The interface of
-the trajectory generator scripts is defined by the abstract class
-called \texttt{Trajectory}. All trajectory generators are subclasses
-of this class and use its interface.
+in the \texttt{controller} package (mainly the PID controller). These
+scripts generate a reference for the controller that respects the
+controller's interface. This means that not only target positions are
+generated, but also target velocities and accelerations. A controller
+uses these together with the data of the motion capture system to
+compute the control output. The interface of the trajectory generator
+scripts is defined by the abstract class called
+\texttt{Trajectory}. All trajectory generators are subclasses of this
+class and use its interface.
 
 There are some classes with class names that end with
 \texttt{\textunderscore ext}. These are meant to be used in connection
@@ -291,8 +292,8 @@ assures that the same node is publishing the points all the time and
 hence there is no risk of interference between different nodes.
 
 The target points are published on the topic
-\texttt{/irisX/trajectory\textunderscore gen/target}, X $= 1, 2, 3,
-4, \dots$. The blender subscribes to this topic and passes the
+\texttt{/irisX/trajectory\textunderscore gen/target} (X $= 1, 2, 3,
+4, \dots$). The blender subscribes to this topic and passes the
 necessary information to the PID.
 
 A useful class in the package \texttt{trajectory\textunderscore
@@ -332,11 +333,45 @@ interval along the z-axis.
 
 The Security Guard is used for several security features during
 experiments. It gives permission to publish on the
-\texttt{rc/override} topic either to the Blender or to the Lander. Permission is granted to the lander if the motion capture signal is lost for more than 0.5 seconds. The Lander sets the flight mode of the quad to landing mode and publishes neutral commands on the texttt{rc/override} topic. When the lander is used, the landing is not controlled since there is no feedback. Therefore, the drone keeps moving in the xy-plane during landing. This should be fixed sooner or later. It was looked into using internal measurements to get feedback for the landing and there are some mavros topics that provide these measurements, but with the firmware used on iris 3 and iris 4 these topics don't give any information. However, the firmware on iris 2 can access the information. Observe that this is a beta firmware and not the firmware pre installed on the iris and it was chosen to not change the firmware on iris 3 and iris 4 to avoid trouble. If the drone is outside of the safety area defined in the launch file \texttt{iris\textunderscore nodes.launch} or the landing button is pushed, the landing is controlled with the PID, still using the motion capture data.
+\texttt{rc/override} topic either to the Blender or to the
+Lander. Permission is granted to the Lander if the motion capture
+signal is lost for more than 0.5 seconds. The Lander sets the flight
+mode of the quad to landing mode and publishes neutral commands on the
+\texttt{rc/override} topic. When the Lander is used, the landing is not
+controlled since there is no feedback. Therefore, the drone keeps
+moving in the xy-plane during landing. This should be fixed sooner or
+later. It was looked into using internal measurements to get feedback
+for the landing and there are some Mavros topics that provide these
+measurements, but with the firmware used on iris 3 and iris 4 these
+topics don't give any information. However, the firmware on iris 2 can
+access the information. Observe that this is a beta firmware and not
+the firmware pre installed on the iris and it was chosen to not change
+the firmware on iris 3 and iris 4 to avoid trouble. If the drone is
+outside of the safety area defined in the launch file
+\texttt{iris\textunderscore nodes.launch} or the landing button is
+pushed, the landing is controlled with the PID, still using the motion
+capture data.
 
-The important topics that manage the landing are \texttt{irisX/security\textunderscore guard/controller} and \texttt{irisX/security\textunderscore guard/lander}. As long as everything works and no landing is desired a zero is published on \texttt{irisX/security\textunderscore guard/controller} and false is published on \texttt{irisX/security\textunderscore guard/lander}. When the landing button is pushed a 2 is published on \texttt{irisX/security\textunderscore guard/controller} and false is published on \texttt{irisX/security\textunderscore guard/lander}. The drone goes to a height of 0.5m and then the landing mode is set. If the mocap signal is lost a 1 is published on \texttt{irisX/security\textunderscore guard/controller} and true is published on \texttt{irisX/security\textunderscore guard/lander}. In this case the controller is turned of and the flight mode is set to landing mode. 
+The important topics that manage the landing are
+\texttt{irisX/security\textunderscore guard/controller} and
+\texttt{irisX/security\textunderscore guard/lander}. As long as
+everything works and no landing is desired a zero is published on
+\texttt{irisX/security\textunderscore guard/controller} and false is
+published on \texttt{irisX/security\textunderscore guard/lander}. When
+the landing button is pushed a 2 is published on
+\texttt{irisX/security\textunderscore guard/controller} and false is
+published on \texttt{irisX/security\textunderscore guard/lander}. The
+drone goes to a height of 0.5m and then the landing mode is set. If
+the mocap signal is lost a 1 is published on
+\texttt{irisX/security\textunderscore guard/controller} and true is
+published on \texttt{irisX/security\textunderscore guard/lander}. In
+this case the controller is turned of and the flight mode is set to
+landing mode.
 
-Since here potentially different nodes are publishing on the topic texttt{rc/override} it is of importance that only one node publishes at a time. Two nodes publishing on this topic can cause conflicting outputs and therefore strange behaviour during landing.
+Since here potentially different nodes are publishing on the topic
+\texttt{rc/override} it is of importance that only one node publishes
+at a time. Two nodes publishing on this topic can cause conflicting
+outputs and therefore strange behaviour during landing.
 
 \section{Blender}
 \label{sec:blender}
@@ -447,7 +482,7 @@ are named RC1-RC8. The different servo ports are named in a similar
 way: RC1-RC8 corresponds to MAIN OUT 1-8 and RC9-RC14 corresponds to
 AUX OUT 1-6. Unfortunately, in the current version of Mission Planner,
 there is no general way of connecting channel RCX to RCY, X $= 1 \dots
-8$, Y = $= 1 \dots 14$. If three or less servos are needed, the built
+8$, Y $= 1 \dots 14$. If three or less servos are needed, the built
 in settings for a camera gimbal can be used.\footnote{Which signals to
 be sent to which servo output are controlled by the parameter
 \texttt{RCX\textunderscore FUNCTION}, X $= 1 \dots 14$, in Mission
@@ -516,7 +551,7 @@ outlined below, fixing many of the possible errors.
     equal to 1500).
   \item Does Mavros fail to connect?
     \begin{itemize}
-      \item In case of green light blinking, check 3DR radio
+      \item In case of green or blue light blinking, check 3DR radio
         configuration.
       \item Check USB connection.
       \item Check configuration of the launching file (e.g. \texttt{iris1.launch}).
@@ -538,14 +573,14 @@ outlined below, fixing many of the possible errors.
     
 \section{3DR Radio communication interference}
 It seems that the radios interfere when they are close, so try to have
-at least 1 meter between each of them.  However, it is not sufficient,
-if you look at the \texttt{/diagnostics} topic, then you will see that there
-are many Rx errors, it is the same in Mission Planner, by looking at
-the logs, we see that many errors append. One of the consequence that
-is directly visible is that that parameters are much slower to be
-loaded at the initialisation of Mavros.
+at least 1 meter between each of them.  However, it is not sufficient;
+if you look at the \texttt{/diagnostics} topic, then you will see that
+there are many Rx errors. It is the same in Mission Planner: by
+looking at the logs, we see that many errors append. One of the
+consequence that is directly visible is that that parameters are much
+slower to be loaded at the initialisation of Mavros.
 
-A quick fix as been made by just decreasing the timeout variable in
+A quick fix that has been tested is just decreasing the timeout variable in
 the \texttt{mavros} package (file in
 \texttt{mavros/src/plugins/param.cpp}, \texttt{PARAM\textunderscore
   TIMEOUT\textunderscore MS} has been changed to 100 ms instead of
@@ -556,8 +591,8 @@ controller if too many errors happens.  Try to reduce the numbers of
 data that are transmitted by using the "rosrun mavros mavsys rate"
 command.
 
-A good fix will be to find a firmware were the ECC can correct more
-that 25\% of errors through the communication protocol. However, it is
+A good fix would be to find a firmware were the ECC can correct more
+that 25\% of errors through the communication protocol. However, this is
 not possible without getting inside the firmware code. I (Paul) did
 not managed to make the "LBT Rssi" work (listen before talk); it could
 help to reduce the number of Rx errors. A good parameter to tune is
@@ -569,7 +604,7 @@ so that it can transmit data up to 500 m, since we are about 10 m of
 the quad, it is okay to set it to 5.
 
 Some people have been facing similar problems. However, none of the
-fix worked (trying with the 1.7 firmware for the 3DR radio, setting
+fixes worked (trying with the 1.7 firmware for the 3DR radio, setting
 different \texttt{SYSID\textunderscore THISMAV}, separate every
 frequencies for each coupled radios). Some links are
 \\ \url{http://copter.ardupilot.com/wiki/common-optional-hardware/common-telemetry-landingpage/common-3dr-radio-version-2/}
@@ -583,10 +618,11 @@ Documentation can be found at
 
 To get any version of the Firmware, clone
 \url{https://github.com/Dronecode/SiK} and get back to another commit
-(the one of the version you want), install sdcc with \texttt{apt-get},
-do a \texttt{make install} in the Firmware directory, the hex file
+(the one of the version you want), install sdcc with \texttt{apt-get}
+and do a \texttt{make install} in the Firmware directory. The hex file
 (equal to the firmware) is the \texttt{Firmware/obj/hm\textunderscore
-  trp/radio$\sim$hm\textunderscore trp/radio$\sim$hm\textunderscore trp.ihx}.
+  trp/radio$\sim$hm\textunderscore trp/radio$\sim$hm\textunderscore
+  trp.ihx}.
 
 \end{appendices}
 
