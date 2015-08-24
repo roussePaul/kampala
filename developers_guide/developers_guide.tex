@@ -192,6 +192,21 @@ start the drone depending on what one wants to achieve. To run the
 simulator the procedure is repeated, but with writing \texttt{sim}
 instead of \texttt{real}.
 
+It is very important to have the correct Qualisys IDs for the
+quadcopters. The ID of a quadcopter can change, for example if a
+registered object is removed in Qualisys. Then, there are a few places
+in the code where this needs to be changed. For the Mocap to import
+the correct data, the parameter \texttt{body\textunderscore array}
+needs to be changed in \texttt{mocap.launch}. (Note that there are two
+versions of this parameter -- one for \texttt{real} and one for
+\texttt{sim}. Only the one for \texttt{real} needs to be changed.) The
+ID also needs to be updated in the file \texttt{irisX.launch} with the
+corresponding X (X $= 1, 2, 3, 4, \dots$) in the \texttt{scenarios}
+package. The concerned parameters are \texttt{body\textunderscore id}
+and \texttt{my\textunderscore id} (yet again one version for
+\texttt{real} and one for \texttt{sim}). This is done so that each
+iris is connected to the correct ID.
+
 \subsection{Advice}
 When arming the drone one sometimes gets the error message:
 \texttt{Throttle below FS}. This tells you that the throttle is too
