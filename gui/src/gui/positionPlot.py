@@ -102,11 +102,12 @@ class positionPlotPlugin(Plugin):
         self._widget.frame_2.setLayout(vellayout)
         self._widget.frame_3.setLayout(channellayout)
         self.timevector = [0]*100
-        self.dtimevector = [0]*20
+        self.dtimevector = [0]*100
         self.channeltimevector = [0]*100
         self.sub = ''
         self.dsub = ''
         self.channelsub = ''
+        self.updatetimer = rospy.Timer(rospy.Duration(0.1), self.updatecallback)
 
         
         #Setting variables for each coordinate and channel
@@ -123,15 +124,15 @@ class positionPlotPlugin(Plugin):
         self.Zcurve = self.plotitem.plot(self.timevector,self.Zplotvector, name='z')
         self.Zcurve.setPen(pg.mkPen('y'))
 
-        self.XDesplotvector = [0]*20
+        self.XDesplotvector = [0]*100
         self.XDescurve = self.plotitem.plot(self.dtimevector,self.XDesplotvector, name='x<sub>d</sub>')
         self.XDescurve.setPen(pg.mkPen(color=(100,0,0)))
 
-        self.YDesplotvector = [0]*20
+        self.YDesplotvector = [0]*100
         self.YDescurve = self.plotitem.plot(self.dtimevector,self.YDesplotvector, name='y<sub>d</sub>')
         self.YDescurve.setPen(pg.mkPen(color=(0,100,0)))
 
-        self.ZDesplotvector = [0]*20
+        self.ZDesplotvector = [0]*100
         self.ZDescurve = self.plotitem.plot(self.dtimevector,self.ZDesplotvector, name='z<sub>d</sub>')
         self.ZDescurve.setPen(pg.mkPen(color=(255,255,100)))
 
@@ -147,15 +148,15 @@ class positionPlotPlugin(Plugin):
         self.Zvelcurve = self.velplotitem.plot(self.timevector,self.Zvelplotvector, name='v<sub>z</sub>')
         self.Zvelcurve.setPen(pg.mkPen('y'))
 
-        self.XDesvelplotvector = [0]*20
+        self.XDesvelplotvector = [0]*100
         self.XDesvelcurve = self.velplotitem.plot(self.dtimevector,self.XDesvelplotvector, name='v<sub>xd</sub>')
         self.XDesvelcurve.setPen(pg.mkPen(color=(100,0,0)))
 
-        self.YDesvelplotvector = [0]*20
+        self.YDesvelplotvector = [0]*100
         self.YDesvelcurve = self.velplotitem.plot(self.dtimevector,self.YDesvelplotvector, name='v<sub>yd</sub>')
         self.YDesvelcurve.setPen(pg.mkPen(color=(0,100,0)))
 
-        self.ZDesvelplotvector = [0]*20
+        self.ZDesvelplotvector = [0]*100
         self.ZDesvelcurve = self.velplotitem.plot(self.dtimevector,self.ZDesvelplotvector, name='v<sub>zd</sub>')
         self.ZDesvelcurve.setPen(pg.mkPen(color=(255,255,100)))
 
@@ -226,22 +227,6 @@ class positionPlotPlugin(Plugin):
         self.Zvelplotvector[:-1] = self.Zvelplotvector[1:]
         self.Zvelplotvector[-1] = data.z_vel
         
-        self.UpdateV.emit()
-
-        if self.xcheck():
-            self.Update.emit(self.Xplotvector,self.timevector,self.Xcurve)           
-        if self.ycheck():
-            self.Update.emit(self.Yplotvector,self.timevector,self.Ycurve)
-        if self.zcheck():
-            self.Update.emit(self.Zplotvector,self.timevector,self.Zcurve)
-    
-        if self.vxcheck():
-            self.Update.emit(self.Xvelplotvector,self.timevector,self.Xvelcurve)
-        if self.vycheck():
-            self.Update.emit(self.Yvelplotvector,self.timevector,self.Yvelcurve)
-        if self.vzcheck():
-            self.Update.emit(self.Zvelplotvector,self.timevector,self.Zvelcurve)
-        
 
     def rcoverridecallback(self,data):
 
@@ -257,14 +242,7 @@ class positionPlotPlugin(Plugin):
         self.channel4plotvector[:-1] = self.channel4plotvector[1:]
         self.channel4plotvector[-1] = data.channels[3]
 
-        if self.ch1check():
-            self.Update.emit(self.channel1plotvector,self.channeltimevector,self.channel1curve)
-        if self.ch2check():
-            self.Update.emit(self.channel2plotvector,self.channeltimevector,self.channel2curve)
-        if self.ch3check():
-            self.Update.emit(self.channel3plotvector,self.channeltimevector,self.channel3curve)
-        if self.ch4check():
-            self.Update.emit(self.channel4plotvector,self.channeltimevector,self.channel4curve)
+        
 
     def targetcallback(self,data):
 
@@ -285,6 +263,33 @@ class positionPlotPlugin(Plugin):
         self.ZDesvelplotvector[:-1] = self.ZDesvelplotvector[1:]
         self.ZDesvelplotvector[-1] = data.z_vel
 
+    def updatecallback(self,timereventdummyargument):
+
+        self.UpdateV.emit()
+
+        if self.xcheck():
+            self.Update.emit(self.Xplotvector,self.timevector,self.Xcurve)           
+        if self.ycheck():
+            self.Update.emit(self.Yplotvector,self.timevector,self.Ycurve)
+        if self.zcheck():
+            self.Update.emit(self.Zplotvector,self.timevector,self.Zcurve)
+    
+        if self.vxcheck():
+            self.Update.emit(self.Xvelplotvector,self.timevector,self.Xvelcurve)
+        if self.vycheck():
+            self.Update.emit(self.Yvelplotvector,self.timevector,self.Yvelcurve)
+        if self.vzcheck():
+            self.Update.emit(self.Zvelplotvector,self.timevector,self.Zvelcurve)
+
+        if self.ch1check():
+            self.Update.emit(self.channel1plotvector,self.channeltimevector,self.channel1curve)
+        if self.ch2check():
+            self.Update.emit(self.channel2plotvector,self.channeltimevector,self.channel2curve)
+        if self.ch3check():
+            self.Update.emit(self.channel3plotvector,self.channeltimevector,self.channel3curve)
+        if self.ch4check():
+            self.Update.emit(self.channel4plotvector,self.channeltimevector,self.channel4curve)
+
         if self.xdcheck():
             self.Update.emit(self.XDesplotvector,self.dtimevector,self.XDescurve)
         if self.ydcheck():
@@ -298,7 +303,6 @@ class positionPlotPlugin(Plugin):
             self.Update.emit(self.YDesvelplotvector,self.dtimevector,self.YDesvelcurve)
         if self.vzdcheck():
             self.Update.emit(self.ZDesvelplotvector,self.dtimevector,self.ZDesvelcurve)
- 
 
     def UpdatePlot(self,vector,timevector,curve):
         curve.setData(timevector,vector)
@@ -307,8 +311,6 @@ class positionPlotPlugin(Plugin):
         self.plotitem.setXRange(self.timevector[0],self.timevector[-1])
         self.velplotitem.setXRange(self.timevector[0],self.timevector[-1])
         self.channelplotitem.setXRange(self.channeltimevector[0],self.channeltimevector[-1])
-        
-
 
     def setQuad(self):
         self.id = rospy.get_param('/body_array',[1,2,3,4,5])[self._widget.IrisInputBox.currentIndex()]

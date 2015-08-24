@@ -260,7 +260,7 @@ class pointInputPlugin(Plugin):
                 if point[2] < 0.5:
                     safepoint = [round(point[0],3),round(point[1],3),0.5]
                 else:
-                    safepoint = [round(point[0],3),round(point[1],3),round(point[2])]
+                    safepoint = [round(point[0],3),round(point[1],3),round(point[2],3)]
                 self.pointlist.append(['go to: ',safepoint])
                 self._widget.Pointlist.insertItem(len(self.pointlist),'go to: ' + str(safepoint[0]) + ',' + str(safepoint[1]) + ',' + str(safepoint[2]))
         else:

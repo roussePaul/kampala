@@ -1,0 +1,23 @@
+<launch>
+  <arg name="enable_logging" default="false"/>
+  <arg name="enable_ground_truth" default="true"/>
+  <arg name="log_file" default="iris"/>
+  <arg name="headless" default="false"/>
+  <arg name="gui" default="true"/>
+
+<!-- CONFIG -->
+<rosparam param="trajectory_generator/leader_id">13</rosparam>
+<rosparam param="trajectory_generator/follower_id">19</rosparam>
+
+<!-- Set the ROS environment variables -->
+  <env name="ROS_IP" value="172.17.42.1"/>
+  <env name="ROS_HOSTNAME" value="172.17.42.1"/>
+
+
+  <arg name="ns"/>
+
+  <group ns="$(arg ns)">
+    <node name="trajectory_gen_follower" pkg="trajectory_generator" type="trajectory_gen_follower_constant.py" output="screen"/>
+ -->
+  </group>
+</launch>

@@ -8,6 +8,7 @@ import QtGui
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
+from PyQt4.QtCore import pyqtSignal
 from mavros.msg import OverrideRCIn
 from mavros.msg import BatteryStatus
 from std_srvs.srv import Empty
@@ -18,7 +19,10 @@ import utils
 import subprocess
 
 class RCDisplayPlugin(Plugin):
-    
+
+    barsignal = pyqtSignal(OverrideRCIn)
+    batterysignal = pyqtSignal(BatteryStatus)
+
     def __init__(self, context):
         
 
@@ -95,6 +99,8 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel8display.textChanged.connect(self.change_bar8)
         self._widget.Batterydisplay.textChanged.connect(self.change_Batterybar)
         self._widget.ListenButton.clicked.connect(self.Listen)
+        self.barsignal.connect(self.set_display_text)
+        self.batterysignal.connect(self.set_battery_display_text)
 
         # Setting other variables
 
@@ -116,10 +122,23 @@ class RCDisplayPlugin(Plugin):
 #
     def callback(self,data):
 
-        # Called each time data from /irisX/mavros/rc/override is recieved, 
-        # updates the displayed outputs on the channels according to that data. 
+        # Called each time data from /irisX/mavros/rc/override is recieved. Emits
+        # a signal to the main thread to call the function set_display_text.
         # self.batterycallback does the corresponding thing for the battery.
 
+        self.barsignal.emit(data)
+
+
+
+    def batterycallback(self,data):
+
+        self.batterysignal.emit(data)
+
+    def set_display_text(self,data):
+
+        # updates the displayed outputs on the channels according to recieved data.
+        # self.set_battery_display_text does the corresponding for the battery. 
+        
         self._widget.channel1display.setText(str(data.channels[0]))
         self._widget.channel2display.setText(str(data.channels[1]))
         self._widget.channel3display.setText(str(data.channels[2]))
@@ -129,8 +148,7 @@ class RCDisplayPlugin(Plugin):
         self._widget.channel7display.setText(str(data.channels[6]))
         self._widget.channel8display.setText(str(data.channels[7]))
 
-    def batterycallback(self,data):
-
+    def set_battery_display_text(self,data):
         self._widget.Batterydisplay.setText(str(data.voltage))
     
     # The following functions update the bars when the text on the corresponding display is changed.

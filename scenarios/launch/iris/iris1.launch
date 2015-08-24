@@ -44,7 +44,7 @@
 			<param name="PID_K_i_z" value="0."/>
                         <param name="OBSTACLE_AVOIDANCE_K" value="1."/>
                         <param name="OBSTACLES_TO_AVOID" value="[8,16,17]"/>
-                        <param name="my_id" value="15"/>
+                        <param name="my_id" value="13"/>
 
 	<!-- Unimportant values -->
 		<!-- <param name="CONTROL_MIN" value="1000"/>

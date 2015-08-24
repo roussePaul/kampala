@@ -24,6 +24,8 @@ from straight_line_class import StraightLineGen
 from pointInput import pointInputPlugin
 from RCDisplay import RCDisplayPlugin
 from saver import saverPlugin
+from positionPlot import positionPlotPlugin
+
 
 
 
@@ -78,10 +80,14 @@ class tabbedGUIPlugin(Plugin):
         self.pointInput = pointInputPlugin(context)
         self.RCDisplay = RCDisplayPlugin(context)
         self.saver = saverPlugin(context)
+        self.positionPlot = positionPlotPlugin(context)
+        
 
         self._widget.tabWidget.addTab(self.RCDisplay._widget,'RC and battery display')
         self._widget.tabWidget.addTab(self.pointInput._widget,'Instruction input')
         self._widget.tabWidget.addTab(self.saver._widget,'Data recorder')
+        self._widget.tabWidget.addTab(self.positionPlot._widget,'Plot windows')
+        
         self._widget.tabWidget.show()
 
         # Connecting signals to slots
@@ -95,6 +101,8 @@ class tabbedGUIPlugin(Plugin):
         index = self._widget.IrisInputBox.currentIndex()
         self.pointInput._widget.IrisInputBox.setCurrentIndex(index)
         self.RCDisplay._widget.IrisInputBox.setCurrentIndex(index)
+        self.positionPlot._widget.IrisInputBox.setCurrentIndex(index)
+        
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
