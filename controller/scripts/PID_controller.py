@@ -8,7 +8,7 @@ import math
 from controller_base import Controller
 from point import *
 from controller.msg import PlotData
-from mavros.msg import OverrideRCIn
+from mavros_msgs.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
 from controller.msg import Permission
 from std_srvs.srv import Empty

@@ -2,9 +2,10 @@
 """This script contains the necessary function for the system setup while working with mavros and the qualysis motion capture system."""
 
 import rospy
-from mavros.srv import ParamSet, ParamGet
-from mavros.srv import CommandBool
-from mavros.srv import SetMode
+from mavros_msgs.srv import ParamSet, ParamGet
+from mavros_msgs.srv import CommandBool
+from mavros_msgs.srv import SetMode
+from mavros_msgs.msg import ParamValue
 from mocap.srv import BodyData
 import sys
 
@@ -74,8 +75,11 @@ def Set_System_ID(id_int):
 	rospy.sleep(2)
 
 	try:
+		system_id_msg = ParamValue() # For the mavros version released 10/08/2015,
+		system_id_msg.integer = id_int # a ParamValue message is required as argument
+		system_id_msg.real = 0.0 # for the mavros/param/set service
 		change_param=rospy.ServiceProxy('mavros/param/set',ParamSet)
-		param=change_param('SYSID_MYGCS',id_int,0.0)
+		param=change_param('SYSID_MYGCS',system_id_msg)
 
 		if param.success:
 			utils.loginfo('System ID changed')

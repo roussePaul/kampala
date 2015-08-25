@@ -1,9 +1,9 @@
 """This script is a copy of the script sml_setup.py in the controller package. It contains the necessary function for the system setup while working with mavros and the qualysis motion capture system."""
 
 import rospy
-from mavros.srv import ParamSet, ParamGet
-from mavros.srv import CommandBool
-from mavros.srv import SetMode
+from mavros_msgs.srv import ParamSet, ParamGet
+from mavros_msgs.srv import CommandBool
+from mavros_msgs.srv import SetMode
 from mocap.srv import BodyData
 import sys
 

@@ -7,8 +7,8 @@ from python_qt_binding.QtGui import QWidget
 from controller.msg import Permission
 from std_srvs.srv import Empty
 from PyQt4.QtCore import QObject, pyqtSignal
-from mavros.msg import OverrideRCIn
-from mavros.msg import BatteryStatus
+from mavros_msgs.msg import OverrideRCIn
+from mavros_msgs.msg import BatteryStatus
 
 import analysis
 import utils

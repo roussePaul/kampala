@@ -73,7 +73,7 @@ class StepPlugin(Plugin):
         self._widget.bBack.clicked.connect(self.Back)
         self._widget.bStart.clicked.connect(self.Start)
 
-        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4'])
+        self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4','iris5'])
 
         self.point = []
 

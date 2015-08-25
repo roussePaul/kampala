@@ -10,8 +10,8 @@
 <rosparam param="trajectory_generator/follower_id">19</rosparam>
 
 <!-- Set the ROS environment variables -->
-  <env name="ROS_IP" value="172.17.42.1"/>
-  <env name="ROS_HOSTNAME" value="172.17.42.1"/>
+  <env name="ROS_IP" value="192.168.1.109"/>
+  <env name="ROS_HOSTNAME" value="192.168.1.109"/>
 
 
   <arg name="ns"/>

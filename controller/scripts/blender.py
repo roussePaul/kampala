@@ -17,7 +17,7 @@ from load_transport_controller import LoadTransportController
 from point import *
 from controller.msg import PlotData
 from controller.srv import SetChannel6
-from mavros.msg import OverrideRCIn
+from mavros_msgs.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived, QuadPositionDerivedExt
 from controller.msg import Permission
 from obstacle_avoidance import AvoidanceController
@@ -26,7 +26,7 @@ import utils
 from std_msgs.msg import Float64, Int32
 import numpy as np
 from numpy import linalg
-from mavros.srv import SetMode
+from mavros_msgs.srv import SetMode
 
 
 #Constants

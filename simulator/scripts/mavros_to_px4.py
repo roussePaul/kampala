@@ -5,10 +5,10 @@
 import sys
 import rospy
 
-from mavros.msg import OverrideRCIn,BatteryStatus
-from mavros.srv import ParamSet
-from mavros.srv import CommandBool
-from mavros.srv import SetMode
+from mavros_msgs.msg import OverrideRCIn,BatteryStatus
+from mavros_msgs.srv import ParamSet
+from mavros_msgs.srv import CommandBool
+from mavros_msgs.srv import SetMode
 from px4.msg import manual_control_setpoint
 import std_msgs.msg
 import ctypes

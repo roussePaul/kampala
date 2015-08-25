@@ -4,7 +4,7 @@ import rospy
 from autotuner import Autotuner
 from std_srvs.srv import Empty
 
-from mavros.msg import OverrideRCIn
+from mavros_msgs.msg import OverrideRCIn
 
 import math
 

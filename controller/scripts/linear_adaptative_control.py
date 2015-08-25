@@ -4,7 +4,7 @@ import rospy
 import sys
 import math
 
-from mavros.msg import BatteryStatus
+from mavros_msgs.msg import BatteryStatus
 from std_srvs.srv import Empty
 
 import analysis

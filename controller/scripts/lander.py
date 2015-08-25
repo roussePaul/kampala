@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import rospy
 import mavros
-from mavros.srv import SetMode
+from mavros_msgs.srv import SetMode
 from mavros.utils import *
 from controller.msg import Permission
-from mavros.msg import OverrideRCIn
+from mavros_msgs.msg import OverrideRCIn
 
 """This script contains the functions necessary to land the drone given permission by the 
 security guard."""

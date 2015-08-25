@@ -9,8 +9,8 @@ from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from PyQt4.QtCore import pyqtSignal
-from mavros.msg import OverrideRCIn
-from mavros.msg import BatteryStatus
+from mavros_msgs.msg import OverrideRCIn
+from mavros_msgs.msg import BatteryStatus
 from std_srvs.srv import Empty
 
 import analysis
