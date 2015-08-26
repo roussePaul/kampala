@@ -1,26 +1,13 @@
+# Erik Berglund 2015
+# A GUI plugin that can contain other GUI plugins in its tabs.
 import os
-import rospy
 import QtGui
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
-from controller.msg import Permission
-from std_srvs.srv import Empty
+
 from PyQt4.QtCore import QObject, pyqtSignal
-from mavros_msgs.msg import OverrideRCIn
-from mavros_msgs.msg import BatteryStatus
 
-import analysis
-import utils
-import subprocess
-
-import trajectory_generator
-from trajectory import Trajectory
-from trajectory_generato import TrajectoryGenerator
-from trajectory_node import TrajectoryNode
-from mocap.msg import QuadPositionDerived
-from controller.msg import Permission
-from straight_line_class import StraightLineGen
 from pointInput import pointInputPlugin
 from RCDisplay import RCDisplayPlugin
 from saver import saverPlugin
@@ -75,13 +62,12 @@ class tabbedGUIPlugin(Plugin):
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4',"iris5"])
         
-        # Adding all the tabs
+        # Initializing the contained plugins and adding them as tabs
 
         self.pointInput = pointInputPlugin(context)
         self.RCDisplay = RCDisplayPlugin(context)
         self.saver = saverPlugin(context)
         self.positionPlot = positionPlotPlugin(context)
-        
 
         self._widget.tabWidget.addTab(self.RCDisplay._widget,'RC and battery display')
         self._widget.tabWidget.addTab(self.pointInput._widget,'Instruction input')
@@ -93,11 +79,10 @@ class tabbedGUIPlugin(Plugin):
         # Connecting signals to slots
 
         self._widget.IrisInputBox.currentIndexChanged.connect(self.setQuad)
-        
-    def execute(self,cmd):
-        subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile" + self.name]) 
 
     def setQuad(self):
+        # Called when you change the quad that is selected on the IrisInputBox on the tabbed GUI plugin.  Sets the quad 
+        # of the IrisInputBox of the plugins contained in the tabs to the same as the one of the tabbed GUI plugin. 
         index = self._widget.IrisInputBox.currentIndex()
         self.pointInput._widget.IrisInputBox.setCurrentIndex(index)
         self.RCDisplay._widget.IrisInputBox.setCurrentIndex(index)

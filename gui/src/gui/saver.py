@@ -1,3 +1,7 @@
+# Erik Berglund 2015
+# A GUI Plugin that sends messages to the recorder node to start and stop recording data for 
+# the quadcopters whose checkboxes gets checked and unchecked.
+
 import os
 import rospy
 import QtGui
@@ -8,14 +12,10 @@ from PyQt4.QtCore import QObject, pyqtSignal
 
 from mocap.msg import Record
 
-import analysis
-import utils
-import subprocess
+
 
 
 class saverPlugin(Plugin):
-
-
     
     def __init__(self, context):
         super(saverPlugin, self).__init__(context)
@@ -55,15 +55,22 @@ class saverPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
+        # Creating a publisher on the record topic and the default message to be published.
 
         self.pub = rospy.Publisher('/recorder', Record, queue_size=10)
         self.msg = Record()
+
+        # Whether the message fields are set to True of False determines if the recorder node should record
+        # data for the corresponding quadcopter. Initally, all checkboxes are unchecked and no data is recorded,
+        # so all message fields are set to false.
+
         self.msg.record_iris1 = False
         self.msg.record_iris2 = False
         self.msg.record_iris3 = False
         self.msg.record_iris4 = False
         self.msg.record_iris5 = False
         
+        # Connecting slots to signals
 
         self._widget.iris1Box.stateChanged.connect(self.send_iris1_msg)
         self._widget.iris2Box.stateChanged.connect(self.send_iris2_msg)
@@ -71,7 +78,8 @@ class saverPlugin(Plugin):
         self._widget.iris4Box.stateChanged.connect(self.send_iris4_msg)
         self._widget.iris5Box.stateChanged.connect(self.send_iris5_msg)
 
-
+        # The following functions are called whenever a checkbox gets checked or unchecked. They alter the message
+        # to be published on the recorder topic in the corresponding way and publishes it.
     def send_iris1_msg(self):
 
         if self._widget.iris1Box.isChecked():
@@ -114,7 +122,7 @@ class saverPlugin(Plugin):
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
-        pass
+        self.pub.unregister()
 
     def save_settings(self, plugin_settings, instance_settings):
         # TODO save intrinsic configuration, usually using:

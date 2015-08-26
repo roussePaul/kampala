@@ -1,6 +1,6 @@
 # Erik Berglund 2015
-# A GUI plugin to monitor the channel outputs and the battery voltage, displaying the values
-# with text and with bars.
+# A GUI plugin to monitor the channel outputs and the battery voltage of a selected quadcopter, 
+# displaying the values with text and with bars.
 
 import os
 import rospy
@@ -11,12 +11,7 @@ from python_qt_binding.QtGui import QWidget
 from PyQt4.QtCore import pyqtSignal
 from mavros_msgs.msg import OverrideRCIn
 from mavros_msgs.msg import BatteryStatus
-from std_srvs.srv import Empty
 
-import analysis
-import utils
-
-import subprocess
 
 class RCDisplayPlugin(Plugin):
 
@@ -102,7 +97,7 @@ class RCDisplayPlugin(Plugin):
         self.barsignal.connect(self.set_display_text)
         self.batterysignal.connect(self.set_battery_display_text)
 
-        # Setting other variables
+        # Setting other instance variables
 
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4',"iris5"])
         self.batterysub = ''

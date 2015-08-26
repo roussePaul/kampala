@@ -1,3 +1,8 @@
+# Erik Berglund 2015 
+# A GUI plugin to plot real time information about a selected quadcopter's current and desired position and velocity,
+# as well as the output that is sent to it on each channel. 
+
+
 import os
 import rospy
 import QtGui
@@ -7,9 +12,7 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 from PyQt4.QtCore import QObject, pyqtSignal
 import pyqtgraph as pg
-import analysis
-import utils
-import subprocess
+
 from mavros_msgs.msg import OverrideRCIn
 from mocap.msg import QuadPositionDerived
 
@@ -59,26 +62,25 @@ class positionPlotPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
-        #Setting coordinate independent variables
-
-        
+        # Creating plotwidgets for each plot window
 
         self.plotwidget = pg.PlotWidget()
-    
-
         self.velplotwidget = pg.PlotWidget()
-    
-
         self.channelplotwidget = pg.PlotWidget()
 
+        # Currently rospy.get_time() is used to keep track of the time. The time offset is set when the plugin
+        # is initialized so that the time that the plugin keeps track of is the one since it started. 
+
         self.time_offset = rospy.get_time()
+
+        # Using the rosparam /body_array, each drone can be connected to the corresponding body id.
+
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4','iris5'])
         self.id = rospy.get_param('/body_array',[1,2,3,4,5])[self._widget.IrisInputBox.currentIndex()]
 
-
-        self.plotwidget.getPlotItem().addLegend()
-        self.velplotwidget.getPlotItem().addLegend()
-        self.channelplotwidget.getPlotItem().addLegend()
+        # To programmatically add Qt objects to a frame, you have to add them to a layout and then set
+        # that layout as the layout of the frame. The frames self._widget.frame_X have been defined in 
+        # the ui file that is a sibling of this file.
 
         layout = QtGui.QGridLayout()
         vellayout = QtGui.QGridLayout()
@@ -86,21 +88,36 @@ class positionPlotPlugin(Plugin):
         layout.addWidget(self.plotwidget)
         vellayout.addWidget(self.velplotwidget)
         channellayout.addWidget(self.channelplotwidget)
+        self._widget.frame.setLayout(layout)
+        self._widget.frame_2.setLayout(vellayout)
+        self._widget.frame_3.setLayout(channellayout)
+
+        # Defining the plotitems of the respective plotwidgets as instance variables allows python to
+        # access them faster.
 
         self.plotitem = self.plotwidget.getPlotItem()
         self.velplotitem = self.velplotwidget.getPlotItem()
         self.channelplotitem = self.channelplotwidget.getPlotItem()
 
+        # Adding a legend to the plot item will set the labels of the plotdataitems (the curves)
+        # belonging to it visible. 
+
+        self.plotitem.addLegend()
+        self.velplotitem.addLegend()
+        self.channelplotitem.addLegend()
+
+        # Adding labels for physical quantity and SI-unit to the left (y) and bottom (x) axis.
+        # pyqtgraph will take care of rescaling the units if the plot scale increases or decreases, e.g.
+        # setting the unit to cm or mm on the left axis when the quad is close to the origin.
+
         self.plotitem.setLabel('left','position','m')
         self.plotitem.setLabel('bottom','time','s')
         self.velplotitem.setLabel('left','speed','m/s')
         self.velplotitem.setLabel('bottom','time','s')
+        self.channelplotitem.setLabel('bottom','time','s')
 
-
-
-        self._widget.frame.setLayout(layout)
-        self._widget.frame_2.setLayout(vellayout)
-        self._widget.frame_3.setLayout(channellayout)
+        # Preallocating values for variables used by multiple plots.
+        
         self.timevector = [0]*100
         self.dtimevector = [0]*100
         self.channeltimevector = [0]*100
@@ -108,9 +125,8 @@ class positionPlotPlugin(Plugin):
         self.dsub = ''
         self.channelsub = ''
         self.updatetimer = rospy.Timer(rospy.Duration(0.1), self.updatecallback)
-
         
-        #Setting variables for each coordinate and channel
+        # Creating the arrays that will contain the plot data and the curves in which it shall be plotted.
         
         self.Xplotvector = [0]*100
         self.Xcurve = self.plotitem.plot(self.timevector,self.Xplotvector, name='x')
@@ -177,6 +193,7 @@ class positionPlotPlugin(Plugin):
         self.channel4curve.setPen(pg.mkPen(color=(100,100,100),style=QtCore.Qt.DashLine))
 
         #Connecting slots to signals
+
         self._widget.startButton.clicked.connect(self.setQuad)
         self.Update.connect(self.UpdatePlot)
         self.UpdateV.connect(self.UpdateView)
@@ -206,9 +223,10 @@ class positionPlotPlugin(Plugin):
         self.ch4check = self._widget.channel4check.isChecked
        
 
-
-    
     def mocapcallback(self,data):
+
+        # Called each time messages from the /body_data/id_X topic is recieved. Updates the position and velocity data 
+        # to be plotted as well as the timevector againts which it is plotted.
 
         self.timevector[:-1] = self.timevector[1:]
         self.timevector[-1] = self.getTime()
@@ -230,6 +248,9 @@ class positionPlotPlugin(Plugin):
 
     def rcoverridecallback(self,data):
 
+        # Called each time messages from the /irisX/mavros/rc/override topic is recieved. Updates the channel data
+        # to be plotted as well as the timevector against which it is plotted.
+        
         self.channeltimevector[:-1] = self.channeltimevector[1:]
         self.channeltimevector[-1] = self.getTime()
 
@@ -245,6 +266,9 @@ class positionPlotPlugin(Plugin):
         
 
     def targetcallback(self,data):
+
+        # Called each time messages from the /irisX/trajectory_gen/target topic is recieved. Updates the target 
+        # position and velocity to be plotted as well as the timevector against which it is plotted.
 
         self.dtimevector[:-1] = self.dtimevector[1:]
         self.dtimevector[-1] = self.getTime()
@@ -265,7 +289,13 @@ class positionPlotPlugin(Plugin):
 
     def updatecallback(self,timereventdummyargument):
 
+        # Called each time a signal from the internal timer (self.updatetimer) is recieved. 
+
+        # Emits the signal connected to the function that updates the view of the plots.
+
         self.UpdateV.emit()
+
+        # If the checkbox of a curve is checked, a signal to update that curve is emitted.
 
         if self.xcheck():
             self.Update.emit(self.Xplotvector,self.timevector,self.Xcurve)           
@@ -305,14 +335,23 @@ class positionPlotPlugin(Plugin):
             self.Update.emit(self.ZDesvelplotvector,self.dtimevector,self.ZDesvelcurve)
 
     def UpdatePlot(self,vector,timevector,curve):
+
+        # Makes the provided curve a plot of the vector versus the timevector.
+
         curve.setData(timevector,vector)
 
     def UpdateView(self):
+
+        # Sets the shown time range of the plots to the interval between the first and the last point of the corresponding timevector.
+
         self.plotitem.setXRange(self.timevector[0],self.timevector[-1])
         self.velplotitem.setXRange(self.timevector[0],self.timevector[-1])
         self.channelplotitem.setXRange(self.channeltimevector[0],self.channeltimevector[-1])
 
     def setQuad(self):
+
+        # Removes subscriptions to any previous topics and subscribes to those of the current quad int the IrisInputbox.
+
         self.id = rospy.get_param('/body_array',[1,2,3,4,5])[self._widget.IrisInputBox.currentIndex()]
         if self.sub != '':
             self.sub.unregister()
@@ -325,6 +364,9 @@ class positionPlotPlugin(Plugin):
         self.dsub = rospy.Subscriber('/' + self._widget.IrisInputBox.currentText() + '/trajectory_gen/target', QuadPositionDerived, self.targetcallback)
 
     def getTime(self):
+
+        # Returns the rospy time minus the offset. 
+
         time = rospy.get_time() - self.time_offset
         return time
 

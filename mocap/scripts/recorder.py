@@ -7,14 +7,21 @@ import subprocess
 import os
 import signal
 from mocap.msg import Record
-from mocap.msg import QuadPositionDerived
+
 
 class Recorder():
 
     def __init__(self):
+
+        # Initializing the node with the name 'recorder' and subscribing to the recorder topic.
         rospy.init_node('recorder')
         rospy.Subscriber('/recorder', Record, self.callback)
+
+        # Creating a dictionary that enables seeing which quadcopter has which body_id, using the rosparam '/body_array'
         self.irisdict = dict(zip(['iris1','iris2','iris3','iris4','iris5'],rospy.get_param('/body_array',[1,2,3,4,5])))
+
+
+        # Preallocating values for the instance variables that will later refer to the different recording subprocesses.
 
         self.p1state = None
         self.p2state = None
@@ -34,12 +41,16 @@ class Recorder():
         self.p4target = None 
         self.p5target = None
 
+        # Creating the default message from the saver plugin of the GUI 
+
         self.last_msg = Record()
         self.last_msg.record_iris1 = False
         self.last_msg.record_iris2 = False
         self.last_msg.record_iris3 = False
         self.last_msg.record_iris4 = False
         self.last_msg.record_iris5 = False
+
+        # Getting the Path of the current Working Directory
 
         self.pwd = os.environ['PWD']
 
@@ -48,8 +59,14 @@ class Recorder():
 
 
     def callback(self,data):
+        # Called each time a message from the recorder topic is recieved. That message is compared to the last message recieved. 
 
-        # time is appended to the filenames to make them unique
+        # If the field 'record_irisx' has changed to true in the new message, the recorder will start recording from the rostopics 
+        # '/body_data/id_X', '/irisx/trajectory_gen/target' and /irisx/mavros/rc/override to the files irisx_state, irisx_target and
+        # irisx_input. Time is appended to the filenames to make them unique. The files will be created in the bagfiles directory.
+
+        # If the'record_irisx' field has changed to false in the new message, the processes recording from each topic corresponding to irisx
+        # will be terminated.
 
         if data.record_iris1 != self.last_msg.record_iris1:
             if data.record_iris1:
@@ -105,7 +122,7 @@ class Recorder():
         self.last_msg = data
 
         # This function is copied from http://answers.ros.org/question/10714/start-and-stop-rosbag-within-a-python-script/. It is
-        # used to stop recording with rosbag.
+        # used to stop the processes recording with rosbag.
     def terminate_process_and_children(self,p):
         ps_command = subprocess.Popen("ps -o pid --ppid %d --noheaders" % p.pid, shell=True, stdout=subprocess.PIPE)
         ps_output = ps_command.stdout.read()

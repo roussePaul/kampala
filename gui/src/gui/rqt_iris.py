@@ -1,3 +1,5 @@
+# A GUI Plugin used to load parameters for the PID-controller, and connecting to, arming, starting and landing a quadcopter.
+
 import os
 import rospy
 import QtGui
@@ -8,9 +10,7 @@ from controller.msg import Permission
 from std_srvs.srv import Empty
 from std_msgs.msg import Int32
 from gazebo_msgs.srv import DeleteModel
-from mavros_msgs.msg import OverrideRCIn
-from mavros_msgs.msg import BatteryStatus
-import analysis
+
 import utils
 
 import os
@@ -19,13 +19,18 @@ import subprocess
 class MyPlugin(Plugin):
     
     def __init__(self, context):
+
+        # Getting the Path to the current Working Directory.
         self.pwd = os.environ['PWD']
+
+        # Getting a list of all files in the scenarios directory.
         self.filelist = os.listdir(self.pwd+'/src/kampala/scenarios/launch')
         
-        
+        # Checking whether it is a simulation or a flight with a real quad.
         self.simulation = rospy.get_param('/simulation','false')
-        self.land_pub = []
 
+        # Preallocating instance variables
+        self.land_pub = []
         self.controller_channel = []
         self.land_permission = Permission()
         self.controller_permission = Permission()
@@ -71,6 +76,7 @@ class MyPlugin(Plugin):
         context.add_widget(self._widget)
 
         
+        # Connecting slots to signals
 
         self._widget.ConnectButton.clicked.connect(self.Connect)
         self._widget.LANDButton.clicked.connect(self.Land)
@@ -80,32 +86,37 @@ class MyPlugin(Plugin):
         self._widget.TerminalButton.clicked.connect(self.Terminal)
         self._widget.StartInputField.returnPressed.connect(self.Autocomplete)
         self._widget.FileInputBox.currentIndexChanged.connect(self.FillIn)
-        
+   
+        # Adding the quadcopters' names and the filenames to their respective lists in the GUI   
         self._widget.IrisInputBox.insertItems(0,['iris1','iris2','iris3','iris4','iris5'])
         self._widget.FileInputBox.insertItems(0,self.filelist)
+
+        # The terminate button is only enabled for simulations.
         if self.simulation:
             self._widget.TerminateButton.clicked.connect(self.Terminate)
         else:
             self._widget.TerminateButton.setEnabled(False)
 
-
-
-
+    def Terminal(self):
+        # Opens a new terminal and runs the script term-pipe-r.sh in that terminal. This script creates a pipefile named pipefileirisx 
+        # if irisx is the current quadcopter selected, reads from it and executes any commands it finds there in the new terminal.
+        self.name = self._widget.IrisInputBox.currentText()
+        subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile' + self.name + ';bash'])
 
     def execute(self,cmd):
+        # Takes a command and writes it to the pipefile of the currently selected quadcopter.
         subprocess.Popen(["bash","-c","cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile" + self.name])
 
     def executeBlocking(self,cmd):
+        # Takes a command and writes it to the pipefile of the currently selected quadcopter and blocks the GUI until it is done 
+        # with this.
         os.system("bash -c 'cd "+self.pwd+"/src/kampala/gui/scripts; echo "+cmd+" > pipefile" + self.name + "'")
 
-    def Terminal(self):
-        self.name = self._widget.IrisInputBox.currentText()
-        subprocess.Popen(["gnome-terminal", "-x" , "bash", "-c", 'source '+self.pwd+'/devel/setup.bash;roscd gui/scripts;./term-pipe-r.sh pipefile' + self.name + ';bash'])
-    
     def Terminate(self):
+        # Kills all nodes associated with the currently selected quadcopter. Tries to delete the model of it in the current
+        # gazebo simulation.
         inputstring = 'rosnode kill `rosnode list | grep ' + self.name + '`'
         self.execute(inputstring)
-
         try:
             delete_model = rospy.ServiceProxy("gazebo/delete_model", DeleteModel)
             delete_model(self.name)
@@ -114,10 +125,11 @@ class MyPlugin(Plugin):
 
 
     def Param(self):
+        # Launches the irisx file containging the PID parameters used for that quadcopter and loads them
         self.name = self._widget.IrisInputBox.currentText()
         inputstring = "roslaunch scenarios %s.launch simulation:=%s" % (self.name,self.simulation)
         self.executeBlocking(inputstring)
-        #A sleep for 0.2 seconds that allows the file to be properly launched before you try to load it. 
+        # A sleep for 0.2 seconds that allows the file to be properly launched before you try to load the parameters. 
         rospy.sleep(2.)
         
         try: 
@@ -131,6 +143,7 @@ class MyPlugin(Plugin):
 
 
     def Connect(self):
+        # Launches the file connect.launch and starts publishers on the lander and controller channels.
         self.rpi = utils.Get_Parameter('/'+self.name+'/rpi','false')            # raspberry pi parameter for the connection (connect.launch)
         inputstring = "roslaunch scenarios connect.launch simulation:=%s ns:=%s rpi:=%s" % (self.simulation,self.name,self.rpi)
         self.execute(inputstring)
@@ -142,6 +155,7 @@ class MyPlugin(Plugin):
 
 
     def Land(self):
+        # Publishes permission for the drone to land. 
       #self.lander_channel.publish(Permission(True))
       self.land_pub.publish(Permission(True))
       #land = rospy.ServiceProxy("/%s/SecurityGuard/land"%(self.name), Empty)
@@ -150,15 +164,20 @@ class MyPlugin(Plugin):
 
 
     def Start(self):
+        # Launches the file whose name is written in the StartInputField
         inputstring = "roslaunch scenarios %s ns:=%s" % (self._widget.StartInputField.text(),self.name)
         self.execute(inputstring)
 
     def Arm(self):
+        # Launches the file iris_nodes.launch and publishes a message to the lander not to land the drone.
         self.land_pub.publish(Permission(False))
         inputstring = "roslaunch scenarios iris_nodes.launch ns:=%s simulation:=%s" % (self.name,self.simulation)
         self.execute(inputstring)
 
     def Autocomplete(self):
+        # Called when the StartInputField is selected and return is pressed. 
+        # Autocompletes the filename in the StartInputField if the string already 
+        # written there is the start of exactly one filename in the scenarios directory.
         exists = False
         unique = True
         completed_text=""
@@ -174,12 +193,8 @@ class MyPlugin(Plugin):
             self._widget.StartInputField.setText(completed_text)
 
     def FillIn(self):
+        # Sets the text in the start input field to the one displayed in the FileInputBox
         self._widget.StartInputField.setText(self._widget.FileInputBox.currentText())
-
-
-
-
-
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here

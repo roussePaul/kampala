@@ -8,22 +8,13 @@ import QtGui
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
-from controller.msg import Permission
-from std_srvs.srv import Empty
 from PyQt4.QtCore import QObject, pyqtSignal
-
-import analysis
-import utils
 
 import os
 import subprocess
 
 import trajectory_generator
-from trajectory import Trajectory
-from trajectory_generato import TrajectoryGenerator
-from trajectory_node import TrajectoryNode
 from mocap.msg import QuadPositionDerived
-from controller.msg import Permission
 from straight_line_class import StraightLineGen
 from dxfwrite import DXFEngine as dxfE
 
@@ -80,7 +71,7 @@ class pointInputPlugin(Plugin):
         context.add_widget(self._widget)
 
 
-        # Setting default values of the class variables
+        # Setting default values of the instance variables
 
         self.ID = 0
         self.index = 0
