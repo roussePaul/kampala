@@ -11,6 +11,7 @@ from std_srvs.srv import Empty
 from std_msgs.msg import Int32
 from gazebo_msgs.srv import DeleteModel
 
+import analysis
 import utils
 
 import os

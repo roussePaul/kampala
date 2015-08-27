@@ -1,5 +1,5 @@
 # Erik Berglund 2015
-# A GUI Plugin that sends messages to the recorder node to start and stop recording data for 
+# A GUI Plugin that sends messages to the recorder node (code for the recorder node can be found in /mocap/scripts) to start and stop recording data for 
 # the quadcopters whose checkboxes gets checked and unchecked.
 
 import os

@@ -5,3 +5,5 @@ http://hintshop.ludvig.co.nz/show/persistent-names-usb-serial-devices/
 or run 
 udevadm info -a -n /dev/ttyUSB0 | grep '{serial}' | head -n1
 and add a line with the result of the previous command
+
+

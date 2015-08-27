@@ -13,7 +13,7 @@ class Mocap(object):
         if host is None:
             #host='130.237.50.87'
             #host = '130.237.50.84'
-            host = '130.237.50.59'
+            host = '130.237.43.68'
         if port is None:
             port = 22224
         self.host = host

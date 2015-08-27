@@ -108,6 +108,8 @@ dxfwrite `sudo pip install dxfwrite`
 
 dxfgrabber `sudo pip install dxfgrabber`
 
+pyqtgraph `sudo pip install pyqtgraph`
+
 scipy `http://www.scipy.org/install.html`
 
 control `sudo pip install control`
@@ -128,6 +130,9 @@ Follow the guide in [scenarios/launch/iris/INSTALL](scenarios/launch/iris/INSTAL
 
 ## Raspberry pi
 Follow the guide in the [raspberrypi](raspberrypi).
+
+ The dialout group
+To be able to use these USB/SERIAL devices a user must be a member of the dialout group. To add itself to that group the user can use the following command: sudo gpasswd --add ${USER} dialout. After executing the command the user needs to log in and out for it to take effect.
 
 # Simulator Setup
 Follow the guide in the [simulator](simulator).

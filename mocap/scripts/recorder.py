@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-# A ros node that records the position, velocity and acceleration data published by 
-# the ros_mocap node for a certain drone when when it receives a message to do so.
+# A ros node that records on the /body_data/id_X, /irisx/mavros/rc/override and /irisx/trajectory_gen/target topics for a certain drone when when it receives a message to do so.
 import rospy
 import subprocess
 import os
